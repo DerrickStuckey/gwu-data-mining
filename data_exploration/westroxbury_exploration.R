@@ -84,3 +84,17 @@ ggplot(data=westroxbury) +
   geom_bar(mapping=aes(x=REMODEL, fill=BEDROOMS),
            position="dodge")
 
+# simple heatmap of correlations between numeric variables
+heatmap(cor(subset(westroxbury,select=-c(REMODEL))))
+
+# plot combinations of variables
+library(GGally)
+ggpairs(subset(roxbury.sample,select=c(TOTAL.VALUE, BEDROOMS, LOT.SQFT)))
+
+# jitter example
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=BEDROOMS, y=TOTAL.VALUE))
+
+ggplot(data=roxbury.sample) + 
+  geom_jitter(mapping=aes(x=BEDROOMS, y=TOTAL.VALUE))
+
