@@ -135,12 +135,14 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
-plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
-     main="Model #1")
-lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
-# TODO convert to a ggplot
-
-
+ggplot() + 
+  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  xlab("Offers Made") + ylab("Number Accepted") + 
+  ggtitle("Model #1 Validation") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.accepted/nrow(validation.data),
+              linetype="dashed")
 
 # look at some numeric variables that could be added
 boxplot(train.data$Age ~ train.data$Loan.Status)
@@ -189,10 +191,14 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
-plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
-     main="Model #2")
-lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
-# TODO convert to a ggplot
+ggplot() + 
+  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  xlab("Offers Made") + ylab("Number Accepted") + 
+  ggtitle("Model #2 Validation") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.accepted/nrow(validation.data),
+              linetype="dashed")
 
 
 
@@ -217,10 +223,14 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
-plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
-     main="Model #3")
-lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
-
+ggplot() + 
+  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  xlab("Offers Made") + ylab("Number Accepted") + 
+  ggtitle("Model #3 Validation") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.accepted/nrow(validation.data),
+              linetype="dashed")
 
 
 # What about Zip Code?
@@ -247,20 +257,27 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
-plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
-     main="Full Model")
-lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
+ggplot() + 
+  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  xlab("Offers Made") + ylab("Number Accepted") + 
+  ggtitle("Model #4 Validation") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.accepted/nrow(validation.data),
+              linetype="dashed")
 
 # Which model do you think will perform best against the final test set?
-# chosen.model <- bd.nb
-# chosen.model <- bd.nb.2
-# chosen.model <- bd.nb.3
-# chosen.model <- bd.nb.4
-test.predictions <- predict(chosen.model, newdata = test.data, type = "class")
-head(test.predictions)
-summary(test.predictions)
+test.predictions.1 <- predict(bd.nb, newdata = test.data, type = "class")
+test.predictions.2 <- predict(bd.nb.2, newdata = test.data, type = "class")
+test.predictions.3 <- predict(bd.nb.3, newdata = test.data, type = "class")
+test.predictions.4 <- predict(bd.nb.4, newdata = test.data, type = "class")
 
-# look at a confusion matrix for the updated model
-confusionMatrix(test.predictions, test.data$Loan.Status)
+# look at a confusion matrix of test results for each model
+confusionMatrix(test.predictions.1, test.data$Loan.Status)
+confusionMatrix(test.predictions.2, test.data$Loan.Status)
+confusionMatrix(test.predictions.3, test.data$Loan.Status)
+confusionMatrix(test.predictions.4, test.data$Loan.Status)
+
+# plot lift for each model
 
 
