@@ -22,7 +22,7 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        Age = col_double(),
                        Experience = col_double(),
                        Income = col_double(),
-                       `ZIP Code` = col_double(),
+                       `ZIP Code` = col_factor(),
                        Family = col_factor(),
                        CCAvg = col_double(),
                        Education = col_factor(),
@@ -136,7 +136,7 @@ total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
 plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
-     main="First Model")
+     main="Model #1")
 lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
 # TODO convert to a ggplot
 
@@ -190,7 +190,7 @@ total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
 plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
-     main="Updated Model")
+     main="Model #2")
 lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
 # TODO convert to a ggplot
 
@@ -218,7 +218,49 @@ total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
 plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
+     main="Model #3")
+lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
+
+
+
+# What about Zip Code?
+summary(train.data$`ZIP Code`)
+bd.nb.4 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level + Education + Family + 
+                        CreditCard + Online + `ZIP Code`,
+                      data=train.data)
+
+bd.nb.4
+
+validation.predictions.4 <- predict(bd.nb.4, newdata = validation.data, type = "class")
+head(validation.predictions.4)
+summary(validation.predictions.4)
+
+# look at a confusion matrix for the updated model
+confusionMatrix(validation.predictions.4, validation.data$Loan.Status)
+
+# plot a gain chart for the updated model
+validation.probabilities.4 <- predict(bd.nb.4, newdata = validation.data, type = "raw")
+gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
+              validation.probabilities.4[,1],
+              groups=100)
+
+total.accepted <- sum(validation.data$Loan.Status=="Accepts")
+yvals <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals <- c(0,gain$cume.obs)
+plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
      main="Full Model")
 lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
+
+# Which model do you think will perform best against the final test set?
+# chosen.model <- bd.nb
+# chosen.model <- bd.nb.2
+# chosen.model <- bd.nb.3
+# chosen.model <- bd.nb.4
+test.predictions <- predict(chosen.model, newdata = test.data, type = "class")
+head(test.predictions)
+summary(test.predictions)
+
+# look at a confusion matrix for the updated model
+confusionMatrix(test.predictions, test.data$Loan.Status)
 
 
