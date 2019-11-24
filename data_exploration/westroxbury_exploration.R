@@ -2,7 +2,7 @@ library(ggplot2)
 
 # from "Data Mining for Business Analytics"
 # https://www.dataminingbook.com/book/r-edition
-westroxbury <- read.csv("./WestRoxbury.csv")
+westroxbury <- read.csv("./data/WestRoxbury.csv")
 
 head(westroxbury)
 
