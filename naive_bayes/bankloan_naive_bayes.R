@@ -193,3 +193,32 @@ plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
      main="Updated Model")
 lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
 # TODO convert to a ggplot
+
+
+
+# try a model with all available categorical variables
+bd.nb.3 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level + Education + Family + 
+                        CreditCard + Online,
+                      data=train.data)
+
+validation.predictions.3 <- predict(bd.nb.3, newdata = validation.data, type = "class")
+head(validation.predictions.3)
+summary(validation.predictions.3)
+
+# look at a confusion matrix for the updated model
+confusionMatrix(validation.predictions.3, validation.data$Loan.Status)
+
+# plot a gain chart for the updated model
+validation.probabilities.3 <- predict(bd.nb.3, newdata = validation.data, type = "raw")
+gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
+              validation.probabilities.3[,1],
+              groups=100)
+
+total.accepted <- sum(validation.data$Loan.Status=="Accepts")
+yvals <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals <- c(0,gain$cume.obs)
+plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
+     main="Full Model")
+lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
+
+
