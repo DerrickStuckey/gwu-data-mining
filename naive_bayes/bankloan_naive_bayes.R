@@ -118,15 +118,12 @@ confusionMatrix(validation.predictions.1, validation.data$Loan.Status)
 validation.predictions.1b <- validation.probabilities.1[,1] > 0.5
 summary(validation.predictions.1b)
 
-validation.predictions.2 <- ifelse(validation.probabilities.1[,1] > 0.25,
+validation.predictions.1c <- ifelse(validation.probabilities.1[,1] > 0.25,
                                    "Accepts","Rejects")
-validation.predictions.2 <- factor(validation.predictions.2)
-summary(validation.predictions.2)
+validation.predictions.1c <- factor(validation.predictions.1c)
+summary(validation.predictions.1c)
 
-confusionMatrix(validation.predictions.2, validation.data$Loan.Status)
-
-
-# TODO add more variables by converting some numeric variables to factors
+confusionMatrix(validation.predictions.1c, validation.data$Loan.Status)
 
 
 # plot a lift curve (using 'gains' library)
@@ -139,7 +136,60 @@ total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
 plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
-     main="")
+     main="First Model")
 lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
 # TODO convert to a ggplot
 
+
+
+# look at some numeric variables that could be added
+boxplot(train.data$Age ~ train.data$Loan.Status)
+boxplot(train.data$Experience ~ train.data$Loan.Status)
+boxplot(train.data$Income ~ train.data$Loan.Status)
+
+# convert 'Income' to a categorical variable
+summary(train.data$Income)
+hist(train.data$Income)
+train.data$Income.Level <- cut(train.data$Income,breaks=4)
+table(train.data$Income.Level)
+
+# choose our breaks explicitly so they can be applied to training, validation, and test sets
+income.breaks <- c(0,50,100,150,Inf)
+train.data$Income.Level <- cut(train.data$Income,breaks=income.breaks)
+validation.data$Income.Level <- cut(validation.data$Income,breaks=income.breaks)
+test.data$Income.Level <- cut(test.data$Income,breaks=income.breaks)
+table(train.data$Income.Level)
+is.factor(train.data$Income.Level)
+
+# add 'Income' and some other variables
+bd.nb.2 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level,
+                    data=train.data)
+
+bd.nb.2
+
+# predicted probability of each class using the updated model
+validation.probabilities.2 <- predict(bd.nb.2, newdata = validation.data, type = "raw")
+head(validation.probabilities.2)
+summary(validation.probabilities.2)
+table(validation.probabilities.2[,1])
+
+# force the model to actually choose a class
+validation.predictions.2 <- predict(bd.nb.2, newdata = validation.data, type = "class")
+head(validation.predictions.2)
+summary(validation.predictions.2)
+
+# look at a confusion matrix for the updated model
+confusionMatrix(validation.predictions.2, validation.data$Loan.Status)
+
+# plot a gain chart for the updated model
+gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
+              validation.probabilities.2[,1],
+              groups=16)
+
+total.accepted <- sum(validation.data$Loan.Status=="Accepts")
+yvals <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals <- c(0,gain$cume.obs)
+plot(xvals, yvals, type="l", xlab="Offers Made", ylab="Number Accepted",
+     main="Updated Model")
+lines(x=c(0,nrow(validation.data)), y=c(0,total.accepted), lty=2)
+# TODO convert to a ggplot
