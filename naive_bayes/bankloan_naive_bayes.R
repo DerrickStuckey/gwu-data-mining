@@ -266,6 +266,11 @@ ggplot() +
               slope=total.accepted/nrow(validation.data),
               linetype="dashed")
 
+
+
+
+### Evaluate Against the Final Test Set ###
+
 # Which model do you think will perform best against the final test set?
 test.predictions.1 <- predict(bd.nb, newdata = test.data, type = "class")
 test.predictions.2 <- predict(bd.nb.2, newdata = test.data, type = "class")
@@ -279,5 +284,62 @@ confusionMatrix(test.predictions.3, test.data$Loan.Status)
 confusionMatrix(test.predictions.4, test.data$Loan.Status)
 
 # plot lift for each model
+total.accepted <- sum(test.data$Loan.Status=="Accepts")
+
+test.probabilities.1 <- predict(bd.nb, newdata = test.data, type = "raw")
+test.gain.1 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
+                     test.probabilities.1[,1],
+              groups=100)
+test.xvals.1 <- c(0,test.gain.1$cume.obs)
+test.yvals.1 <- c(0,test.gain.1$cume.pct.of.total*total.accepted)
+
+test.probabilities.2 <- predict(bd.nb.2, newdata = test.data, type = "raw")
+test.gain.2 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
+                     test.probabilities.2[,1],
+                     groups=100)
+
+test.xvals.2 <- c(0,test.gain.2$cume.obs)
+test.yvals.2 <- c(0,test.gain.2$cume.pct.of.total*total.accepted)
+
+test.probabilities.3 <- predict(bd.nb.3, newdata = test.data, type = "raw")
+test.gain.3 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
+                     test.probabilities.3[,1],
+                     groups=100)
+
+test.xvals.3 <- c(0,test.gain.3$cume.obs)
+test.yvals.3 <- c(0,test.gain.3$cume.pct.of.total*total.accepted)
+
+test.probabilities.4 <- predict(bd.nb.4, newdata = test.data, type = "raw")
+test.gain.4 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
+                     test.probabilities.4[,1],
+                     groups=100)
+
+test.xvals.4 <- c(0,test.gain.4$cume.obs)
+test.yvals.4 <- c(0,test.gain.4$cume.pct.of.total*total.accepted)
+
+# create a dataframe with all the gain values together
+test.gain.1 <- data.frame("offers"=test.xvals.1,
+                          "acceptances"=test.yvals.1,
+                          "model"="Model 1")
+test.gain.2 <- data.frame("offers"=test.xvals.2,
+                          "acceptances"=test.yvals.2,
+                          "model"="Model 2")
+test.gain.3 <- data.frame("offers"=test.xvals.3,
+                          "acceptances"=test.yvals.3,
+                          "model"="Model 3")
+test.gain.4 <- data.frame("offers"=test.xvals.4,
+                          "acceptances"=test.yvals.4,
+                          "model"="Model 4")
+test.results.combined <- rbind(test.gain.1, test.gain.2, test.gain.3, test.gain.4)
+
+ggplot(data=test.results.combined) + 
+  geom_line(mapping = aes(x=offers, y=acceptances, color=model)) +
+  xlab("Offers Made") + ylab("Number Accepted") + 
+  ggtitle("Model Comparison") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.accepted/nrow(validation.data),
+              linetype="dashed")
+
 
 
