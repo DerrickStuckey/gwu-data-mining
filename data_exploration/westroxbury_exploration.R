@@ -10,6 +10,10 @@ head(westroxbury)
 ggplot(data=westroxbury) + 
   geom_histogram(mapping=aes(x=TOTAL.VALUE))
 
+# density plot of total value (like histogram but with proportion)
+ggplot(data=westroxbury) + 
+  geom_density(mapping=aes(x=TOTAL.VALUE))
+
 # simple scatter plot of total value vs square footage
 ggplot(data=westroxbury) + 
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE))
