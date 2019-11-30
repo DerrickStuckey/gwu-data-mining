@@ -92,7 +92,7 @@ train.data$price.pred.carat.poly.3 <- predict(carat.lm.poly.3, newdata=train.dat
 ggplot(data=train.data[train.data.sample.idx,]) + 
   geom_point(mapping = aes(x=price.pred.carat.poly.3,y=price))
 
-# look at the distribution of residuals
+# look at the distribution of residuals for the poly 3 model
 train.data$residuals.carat.poly.3 <- train.data$price - train.data$price.pred.carat.poly.3
 ggplot(data=train.data[train.data.sample.idx,]) +
   geom_histogram(mapping = aes(x=residuals.carat.poly.3))
@@ -103,12 +103,100 @@ ggplot(data=train.data[train.data.sample.idx,]) +
           distribution = stats::qnorm)
 
 
+### Why not use higher-order polynomials all the time? ###
+
+# try with a tiny training dataset
+set.seed(11235)
+train.data.tiny.index <- sample(1:nrow(train.data), 10)
+train.data.tiny <- train.data[train.data.tiny.index,]
+
+ggplot(data=train.data.tiny) + 
+  geom_point(mapping = aes(x = carat, y = price))
+
+# train our 3 polynomial models on the tiny dataset
+tiny.lm.1 <- lm(data=train.data.tiny, price ~ carat)
+summary(tiny.lm.1)
+
+tiny.lm.2 <- lm(data=train.data.tiny, price ~ carat + I(carat^2))
+summary(tiny.lm.2)
+
+tiny.lm.3 <- lm(data=train.data.tiny, price ~ carat + I(carat^2) + I(carat^3))
+summary(tiny.lm.3)
+
+# look at the curves fit by each model
+
+# simple linear model
+tiny.lm.1$coefficients
+ggplot(data=train.data.tiny) + 
+  geom_point(mapping = aes(x = carat, y = price)) + 
+  stat_function(geom = "line",
+                fun = function(x) tiny.lm.1$coefficients[1] + 
+                  tiny.lm.1$coefficients[2]*x
+                )
 
 
-# train a basic linear model to predict price using all other variables as predictors
-dlm <- lm(data = train.data, price ~ .)
-summary(dlm)
+# 2nd-order polynomial
+tiny.lm.2$coefficients
+ggplot(data=train.data.tiny) + 
+  geom_point(mapping = aes(x = carat, y = price)) + 
+  stat_function(geom = "line",
+                fun = function(x) tiny.lm.2$coefficients[1] + 
+                  tiny.lm.2$coefficients[2]*x + 
+                  tiny.lm.2$coefficients[3]*x^2
+  )
 
+# 3rd-order polynomial
+tiny.lm.3$coefficients
+ggplot(data=train.data.tiny) + 
+  geom_point(mapping = aes(x = carat, y = price)) + 
+  stat_function(geom = "line",
+                fun = function(x) tiny.lm.3$coefficients[1] + 
+                  tiny.lm.3$coefficients[2]*x + 
+                  tiny.lm.3$coefficients[3]*x^2 + 
+                  tiny.lm.3$coefficients[4]*x^3
+  )
+
+
+# 5th-order polynomial
+tiny.lm.5 <- lm(data=train.data.tiny, price ~ carat + I(carat^2) + I(carat^3)
+                + I(carat^4) + I(carat^5))
+summary(tiny.lm.5)
+
+tiny.lm.5$coefficients
+ggplot(data=train.data.tiny) + 
+  geom_point(mapping = aes(x = carat, y = price)) + 
+  stat_function(geom = "line",
+                fun = function(x) tiny.lm.5$coefficients[1] + 
+                  tiny.lm.5$coefficients[2]*x + 
+                  tiny.lm.5$coefficients[3]*x^2 + 
+                  tiny.lm.5$coefficients[4]*x^3 + 
+                  tiny.lm.5$coefficients[5]*x^4 + 
+                  tiny.lm.5$coefficients[6]*x^5
+  )
+
+
+# 8th-order polynomial
+tiny.lm.8 <- lm(data=train.data.tiny, price ~ carat + I(carat^2) + I(carat^3)
+                + I(carat^4) + I(carat^5) + I(carat^6) + I(carat^7)+ I(carat^8))
+summary(tiny.lm.8)
+
+tiny.lm.8$coefficients
+ggplot(data=train.data.tiny) + 
+  geom_point(mapping = aes(x = carat, y = price)) + 
+  stat_function(geom = "line",
+                fun = function(x) tiny.lm.8$coefficients[1] + 
+                  tiny.lm.8$coefficients[2]*x + 
+                  tiny.lm.8$coefficients[3]*x^2 + 
+                  tiny.lm.8$coefficients[4]*x^3 + 
+                  tiny.lm.8$coefficients[5]*x^4 + 
+                  tiny.lm.8$coefficients[6]*x^5 + 
+                  tiny.lm.8$coefficients[7]*x^6 + 
+                  tiny.lm.8$coefficients[8]*x^7 + 
+                  tiny.lm.8$coefficients[9]*x^8
+  )
+
+# check out the validation results
+val.preds.tiny.lm.1 <- predict(tiny.lm.1)
 
 
 
