@@ -33,7 +33,10 @@ train.data.sample.idx <- sample(1:nrow(train.data), 1000)
 
 # plot price vs. the model predictions
 ggplot(data=train.data[train.data.sample.idx,]) + 
-  geom_point(mapping = aes(x=price.pred.carat,y=price))
+  geom_point(mapping = aes(x=price.pred.carat,y=price)) +
+  coord_equal(ratio=1) + 
+  geom_abline(intercept=0, slope=1, color="red")
+# coord_equal ensures the x and y scales are the same
 
 # compare with the plot of price vs carat directly
 ggplot(data=train.data[train.data.sample.idx,]) + 
@@ -70,7 +73,9 @@ summary(carat.lm.poly.2)
 # plot price vs predicted price for the polynomial model
 train.data$price.pred.carat.poly.2 <- predict(carat.lm.poly.2, newdata=train.data)
 ggplot(data=train.data[train.data.sample.idx,]) + 
-  geom_point(mapping = aes(x=price.pred.carat.poly.2,y=price))
+  geom_point(mapping = aes(x=price.pred.carat.poly.2,y=price)) +
+  coord_equal(ratio=1) + 
+  geom_abline(intercept=0, slope=1, color="red")
 
 # look at the distribution of residuals
 train.data$residuals.carat.poly.2 <- train.data$price - train.data$price.pred.carat.poly.2
@@ -90,7 +95,9 @@ summary(carat.lm.poly.3)
 train.data$price.pred.carat.poly.3 <- predict(carat.lm.poly.3, newdata=train.data)
 
 ggplot(data=train.data[train.data.sample.idx,]) + 
-  geom_point(mapping = aes(x=price.pred.carat.poly.3,y=price))
+  geom_point(mapping = aes(x=price.pred.carat.poly.3,y=price)) +
+  coord_equal(ratio=1) + 
+  geom_abline(intercept=0, slope=1, color="red")
 
 # look at the distribution of residuals for the poly 3 model
 train.data$residuals.carat.poly.3 <- train.data$price - train.data$price.pred.carat.poly.3
@@ -196,7 +203,21 @@ ggplot(data=train.data.tiny) +
   )
 
 # check out the validation results
-val.preds.tiny.lm.1 <- predict(tiny.lm.1)
+val.preds.tiny.lm.1 <- predict(tiny.lm.1, newdata = validation.data)
+ggplot() +
+  geom_point(mapping = aes(x=val.preds.tiny.lm.1, y=validation.data$price)) +
+  coord_equal(ratio=1)
 
+val.preds.tiny.lm.2 <- predict(tiny.lm.2, newdata = validation.data)
+plot(val.preds.tiny.lm.2,validation.data$price)
+
+val.preds.tiny.lm.3 <- predict(tiny.lm.3, newdata = validation.data)
+plot(val.preds.tiny.lm.3,validation.data$price)
+
+val.preds.tiny.lm.5 <- predict(tiny.lm.5, newdata = validation.data)
+plot(val.preds.tiny.lm.5,validation.data$price)
+
+val.preds.tiny.lm.8 <- predict(tiny.lm.8, newdata = validation.data)
+plot(val.preds.tiny.lm.8,validation.data$price)
 
 
