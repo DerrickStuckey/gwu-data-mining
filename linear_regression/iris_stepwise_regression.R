@@ -7,7 +7,7 @@ dim(iris)
 # https://www.snaplogic.com/machine-learning-showcase/iris-flower-classification
 
 # training / test split (no validation set this time)
-set.seed(11235)
+set.seed(12345)
 train.proportion <- 0.67
 test.proportion <- 0.33
 
