@@ -7,7 +7,7 @@ dim(iris)
 # https://www.snaplogic.com/machine-learning-showcase/iris-flower-classification
 
 # training / test split (no validation set this time)
-set.seed(12345)
+set.seed(11235)
 train.proportion <- 0.67
 test.proportion <- 0.33
 
@@ -49,12 +49,12 @@ ggplot(data=train.data) +
 # train a linear model for Petal Length against each predictor individually
 
 # Petal Length as predictor
-Petal.Length.lm <- lm(data = train.data, Sepal.Length ~ Petal.Length)
-summary(Petal.Length.lm)
+petal.length.lm <- lm(data = train.data, Sepal.Length ~ Petal.Length)
+summary(petal.length.lm)
 
 # Petal Width as predictor
-petal.lm <- lm(data = train.data, Sepal.Length ~ Petal.Width)
-summary(petal.lm)
+petal.width.lm <- lm(data = train.data, Sepal.Length ~ Petal.Width)
+summary(petal.width.lm)
 
 # Sepal Width as predictor
 sepal.width.lm <- lm(data = train.data, Sepal.Length ~ Sepal.Width)
@@ -100,7 +100,8 @@ summary(step.lm.forward)
 ### Feature Engineering ###
 
 # add an interaction term
-inter.lm <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species)
+inter.lm <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species + 
+                 Petal.Length*Species + Petal.Width*Species)
 summary(inter.lm)
 
 # run stepwise regression again
@@ -113,29 +114,34 @@ summary(step.lm.backward.inter)
 test.data$preds.full.lm <- predict(full.lm, newdata=test.data)
 test.data$preds.step.lm <- predict(step.lm.backward, newdata=test.data)
 test.data$preds.step.inter.lm <- predict(step.lm.backward.inter, newdata = test.data)
-test.data$preds.Petal.Length.lm <- predict(Petal.Length.lm, newdata = test.data)
+test.data$preds.petal.length.lm <- predict(petal.length.lm, newdata = test.data)
 
 # R-squared for the test results
 cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
 cor(test.data$preds.step.lm, test.data$Sepal.Length)^2
 cor(test.data$preds.step.inter.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.Petal.Length.lm, test.data$Sepal.Length)^2
+cor(test.data$preds.petal.length.lm, test.data$Sepal.Length)^2
 
 # plot actual values vs. predictions for each
+
 ggplot(data=test.data) + 
   geom_point(mapping = aes(x=preds.full.lm, y=Sepal.Length)) + 
-  geom_abline(intercept = 0, slope = 1, color = "red")
+  geom_abline(intercept = 0, slope = 1, color = "red") + 
+  ggtitle("Full Linear Model")
 
 ggplot(data=test.data) + 
   geom_point(mapping = aes(x=preds.step.lm, y=Sepal.Length)) + 
-  geom_abline(intercept = 0, slope = 1, color = "red")
+  geom_abline(intercept = 0, slope = 1, color = "red") + 
+  ggtitle("Stepwise")
 
 ggplot(data=test.data) + 
   geom_point(mapping = aes(x=preds.step.inter.lm, y=Sepal.Length)) + 
-  geom_abline(intercept = 0, slope = 1, color = "red")
+  geom_abline(intercept = 0, slope = 1, color = "red") + 
+  ggtitle("Stepwise with Interaction Terms")
 
 ggplot(data=test.data) + 
-  geom_point(mapping = aes(x=preds.Petal.Length.lm, y=Sepal.Length)) + 
-  geom_abline(intercept = 0, slope = 1, color = "red")
+  geom_point(mapping = aes(x=preds.petal.length.lm, y=Sepal.Length)) + 
+  geom_abline(intercept = 0, slope = 1, color = "red") + 
+  ggtitle("Petal Length Only")
 
 
