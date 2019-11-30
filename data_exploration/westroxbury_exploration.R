@@ -32,6 +32,9 @@ summary(westroxbury$TOTAL.VALUE)
 table(westroxbury$FLOORS)
 table(westroxbury$REMODEL)
 
+# correlation between two variables
+cor(westroxbury$TOTAL.VALUE, westroxbury$LOT.SQFT)
+
 # ggplot histogram of total value
 ggplot(data=westroxbury) + 
   geom_histogram(mapping=aes(x=TOTAL.VALUE))
@@ -87,11 +90,6 @@ ggplot(data=roxbury.sample) +
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE))
 
 
-
-
-
-
-
 # add another variable, BEDROOMS, into the mix
 
 # distribution of values for REMODEL variable
@@ -115,7 +113,8 @@ ggplot(data=westroxbury) +
            position="dodge")
 
 # simple heatmap of correlations between numeric variables
-heatmap(cor(subset(westroxbury,select=-c(REMODEL))))
+# (all the variables except REMODEL and BEDROOMS are numeric)
+heatmap(cor(subset(westroxbury,select=-c(REMODEL,BEDROOMS))))
 
 # plot combinations of variables
 library(GGally)
