@@ -4,7 +4,33 @@ library(ggplot2)
 # https://www.dataminingbook.com/book/r-edition
 westroxbury <- read.csv("./data/WestRoxbury.csv")
 
+# take a quick look at the data
 head(westroxbury)
+dim(westroxbury)
+names(westroxbury)
+
+# select individual rows
+westroxbury[1,]
+westroxbury[2,]
+westroxbury[1:5,]
+westroxbury[c(1,3,5),]
+
+# select individual columns (and rows 1-10)
+westroxbury[1:10,1]
+westroxbury[1:10,2]
+westroxbury$TOTAL.VALUE[1:10]
+westroxbury$TAX[1:10]
+
+# view the whole table
+View(westroxbury)
+
+# some summary stats
+mean(westroxbury$TOTAL.VALUE)
+median(westroxbury$TOTAL.VALUE)
+summary(westroxbury$TOTAL.VALUE)
+
+table(westroxbury$FLOORS)
+table(westroxbury$REMODEL)
 
 # ggplot histogram of total value
 ggplot(data=westroxbury) + 
