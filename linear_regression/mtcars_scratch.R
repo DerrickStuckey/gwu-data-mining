@@ -42,3 +42,10 @@ mean(step.scores)
 
 median(full.scores)
 median(step.scores)
+
+# though for any individual run, it's a toss-up
+full.scores[1]
+step.scores[1]
+
+full.scores[2]
+step.scores[2]
