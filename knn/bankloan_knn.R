@@ -76,8 +76,7 @@ sd(train.data$Age)
 mean(train.data.norm$Age)
 sd(train.data.norm$Age)
 
-# predict Loan Status with a k-nearest neighbors model using
-# all the numerical predictors available
+# predict Loan Status with a k-nearest neighbors model with k=3
 loan.knn.3.preds <- knn(train = train.data.norm[,selected.vars],
                  test = validation.data.norm[,selected.vars],
                  cl = train.data.norm$Loan.Status,
@@ -88,5 +87,54 @@ summary(validation.data.norm$Loan.Status)
 
 confusionMatrix(loan.knn.3.preds, validation.data.norm$Loan.Status)
 
+# TODO look at a few specific data points in validation dataset as examples
+
+### try different values of k to see how they perform ###
+
+# predict Loan Status with a k-nearest neighbors model with k=4
+loan.knn.4.preds <- knn(train = train.data.norm[,selected.vars],
+                        test = validation.data.norm[,selected.vars],
+                        cl = train.data.norm$Loan.Status,
+                        k=4)
+
+confusionMatrix(loan.knn.4.preds, validation.data.norm$Loan.Status)
+
+
+# try several different values of k
+sensitivity.vals <- c()
+specificity.vals <- c()
+k.vals <- 1:10
+for (k.val in k.vals) {
+  loan.knn.preds <- knn(train = train.data.norm[,selected.vars],
+                        test = validation.data.norm[,selected.vars],
+                        cl = train.data.norm$Loan.Status,
+                        k=k.val)
+  cf <- confusionMatrix(loan.knn.preds, validation.data.norm$Loan.Status)
+  sensitivity.vals <- c(sensitivity.vals, cf$byClass['Sensitivity'])
+  specificity.vals <- c(specificity.vals, cf$byClass['Specificity'])
+}
+
+# construct a dataframe to check out the results
+sensitivity.df <- data.frame("k"=k.vals,
+                             "metric"="Sensitivity",
+                             "value"=sensitivity.vals)
+specificity.df <- data.frame("k"=k.vals,
+                             "metric"="Specificity",
+                             "value"=specificity.vals)
+results.df <- rbind(sensitivity.df, specificity.df)
+
+# plot sensitivity and specificity vs k
+ggplot(results.df) + 
+  geom_line(mapping = aes(x=k, y=value, col=metric)) + 
+  ylim(c(0.5,1))
+
+balanced.accuracy <- (sensitivity.vals + specificity.vals) / 2
+
+# plot balanced accuracy vs k
+ggplot() + 
+  geom_line(mapping = aes(x=k.vals, y=balanced.accuracy)) + 
+  ylim(c(0.5,1))
 
 # TODO now try over-sampling the target class "Accepts"
+
+
