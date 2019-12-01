@@ -138,3 +138,6 @@ ggplot() +
 # TODO now try over-sampling the target class "Accepts"
 
 
+# TODO test the best model against the actual test set
+
+
