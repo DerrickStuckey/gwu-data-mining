@@ -16,18 +16,19 @@ for (i in 1:100) {
   train.idx <- sample(1:nrow(mtcars), nrow(mtcars)*train.proportion)
   train.idx
   
+  # train/test split
   train.data <- mtcars[train.idx,]
   test.data <- mtcars[-train.idx,]
   
-  nrow(train.data)
-  nrow(test.data)
-  
+  # train a linear model on all available predictors
   full.lm <- lm(mpg ~ ., data = train.data)
   summary(full.lm)
   
+  # drop the less-useful predictors through backwards stepwise regression
   step.lm <- step(full.lm, direction = "backward")
   summary(step.lm)
   
+  # obtain predictions for the test set
   test.data$preds.full.lm <- predict(full.lm, newdata = test.data)
   test.data$preds.step.lm <- predict(step.lm, newdata = test.data)
   
@@ -42,6 +43,8 @@ mean(step.scores)
 
 median(full.scores)
 median(step.scores)
+
+mean(step.scores > full.scores)
 
 # though for any individual run, it's a toss-up
 full.scores[1]
