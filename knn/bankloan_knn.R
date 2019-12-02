@@ -127,13 +127,17 @@ results.df <- rbind(sensitivity.df, specificity.df)
 ggplot(results.df) + 
   geom_line(mapping = aes(x=k, y=value, col=metric)) + 
   ylim(c(0.5,1))
+  # ylim(c(0,1))
 
 balanced.accuracy <- (sensitivity.vals + specificity.vals) / 2
 
 # plot balanced accuracy vs k
 ggplot() + 
   geom_line(mapping = aes(x=k.vals, y=balanced.accuracy)) + 
-  ylim(c(0.5,1))
+  ylim(c(0.7,1))
+
+# what happens if we try really large values of k?
+k.vals <- c(1, 3, 5, 9, 15, 21, 25, 31, 51, 99)
 
 # TODO now try over-sampling the target class "Accepts"
 
