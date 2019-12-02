@@ -47,4 +47,17 @@ surv.tree.1 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
 
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
 
+# try some different parameters for minsplit, minbucket, maxdepth, 
+# cp (complexity parameter; default = 0.01)
+# ?rpart.control explains meaning of these parameters
+surv.tree.2 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
+                     data=train.data,
+                     method="class"
+                     # ,minsplit=10
+                     # ,minbucket=5
+                     ,maxdepth=3
+                     # ,cp=0.02
+                     )
+
+prp(surv.tree.2, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
 
