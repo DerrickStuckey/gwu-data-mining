@@ -1,5 +1,6 @@
 library(rpart)
 library(rpart.plot)
+library(gains)
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
@@ -7,8 +8,9 @@ titanic.data <- read_csv("./data/titanic/train.csv")
 titanic.data
 dim(titanic.data)
 
-# 'Survived' should be a logical variable
-titanic.data$Survived <- as.logical(titanic.data$Survived)
+# confusionMatrix() works best if the target is a factor
+# rather than a numeric or logical variable
+titanic.data$Survived <- as.factor(titanic.data$Survived)
 
 # partition into training and test sets
 set.seed(12345)
@@ -53,11 +55,64 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
 surv.tree.2 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class"
-                     # ,minsplit=10
-                     # ,minbucket=5
                      ,maxdepth=3
-                     # ,cp=0.02
                      )
-
 prp(surv.tree.2, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
+
+
+surv.tree.3 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
+                     data=train.data,
+                     method="class"
+                     ,minsplit=40
+                     )
+prp(surv.tree.3, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
+
+
+surv.tree.4 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
+                     data=train.data,
+                     method="class",
+                     cp=0.002
+)
+prp(surv.tree.4, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
+
+# measure performance against a validation set
+validation.data$preds.tree.1 <- predict(surv.tree.1,
+                                        newdata=validation.data,
+                                        type="class")
+summary(validation.data$preds.tree.1)
+
+confusionMatrix(validation.data$preds.tree.1,
+                validation.data$Survived)
+
+
+# get probabilities instead
+probs.tree.1 <- predict(surv.tree.1,
+                                        newdata=validation.data,
+                                        type="prob")
+head(probs.tree.1)
+validation.data$survival.probs <- probs.tree.1[,2]
+
+# plot a lift chart with the probabilities
+gain <- gains(as.numeric(validation.data$Survived), 
+              validation.data$survival.probs,
+              groups=10)
+
+# set up lift chart variables
+total.survived <- sum(as.numeric(validation.data$Survived))
+yvals <- c(0,gain$cume.pct.of.total*total.survived)
+xvals <- c(0,gain$cume.obs)
+
+# plot the actual lift chart
+ggplot() + 
+  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  xlab("Predicted Survivors") + ylab("Actual Survivors") + 
+  ggtitle("Tree #1 Validation") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.survived/nrow(validation.data),
+              linetype="dashed")
+
+# notice: not too many actual points on the curve
+table(validation.data$survival.probs)
+
 
