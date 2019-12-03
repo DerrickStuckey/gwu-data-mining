@@ -84,18 +84,18 @@ summary(validation.data$preds.tree.1)
 confusionMatrix(validation.data$preds.tree.1,
                 validation.data$Survived)
 
-
 # get probabilities instead
 probs.tree.1 <- predict(surv.tree.1,
-                                        newdata=validation.data,
-                                        type="prob")
+                        newdata=validation.data,
+                        type="prob")
 head(probs.tree.1)
-validation.data$survival.probs <- probs.tree.1[,2]
+validation.data$survival.probs.1 <- probs.tree.1[,2]
 
 # plot a lift chart with the probabilities
 gain <- gains(as.numeric(validation.data$Survived), 
-              validation.data$survival.probs,
+              validation.data$survival.probs.1,
               groups=10)
+gain
 
 # set up lift chart variables
 total.survived <- sum(as.numeric(validation.data$Survived))
@@ -113,6 +113,6 @@ ggplot() +
               linetype="dashed")
 
 # notice: not too many actual points on the curve
-table(validation.data$survival.probs)
+table(validation.data$survival.probs.1)
 
 
