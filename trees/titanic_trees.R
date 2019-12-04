@@ -91,6 +91,8 @@ probs.tree.1 <- predict(surv.tree.1,
 head(probs.tree.1)
 validation.data$survival.probs.1 <- probs.tree.1[,2]
 
+# aside: where do these probabilities actually come from?
+
 # plot a lift chart with the probabilities
 gain <- gains(as.numeric(validation.data$Survived), 
               validation.data$survival.probs.1,
@@ -112,7 +114,62 @@ ggplot() +
               slope=total.survived/nrow(validation.data),
               linetype="dashed")
 
-# notice: not too many actual points on the curve
+# aside: not too many actual points on the curve - why is this?
 table(validation.data$survival.probs.1)
 
+
+
+# plot accuracy vs training, accuracy vs holdout against CP
+cps <- c(0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1)
+# cps <- c(0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1)
+balanced.accuracy.train <- c()
+balanced.accuracy.val <- c()
+
+# set minsplit, minbucket, maxdepth to be extremely loose so that only 
+# cp (complexity parameter) determines the tree shape
+for (cp in cps) {
+  print(cp)
+  surv.tree.cp <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age,
+                       data=train.data,
+                       method="class",
+                       cp=cp,
+                       minsplit=2,
+                       minbucket=1,
+                       maxdepth=30,
+                       xval=0
+  )
+  
+  # get predictions for each value in the training and validation sets
+  train.preds <- predict(surv.tree.cp, newdata=train.data, type="class")
+  val.preds <- predict(surv.tree.cp, newdata=validation.data, type="class")
+  
+  # confusion matrix for train and test sets
+  cm.train <- confusionMatrix(train.preds, train.data$Survived)
+  cm.val <- confusionMatrix(val.preds, validation.data$Survived)
+  
+  # pull out balanced accuracy from each confusion matrix and add it to the array
+  balanced.accuracy.train <- c(balanced.accuracy.train,
+                               cm.train$byClass['Balanced Accuracy'])
+  balanced.accuracy.val <- c(balanced.accuracy.val,
+                             cm.val$byClass['Balanced Accuracy'])
+}
+
+# set up a dataframe to plot both series with a legend
+train.accuracy <- data.frame("cp"=cps,
+                             "dataset"="Training",
+                             "accuracy"=balanced.accuracy.train)
+val.accuracy <- data.frame("cp"=cps,
+                             "dataset"="Validation",
+                             "accuracy"=balanced.accuracy.val)
+full.accuracy <- rbind(train.accuracy, val.accuracy)
+
+# plot the performance vs. complexity parameter
+ggplot(data=full.accuracy) + 
+  geom_line(mapping = aes(x=cp, y=accuracy, col=dataset)) + 
+  ylab("Balanced Accuracy") + 
+  scale_x_log10(labels = scales::label_number(accuracy=0.001))
+
+
+# NOTES:
+# apparently rpart has no problem with variables that have some NA values e.g. Embarked, Age
 
