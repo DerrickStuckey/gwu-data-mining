@@ -15,6 +15,13 @@ westroxbury[2,]
 westroxbury[1:5,]
 westroxbury[c(1,3,5),]
 
+# hold on - what is c(1,3,5)?
+avector <- c(1,3,5)
+avector
+avector + 1
+anothervector <- c(avector,99)
+anothervector
+
 # select individual columns (and rows 1-10)
 westroxbury[1:10,1]
 westroxbury[1:10,2]
@@ -126,4 +133,11 @@ ggplot(data=roxbury.sample) +
 
 ggplot(data=roxbury.sample) + 
   geom_jitter(mapping=aes(x=BEDROOMS, y=TOTAL.VALUE))
+
+
+# TODO show some additional customization options
+# e.g. different themes, titles, axis names, transformation
+# to show the value of ggplot
+
+
 
