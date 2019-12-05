@@ -1,5 +1,3 @@
-library(ggplot2)
-
 # from "Data Mining for Business Analytics"
 # https://www.dataminingbook.com/book/r-edition
 westroxbury <- read.csv("./data/WestRoxbury.csv")
@@ -42,6 +40,10 @@ table(westroxbury$REMODEL)
 # correlation between two variables
 cor(westroxbury$TOTAL.VALUE, westroxbury$LOT.SQFT)
 
+# ggplot library
+# install.packages("ggplot2")
+library(ggplot2)
+
 # ggplot histogram of total value
 ggplot(data=westroxbury) + 
   geom_histogram(mapping=aes(x=TOTAL.VALUE))
@@ -66,6 +68,7 @@ ggplot(data=westroxbury) +
 nrow(westroxbury)
 set.seed(12345)
 sample.index <- sample(row.names(westroxbury), 500)
+head(sample.index)
 roxbury.sample <- westroxbury[sample.index,]
 
 # plot the sample only
@@ -129,15 +132,77 @@ ggpairs(subset(roxbury.sample,select=c(TOTAL.VALUE, BEDROOMS, LOT.SQFT)))
 
 # jitter example
 ggplot(data=roxbury.sample) + 
-  geom_point(mapping=aes(x=BEDROOMS, y=TOTAL.VALUE))
+  geom_point(mapping=aes(x=FLOORS, y=BEDROOMS))
 
 ggplot(data=roxbury.sample) + 
-  geom_jitter(mapping=aes(x=BEDROOMS, y=TOTAL.VALUE))
+  geom_jitter(mapping=aes(x=FLOORS, y=BEDROOMS))
 
 
-# TODO show some additional customization options
-# e.g. different themes, titles, axis names, transformation
-# to show the value of ggplot
+# Some aesthetic options
 
+# basic plot
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE))
+
+# specify axis labels
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
+  xlab("Living Area") + ylab("Home Value")
+
+# add a title
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms")
+
+# center the title
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# change the colour
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE), colour="darkblue") + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# note how this is different from
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE, col=REMODEL)) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# or this:
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE, col=BEDROOMS)) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme(plot.title = element_text(hjust = 0.5))
+is.factor(roxbury.sample$BEDROOMS)
+is.factor(roxbury.sample$REMODEL)
+
+# change the theme
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# even more themes
+# install.packages("ggthemes")
+library(ggthemes)
+
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme_economist() + 
+  theme(plot.title = element_text(hjust = 0.5))
 
 
