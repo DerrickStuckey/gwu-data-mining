@@ -185,6 +185,17 @@ ggplot(data=roxbury.sample) +
 is.factor(roxbury.sample$BEDROOMS)
 is.factor(roxbury.sample$REMODEL)
 
+# customize the colors used
+p <- ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE, col=BEDROOMS)) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+p + scale_color_gradient(low="blue", high="red")
+p + scale_color_gradient(low = "#d69ce1", high = "#bd5915")
+# from https://www.color-hex.com/
+
 # change the theme
 ggplot(data=roxbury.sample) + 
   geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
