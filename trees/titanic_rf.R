@@ -17,8 +17,6 @@ titanic.data$Survived <- as.factor(titanic.data$Survived)
 titanic.data$Sex <- as.factor(titanic.data$Sex)
 titanic.data$Embarked <- as.factor(titanic.data$Embarked)
 
-# TODO clean up data with missing values e.g. Age, Embarked
-
 # partition into training and test sets
 set.seed(12345)
 train.proportion <- 0.75
@@ -31,8 +29,18 @@ validation.data <- titanic.data[-train.index,]
 # check out the data
 View(train.data)
 
-surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare,
+# try a model with all "tidy" variables
+# aka those which are either numeric or have a small number of classes
+surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Age + Embarked,
                      data=train.data)
+summary(surv.rf.1)
+
+# which variables have missing values?
+summary(train.data)
+
+# for now, just drop the variables with missing values
+surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare
+                          data=train.data)
 summary(surv.rf.1)
 
 # TODO investigate properties of the RF
@@ -76,4 +84,20 @@ ggplot() +
               linetype="dashed")
 
 
+
+# what about the variables we left out?
+
+# let's create a new variable using 'Age', but with no missing values
+train.data$Age.Full <- train.data$Age
+train.data$Age.Full[is.na(train.data$Age.Full)] <- median(train.data$Age.Full, na.rm = TRUE)
+summary(train.data$Age)
+summary(train.data$Age.Full)
+
+# same for 'Embarked'
+
+# 
+
+surv.rf.2 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Age + Embarked,
+                          data=train.data)
+summary(surv.rf.2)
 
