@@ -173,5 +173,64 @@ surv.rf.2$importance
 
 # TODO any other model attributes that we should look at?
 
-# TODO tune the models?
+# TODO tune the models
+# could train a forest with 1 tree only and compare performance to simple rpart tree
+
+# from ?randomForest
+
+# ntree	
+# Number of trees to grow. This should not be set to too small a number, 
+# to ensure that every input row gets predicted at least a few times.
+
+# mtry	
+# Number of variables randomly sampled as candidates at each split. 
+# Note that the default values are different for 
+# classification (sqrt(p) where p is number of variables in x) and regression (p/3)
+
+# try mtry between 1 and 7 (the total number of variables)
+# default is sqrt(7)
+mtry.vals <- c(1:7)
+mtry.results <- c()
+
+for (mtry.val in mtry.vals) {
+  print(mtry.val)
+  # train a random forest with mtry = mtry.val
+  rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                               Age.Full + Embarked.Full,
+                             data=train.data,
+                             mtry = mtry.val)
+  
+  # obtain predictions for the current model 
+  # and "Balanced Accuracy" for those predictions
+  rf.preds <- predict(rf.current, newdata=validation.data)
+  cm <- confusionMatrix(rf.preds, validation.data$Survived)
+  balanced.accuracy <- cm$byClass['Balanced Accuracy']
+  mtry.results <- c(mtry.results, balanced.accuracy)
+}
+
+# plot the results
+ggplot() + 
+  geom_line(mapping = aes(x=mtry.vals, y=mtry.results)) + 
+  xlab("mtry") + ylab("Balanced Accuracy")
+
+# how can we be more confident that these results are not just due to random luck?
+
+
+# try a boosted tree
+library(adabag)
+library(rpart)
+
+surv.boost <- boosting(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                         Age.Full + Embarked.Full,
+                       data=train.data)
+
+
+# measure performance of the boosted tree
+validation.data$preds.boost <- predict(surv.boost,
+                                      newdata=validation.data,
+                                      type="class")
+
+confusionMatrix(validation.data$preds.boost, validation.data$Survived)
+
+
 
