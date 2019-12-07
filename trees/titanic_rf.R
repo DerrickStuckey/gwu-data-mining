@@ -43,9 +43,6 @@ surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare
                           data=train.data)
 summary(surv.rf.1)
 
-# TODO investigate properties of the RF
-
-
 # measure performance against a validation set
 validation.data$preds.rf.1 <- predict(surv.rf.1,
                                         newdata=validation.data,
@@ -65,7 +62,7 @@ validation.data$survival.probs.1 <- probs.rf.1[,2]
 # plot a lift chart with the probabilities
 gain <- gains(as.numeric(validation.data$Survived), 
               validation.data$survival.probs.1,
-              groups=10)
+              groups=50)
 gain
 
 # set up lift chart variables
@@ -86,18 +83,95 @@ ggplot() +
 
 
 # what about the variables we left out?
+# what values should we use in place of missing values?
 
 # let's create a new variable using 'Age', but with no missing values
+median.age <- median(train.data$Age.Full, na.rm = TRUE)
+median.age
 train.data$Age.Full <- train.data$Age
-train.data$Age.Full[is.na(train.data$Age.Full)] <- median(train.data$Age.Full, na.rm = TRUE)
+train.data$Age.Full[is.na(train.data$Age.Full)] <- median.age
 summary(train.data$Age)
 summary(train.data$Age.Full)
 
 # same for 'Embarked'
+summary(train.data$Embarked)
+mode.embarked <- "S"
+train.data$Embarked.Full <- train.data$Embarked
+train.data$Embarked.Full[is.na(train.data$Embarked.Full)] <- mode.embarked
+summary(train.data$Embarked.Full)
 
-# 
-
-surv.rf.2 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Age + Embarked,
+# train a new random forest using the same variables as before, plus the new ones
+surv.rf.2 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                            Age.Full + Embarked.Full,
                           data=train.data)
 summary(surv.rf.2)
+
+# measure performance against a validation set
+validation.data$preds.rf.2 <- predict(surv.rf.2,
+                                      newdata=validation.data,
+                                      type="class")
+
+# we have to also fill in the missing values for the validation set
+validation.data$Age.Full <- validation.data$Age
+validation.data$Age.Full[is.na(validation.data$Age.Full)] <- median.age
+validation.data$Embarked.Full <- validation.data$Embarked
+validation.data$Embarked.Full[is.na(validation.data$Embarked.Full)] <- mode.embarked
+
+# why don't we use median(validation.data$Age) 
+# or the mode of validation.data$Embarked ?
+
+# try again with validation data missing values filled in 
+validation.data$preds.rf.2 <- predict(surv.rf.2,
+                                      newdata=validation.data,
+                                      type="class")
+summary(validation.data$preds.rf.2)
+
+# check actual accuracy of the new model
+confusionMatrix(validation.data$preds.rf.2,
+                validation.data$Survived)
+
+# get probabilities instead, to plot another lift chart
+probs.rf.2 <- predict(surv.rf.2,
+                      newdata=validation.data,
+                      type="prob")
+head(probs.rf.2)
+validation.data$survival.probs.2 <- probs.rf.2[,2]
+
+# plot a lift chart with the probabilities
+gain.2 <- gains(as.numeric(validation.data$Survived), 
+              validation.data$survival.probs.2,
+              groups=50)
+gain.2
+
+# combine with values from the first lift chart, to compare the models in one plot
+total.survived <- sum(as.numeric(validation.data$Survived))
+yvals.2 <- c(0,gain.2$cume.pct.of.total*total.survived)
+xvals.2 <- c(0,gain.2$cume.obs)
+
+lift.inputs.1 <- data.frame("xvals"=xvals,
+                            "yvals"=yvals,
+                            "model"="Model 1")
+lift.inputs.2 <- data.frame("xvals"=xvals.2,
+                            "yvals"=yvals.2,
+                            "model"="Model 2")
+lift.inputs <- rbind(lift.inputs.1, lift.inputs.2)
+
+# plot the actual lift chart
+ggplot(data=lift.inputs) + 
+  geom_line(mapping = aes(x=xvals, y=yvals, col=model)) +
+  xlab("Predicted Survivors") + ylab("Actual Survivors") + 
+  ggtitle("Model Comparison") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.survived/nrow(validation.data),
+              linetype="dashed")
+
+
+# How important is each variable in each model?
+surv.rf.1$importance
+surv.rf.2$importance
+
+# TODO any other model attributes that we should look at?
+
+# TODO tune the models?
 
