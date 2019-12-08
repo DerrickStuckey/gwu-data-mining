@@ -1,6 +1,6 @@
 library(tidyverse)
 
-# check out our data
+# check out our data (included with 'tidyverse' package)
 diamonds
 
 # training/test/validation split
