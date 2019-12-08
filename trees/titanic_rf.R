@@ -39,7 +39,7 @@ summary(surv.rf.1)
 summary(train.data)
 
 # for now, just drop the variables with missing values
-surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare
+surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare,
                           data=train.data)
 summary(surv.rf.1)
 
@@ -86,7 +86,7 @@ ggplot() +
 # what values should we use in place of missing values?
 
 # let's create a new variable using 'Age', but with no missing values
-median.age <- median(train.data$Age.Full, na.rm = TRUE)
+median.age <- median(train.data$Age, na.rm = TRUE)
 median.age
 train.data$Age.Full <- train.data$Age
 train.data$Age.Full[is.na(train.data$Age.Full)] <- median.age
@@ -171,10 +171,8 @@ ggplot(data=lift.inputs) +
 surv.rf.1$importance
 surv.rf.2$importance
 
-# TODO any other model attributes that we should look at?
 
-# TODO tune the models
-# could train a forest with 1 tree only and compare performance to simple rpart tree
+### Model parameter tuning ###
 
 # from ?randomForest
 
@@ -216,21 +214,32 @@ ggplot() +
 # how can we be more confident that these results are not just due to random luck?
 
 
-# try a boosted tree
-library(adabag)
-library(rpart)
+# try several different values for ntree
+# ntree.vals <- c(1,2,5,10,20,50,100,200,500,1000,2000)
+ntree.vals <- rep(c(1,2,5,10,20,50,100,200,500,1000,2000),5)
+ntree.results <- c()
 
-surv.boost <- boosting(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
-                         Age.Full + Embarked.Full,
-                       data=train.data)
+for (ntree.val in ntree.vals) {
+  print(ntree.val)
+  # train a random forest with ntree = ntree.val
+  rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                               Age.Full + Embarked.Full,
+                             data=train.data,
+                             ntree = ntree.val)
+  
+  # obtain predictions for the current model 
+  # and "Balanced Accuracy" for those predictions
+  rf.preds <- predict(rf.current, newdata=validation.data)
+  cm <- confusionMatrix(rf.preds, validation.data$Survived)
+  balanced.accuracy <- cm$byClass['Balanced Accuracy']
+  ntree.results <- c(ntree.results, balanced.accuracy)
+}
 
-
-# measure performance of the boosted tree
-validation.data$preds.boost <- predict(surv.boost,
-                                      newdata=validation.data,
-                                      type="class")
-
-confusionMatrix(validation.data$preds.boost, validation.data$Survived)
-
+# plot the results
+ggplot() + 
+  geom_point(mapping = aes(x=ntree.vals, y=ntree.results)) + 
+  xlab("ntree") + ylab("Balanced Accuracy") + 
+  scale_x_log10()
+# if too many points are overlapping, try geom_jitter instead
 
 
