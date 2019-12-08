@@ -77,13 +77,8 @@ train.data %>%
     cd.account.pct = mean(`CD Account`)
   )
 
-# score the validation data
-# predict() throws up some warnings if newdata contains extra columns, 
-# so pull out just the ones that the model needs
-validation.data.predictors <- validation.data %>% select(`Securities Account`, `CD Account`)
-
 # predicted probability of each class
-validation.probabilities.1 <- predict(bd.nb, newdata = validation.data.predictors, type = "raw")
+validation.probabilities.1 <- predict(bd.nb, newdata = validation.data, type = "raw")
 head(validation.probabilities.1)
 summary(validation.probabilities.1)
 table(validation.probabilities.1[,1]) # only 4 possible values since we have only 2 binary predictors
@@ -91,7 +86,7 @@ table(validation.probabilities.1[,1]) # only 4 possible values since we have onl
 # TODO manually calculate the probabilties for a few example data points
 
 # force the model to actually choose a class
-validation.predictions.1 <- predict(bd.nb, newdata = validation.data.predictors, type = "class")
+validation.predictions.1 <- predict(bd.nb, newdata = validation.data, type = "class")
 head(validation.predictions.1)
 summary(validation.predictions.1)
 
@@ -342,4 +337,10 @@ ggplot(data=test.results.combined) +
               linetype="dashed")
 
 
+# use plotROC instead of gains library for a simple ROC plot
+library(plotROC)
+# rocplot <- 
+ggplot(mapping = aes(m = test.probabilities.1[,1], d = test.data$Loan.Status=="Accepts")) + 
+  geom_roc(n.cuts=20,labels=FALSE) + 
+  style_roc(theme = theme_grey) 
 
