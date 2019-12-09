@@ -59,3 +59,9 @@ accuracy(test.data$rating, test.preds.unscaled.nn.1)
 
 # are these different than before?
 
+
+# TODO tune the model
+# show overfitting with high number of hidden nodes
+# reduce overfitting by limiting stepmax argument
+
+
