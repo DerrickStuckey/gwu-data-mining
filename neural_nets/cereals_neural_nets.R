@@ -1,5 +1,6 @@
 # install.packages("neuralnet")
 library(neuralnet)
+library(tidyverse)
 
 # from https://s3-ap-south-1.amazonaws.com/av-blog-media/wp-content/uploads/2017/09/07122416/cereals.csv
 # via https://www.analyticsvidhya.com/blog/2017/09/creating-visualizing-neural-network-in-r/
@@ -63,5 +64,7 @@ accuracy(test.data$rating, test.preds.unscaled.nn.1)
 # TODO tune the model
 # show overfitting with high number of hidden nodes
 # reduce overfitting by limiting stepmax argument
+
+# also try learning rate, momentum
 
 
