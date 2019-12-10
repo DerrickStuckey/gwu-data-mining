@@ -3,6 +3,7 @@
 
 library(rhdf5)
 library(neuralnet)
+library(ggplot2)
 
 # data from https://www.kaggle.com/bistaumanga/usps-dataset#usps.h5
 # help from https://stackoverflow.com/questions/15974643/how-to-deal-with-hdf5-files-in-r
@@ -44,11 +45,17 @@ test.data.df$label <- as.factor(test.label)
 
 
 # train a neural net
-nn.1 <- neuralnet(label ~ ., 
-                  data=train.data.df,
-                  hidden = 20, linear.output = FALSE,
-                  stepmax = 10^3)
+# nn.1 <- neuralnet(label ~ ., 
+#                   data=train.data.df,
+#                   hidden = 20, linear.output = FALSE,
+#                   stepmax = 10^3)
 # limit steps just to limit runtime
+
+# save the model
+# saveRDS(nn.1, "./neural_nets/digits/digits_nn1.rds")
+
+# load the model
+nn.1 <- readRDS("./neural_nets/digits/digits_nn1.rds")
 
 # obtain test probabilities
 test.probs <- predict(nn.1,
@@ -69,19 +76,19 @@ if(!dir.exists(chart.dir)) {
 }
 
 # plot ROC for each digit
-library(plotROC)
-
-for (i in 1:length(levels(test.data.df$label))) {
-  digit <- levels(test.data.df$label)[i]
-  print(digit)
-  p <- ggplot(mapping = aes(m = test.probs[,i], d = ifelse(test.data.df$label==digit,1,0))) + 
-    geom_roc(n.cuts=20,labels=FALSE) + 
-    style_roc(theme = theme_grey) + 
-    ggtitle(paste("Digit",digit))
-  p
-  plot.filename <- paste(chart.dir,digit,".png",sep="")
-  ggsave(filename=plot.filename, plot=p, device=png())
-}
+# library(plotROC)
+# 
+# for (i in 1:length(levels(test.data.df$label))) {
+#   digit <- levels(test.data.df$label)[i]
+#   print(digit)
+#   p <- ggplot(mapping = aes(m = test.probs[,i], d = ifelse(test.data.df$label==digit,1,0))) + 
+#     geom_roc(n.cuts=20,labels=FALSE) + 
+#     style_roc(theme = theme_grey) + 
+#     ggtitle(paste("Digit",digit))
+#   p
+#   plot.filename <- paste(chart.dir,digit,".png",sep="")
+#   ggsave(filename=plot.filename, plot=p, device=png())
+# }
 
 # plot an actual image from the dataset
 dim(test.data.t)
@@ -109,12 +116,16 @@ for (x in 1:16) {
   }
 }
 
+# plot the bitmap
 p <- ggplot() + 
   geom_point(mapping = aes(x=filled.pixels.x, y=filled.pixels.y, alpha=filled.pixels.shade),
-             shape=15, size=10)
+             shape=15, size=10) + 
+  theme_void() + 
+  theme(legend.position = "none") + coord_fixed()
 p
 test.label[1]
 
-# ggsave(filename = "./neural_nets/digits/digit0.png", plot=p)
+ggsave(filename = "./neural_nets/digits/digit0.png", plot=p, width=5, height=5)
+
 
 
