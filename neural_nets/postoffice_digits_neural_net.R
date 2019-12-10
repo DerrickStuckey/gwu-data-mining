@@ -61,9 +61,16 @@ levels(test.data.df$label)
 # confusionMatrix(test.preds, test.data.df$label)
 # table(test.preds, test.data.df$label)
 
+
+# create a directory to hold charts
+chart.dir <- "./neural_nets/digits"
+if(!dir.exists(chart.dir)) {
+  dir.create(chart.dir)
+}
+
 # plot ROC for each digit
 library(plotROC)
-dir.create("./neural_nets/digits")
+
 for (i in 1:length(levels(test.data.df$label))) {
   digit <- levels(test.data.df$label)[i]
   print(digit)
@@ -72,7 +79,7 @@ for (i in 1:length(levels(test.data.df$label))) {
     style_roc(theme = theme_grey) + 
     ggtitle(paste("Digit",digit))
   p
-  plot.filename <- paste("./neural_nets/digits/",digit,".png",sep="")
+  plot.filename <- paste(chart.dir,digit,".png",sep="")
   ggsave(filename=plot.filename, plot=p, device=png())
 }
 
@@ -105,7 +112,9 @@ for (x in 1:16) {
 p <- ggplot() + 
   geom_point(mapping = aes(x=filled.pixels.x, y=filled.pixels.y, alpha=filled.pixels.shade),
              shape=15, size=10)
-ggsave(filename = "./neural_nets/digits/digit0.png", plot=p)
-
+p
 test.label[1]
+
+# ggsave(filename = "./neural_nets/digits/digit0.png", plot=p)
+
 
