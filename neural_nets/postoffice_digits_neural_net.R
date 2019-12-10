@@ -90,42 +90,51 @@ if(!dir.exists(chart.dir)) {
 #   ggsave(filename=plot.filename, plot=p, device=png())
 # }
 
-# plot an actual image from the dataset
-dim(test.data.t)
-test.data.first.row <- test.data.t[3,]
-length(test.data.first.row)
-
-filled.pixels.x <- c()
-filled.pixels.y <- c()
-filled.pixels.shade <- c()
-idx <- 1
-
-for (x in 1:16) {
-  for (y in 1:16) {
-    print(paste("x:",x))
-    print(paste("y:",y))
-    print(paste("idx:",idx))
-    pixel.val <- test.data.first.row[idx]
-    print(paste("pixel.val:",pixel.val))
-    if(pixel.val>0) {
-      filled.pixels.x <- c(filled.pixels.x, x)
-      filled.pixels.y <- c(filled.pixels.y, y)
-      filled.pixels.shade <- c(filled.pixels.shade, pixel.val)
+# plot the first 20 actual images from the dataset
+for (img.index in 1:20) {
+  
+  train.data.first.row <- train.data.t[img.index,]
+  length(train.data.first.row)
+  
+  filled.pixels.x <- c()
+  filled.pixels.y <- c()
+  filled.pixels.shade <- c()
+  idx <- 1
+  
+  # start from top left, filling out rows, then columns
+  for (y in 16:1) {
+    for (x in 1:16) {
+      print(paste("x:",x))
+      print(paste("y:",y))
+      print(paste("idx:",idx))
+      pixel.val <- train.data.first.row[idx]
+      print(paste("pixel.val:",pixel.val))
+      # capture the x coordinate, y coordinate, and alpha for the pixel
+      if(pixel.val>0) {
+        filled.pixels.x <- c(filled.pixels.x, x)
+        filled.pixels.y <- c(filled.pixels.y, y)
+        filled.pixels.shade <- c(filled.pixels.shade, pixel.val)
+      }
+      idx <- idx + 1
     }
-    idx <- idx + 1
   }
+  
+  # plot the bitmap with no title or legend
+  p <- ggplot() + 
+    geom_point(mapping = aes(x=filled.pixels.x, y=filled.pixels.y, alpha=filled.pixels.shade),
+               shape=15, size=10) + 
+    theme_void() + 
+    theme(legend.position = "none") + coord_fixed()
+  p
+  
+  ggsave(filename = paste("./neural_nets/digits/train_image_",img.index,".png",sep=""), plot=p, width=5, height=5)
+  
 }
 
-# plot the bitmap
-p <- ggplot() + 
-  geom_point(mapping = aes(x=filled.pixels.x, y=filled.pixels.y, alpha=filled.pixels.shade),
-             shape=15, size=10) + 
-  theme_void() + 
-  theme(legend.position = "none") + coord_fixed()
-p
-test.label[1]
+# check against the labels
+train.label[1:20]
 
-ggsave(filename = "./neural_nets/digits/digit0.png", plot=p, width=5, height=5)
+
 
 
 
