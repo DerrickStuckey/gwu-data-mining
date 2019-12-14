@@ -12,13 +12,13 @@ interactions.train
 # how many reviews per user do we have
 reviews.per.user <- interactions.train %>% 
   group_by(user_id) %>%
-  summarise(count=n())
+  summarise(user.review.count=n())
 
-summary(reviews.per.user$count)
+summary(reviews.per.user$user.review.count)
 nrow(reviews.per.user)
 
-ggplot() + geom_histogram(mapping = aes(x = reviews.per.user$count))
-ggplot() + geom_histogram(mapping = aes(x = reviews.per.user$count)) + xlim(0,1000)
+ggplot() + geom_histogram(mapping = aes(x = reviews.per.user$user.review.count))
+ggplot() + geom_histogram(mapping = aes(x = reviews.per.user$user.review.count)) + xlim(0,1000)
 
 # reviews per recipe
 reviews.per.recipe <- interactions.train %>% 
@@ -41,7 +41,7 @@ top.recipes <-
 
 top.recipes
 
-# merge with reviews per recipe, select only the top 100 recipes
+# merge with reviews per recipe, select only the top N recipes
 interactions.train.top <- 
   interactions.train %>%
   inner_join(top.recipes, by=c("recipe_id"="recipe_id"))
@@ -55,10 +55,10 @@ interactions.train.top %>%
   )
 
 # select only N users to reduce computation
-N <- 1000
+num.users <- 1000
 set.seed(12345)
 all.users <- unique(interactions.train.top$user_id)
-selected.users <- all.users[sample(length(all.users),N)]
+selected.users <- all.users[sample(length(all.users),num.users)]
 length(selected.users)
 
 interactions.train.small <-
@@ -107,6 +107,8 @@ ratingmatrix.train
 recipes.rec <- Recommender(ratingmatrix.train, "IBCF")
 pred <- predict(recipes.rec, ratingmatrix.train, type="ratings")
 View(as(pred,"matrix"))
+
+
 
 # look at the details for the historical ratings for an individual user
 user.26075.ratings <-
@@ -182,6 +184,10 @@ user.46759.recommendations %>%
   select(name,minutes,contributor_id)
 
 
+# TODO execute predictions on validation data as well
+
+
+
 
 
 # user-based collaborative filtering recommendations
@@ -190,3 +196,9 @@ pred <- predict(recipes.rec, ratingmatrix.train, type="ratings")
 dim(as(pred,"matrix"))
 View(as(pred,"matrix"))
 # TODO seems like nonsense, some users have the same rating across the board
+
+
+
+
+
+
