@@ -14,13 +14,28 @@ movies
 # convert the movie ratings data to binary
 ratings$viewed <- ifelse(!is.na(ratings$rating),1,0)
 
+# drop movies with duplicate titles
+movies.deduped <- movies[!duplicated(movies$title),]
+# TODO make the duplicate titles unique and add them back in
+
+# use movie titles rather than movie ids
+ratings.titles <- 
+  ratings %>% 
+  left_join(movies.deduped,by="movieId")
+
+# verify no duplicate entries
+ratings.titles %>%
+  summarise(
+    unique_titles = n_distinct(title),
+    unique_movieIds = n_distinct(title)
+  )
+
 # convert to a "wide-format" dataframe
-# with userId for rows, movieId for columns, and the rating value in each cell
+# with userId for rows, title for columns, and the rating value in each cell
 ratings.wide <- 
-  ratings %>%
-  select(userId, movieId, viewed) %>%
-  spread(movieId, viewed, fill=0)
-ratings.wide
+  ratings.titles %>%
+  select(userId, title, viewed) %>%
+  spread(title, viewed, fill=0)
 ratings.wide[1:5,1:5]
 
 # make 'userId' the row names rather than an actual column
