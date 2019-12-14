@@ -15,7 +15,12 @@ movies
 ratings$viewed <- ifelse(!is.na(ratings$rating),1,0)
 
 # drop movies with duplicate titles
-movies.deduped <- movies[!duplicated(movies$title),]
+movies.deduped <- movies
+movies.deduped$title <- str_trunc(movies.deduped$title, width=30)
+movies.deduped <- movies.deduped[!duplicated(movies.deduped$title),]
+head(movies.deduped$title)
+# TODO fix this as there are apparently still duplicates
+
 # TODO make the duplicate titles unique and add them back in
 
 # use movie titles rather than movie ids
