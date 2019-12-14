@@ -61,10 +61,13 @@ all.users <- unique(interactions.train.top$user_id)
 selected.users <- all.users[sample(length(all.users),num.users)]
 length(selected.users)
 
+# alternatively, select users with the most reviews
+# selected.users <- (reviews.per.user %>% arrange(desc(user.review.count)) %>% top_n(num.users) %>% select(user_id))$user_id
+
 interactions.train.small <-
   interactions.train.top[interactions.train.top$user_id %in% selected.users,]
 
-# verify the numbe of unique users and unique recipes in the selected subset
+# verify the number of unique users and unique recipes in the selected subset
 interactions.train.small %>% 
   summarise(
     unique_users = n_distinct(user_id),
@@ -104,9 +107,32 @@ ratingmatrix.train <- as(interactions.train.matrix, "realRatingMatrix")
 ratingmatrix.train
 
 # item-based collaborative filtering recommendations
-recipes.rec <- Recommender(ratingmatrix.train, "IBCF")
+recipes.rec <- Recommender(ratingmatrix.train, "SVDF")
 pred <- predict(recipes.rec, ratingmatrix.train, type="ratings")
 View(as(pred,"matrix"))
+
+# TODO try other algos:
+# SVDF seems to produce most variation in values
+## $IBCF_realRatingMatrix
+## [1] "Recommender based on item-based collaborative filtering (real data)."
+## 
+## $POPULAR_realRatingMatrix
+## [1] "Recommender based on item popularity (real data)."
+## 
+## $RANDOM_realRatingMatrix
+## [1] "Produce random recommendations (real ratings)."
+## 
+## $RERECOMMEND_realRatingMatrix
+## [1] "Re-recommends highly rated items (real ratings)."
+## 
+## $SVD_realRatingMatrix
+## [1] "Recommender based on SVD approximation with column-mean imputation (real data)."
+## 
+## $SVDF_realRatingMatrix
+## [1] "Recommender based on Funk SVD with gradient descend (real data)."
+## 
+## $UBCF_realRatingMatrix
+## [1] "Recommender based on user-based collaborative filtering (real data)."
 
 
 
