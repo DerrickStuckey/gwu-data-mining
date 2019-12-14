@@ -9,8 +9,6 @@ recipes
 interactions.train <- read_csv("./data/food-com-recipes-and-user-interactions/interactions_train.csv")
 interactions.train
 
-# TODO do we really need a train/test split?
-
 # how many reviews per user do we have
 reviews.per.user <- interactions.train %>% 
   group_by(user_id) %>%
@@ -35,21 +33,22 @@ ggplot() + geom_histogram(mapping = aes(x=reviews.per.recipe$review.count))
 ggplot() + geom_histogram(mapping = aes(x=reviews.per.recipe$review.count)) + xlim(0,400)
 
 # get top N recipes by review count
+num.recipes <- 100
 top.recipes <- 
   reviews.per.recipe %>% 
   arrange(desc(review.count)) %>%
-  top_n(10)
+  top_n(num.recipes)
 
 top.recipes
 
 # merge with reviews per recipe, select only the top 100 recipes
-interactions.train.2 <- 
+interactions.train.top <- 
   interactions.train %>%
   inner_join(top.recipes, by=c("recipe_id"="recipe_id"))
 
-interactions.train.2
+interactions.train.top
 
-interactions.train.2 %>% 
+interactions.train.top %>% 
   summarise(
     unique_users = n_distinct(user_id),
     unique_recipes = n_distinct(recipe_id)
@@ -57,12 +56,13 @@ interactions.train.2 %>%
 
 # select only N users to reduce computation
 N <- 1000
-all.users <- unique(interactions.train.2$user_id)
+set.seed(12345)
+all.users <- unique(interactions.train.top$user_id)
 selected.users <- all.users[sample(length(all.users),N)]
 length(selected.users)
 
 interactions.train.small <-
-  interactions.train.2[interactions.train.2$user_id %in% selected.users,]
+  interactions.train.top[interactions.train.top$user_id %in% selected.users,]
 
 # verify the numbe of unique users and unique recipes in the selected subset
 interactions.train.small %>% 
@@ -71,32 +71,32 @@ interactions.train.small %>%
     unique_recipes = n_distinct(recipe_id)
   )
 
-# make user_id and recipe_id factors
-# TODO is this necessary?
-# interactions.train.small$user_id <- as.factor(interactions.train.tmp$user_id)
-# interactions.train.small$recipe_id <- as.factor(interactions.train.tmp$recipe_id)
-
-# convert to a matrix
-interactions.train.df <- 
+# convert to a "wide-format" dataframe
+# with user_id for rows, recipe_id for columns, and the rating value in each cell
+interactions.train.wide <- 
   interactions.train.small %>%
   select(user_id, recipe_id, rating) %>%
   spread(recipe_id, rating)
 
-dim(interactions.train.df)
-interactions.train.df
+# what did we just do?
+dim(interactions.train.top)
+dim(interactions.train.wide)
+interactions.train.small
+interactions.train.wide
 
 # make 'user_id' the row names rather than an actual column
-# row.names(interactions.train.df) <- interactions.train.df$user_id
-interactions.train.df <- 
-  interactions.train.df %>% 
+# row.names(interactions.train.wide) <- interactions.train.wide$user_id
+interactions.train.wide <- 
+  interactions.train.wide %>% 
   remove_rownames %>%
   column_to_rownames(var = "user_id")
 
-dim(interactions.train.df)
-head(interactions.train.df)
+dim(interactions.train.wide)
+head(interactions.train.wide)
 
+# convert our wide training dataframe to a matrix
 interactions.train.matrix <-
-  interactions.train.df %>%
+  interactions.train.wide %>%
   data.matrix()
 
 # convert to a realRatingMatrix
@@ -108,48 +108,85 @@ recipes.rec <- Recommender(ratingmatrix.train, "IBCF")
 pred <- predict(recipes.rec, ratingmatrix.train, type="ratings")
 View(as(pred,"matrix"))
 
-# merge transactions data with recipes and select key columns
-# interactions.train.2 <-
-#   interactions.train %>%
-#   select(user_id, recipe_id, rating) %>%
-#   left_join(
-#     select(recipes,name,id),
-#     by=c("recipe_id"="id"))
-
 # look at the details for the historical ratings for an individual user
-user.26719.ratings <-
-  interactions.train.2 %>% 
-  filter(user_id == 26719) %>%
+user.26075.ratings <-
+  interactions.train.top %>% 
+  filter(user_id == 26075) %>%
   left_join(recipes, by=c("recipe_id"="id"))
 
-View(user.26719.ratings)
+user.26075.ratings
+user.26075.ratings %>%
+  select(rating, name)
 
-# obtain top 3 recommended recipes for user_id '26719'
-recommended.items.26719.raw <- predict(recipes.rec, ratingmatrix.train["26719",], n=3)
-recommended.items.26719.raw
-recommended.items.26719 <- 
-  as(recommended.items.26719.raw, "list")
-recommended.items.26719.vector <- recommended.items.26719[[1]]
+# obtain top 5 recommended recipes for user_id '26075'
+recommended.items.26075.raw <- predict(recipes.rec, ratingmatrix.train["26075",], n=5)
+recommended.items.26075.raw
+recommended.items.26075 <- 
+  as(recommended.items.26075.raw, "list")
+recommended.items.26075
+recommended.items.26075.vector <- recommended.items.26075[[1]]
+recommended.items.26075.vector
 
-# look at the details for their recommendations
-user.26719.recommendations <- 
+# look at the recipe details for their recommended recipes
+user.26075.recommendations <- 
   recipes %>%
-  filter(id %in% recommended.items.26719.vector)
-user.26719.recommendations
+  filter(id %in% recommended.items.26075.vector)
+
+user.26075.recommendations
+user.26075.recommendations %>% 
+  select(name)
 
 # compare the user's ratings and their generated recommendations
-user.26719.ratings %>%
+user.26075.ratings %>%
   select(rating,name,minutes,contributor_id)
-user.26719.recommendations %>%
+user.26075.recommendations %>%
   select(name,minutes,contributor_id)
 
 # out of this possible set of recipes
-top.recipes %>%
-  left_join(recipes, by=c("recipe_id" = "id")) %>%
-  select(recipe_id, name)
+# top.recipes %>%
+#   left_join(recipes, by=c("recipe_id" = "id")) %>%
+#   select(recipe_id, name)
 
-# item-based collaborative filtering recommendations
-recipes.rec <- Recommender(ratingmatrix.train, "IBCF")
+
+# do the same for a different user: '46759'
+user.46759.ratings <-
+  interactions.train.top %>% 
+  filter(user_id == 46759) %>%
+  left_join(recipes, by=c("recipe_id"="id"))
+
+user.46759.ratings
+user.46759.ratings %>%
+  select(rating,name)
+
+# obtain top 5 recommended recipes for user_id '46759'
+recommended.items.46759.raw <- predict(recipes.rec, ratingmatrix.train["46759",], n=5)
+recommended.items.46759.raw
+recommended.items.46759 <- 
+  as(recommended.items.46759.raw, "list")
+recommended.items.46759
+recommended.items.46759.vector <- recommended.items.46759[[1]]
+recommended.items.46759.vector
+
+# look at the recipe details for their recommended recipes
+user.46759.recommendations <- 
+  recipes %>%
+  filter(id %in% recommended.items.46759.vector)
+
+user.46759.recommendations %>% 
+  select(name)
+
+# compare the user's ratings and their generated recommendations
+user.46759.ratings %>%
+  select(rating,name,minutes,contributor_id)
+user.46759.recommendations %>%
+  select(name,minutes,contributor_id)
+
+
+
+
+# user-based collaborative filtering recommendations
+recipes.rec <- Recommender(ratingmatrix.train, "UBCF")
 pred <- predict(recipes.rec, ratingmatrix.train, type="ratings")
+dim(as(pred,"matrix"))
 View(as(pred,"matrix"))
-
+# TODO seems like nonsense, some users have the same rating across the board
