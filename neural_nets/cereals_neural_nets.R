@@ -1,6 +1,7 @@
 # install.packages("neuralnet")
 library(neuralnet)
 library(tidyverse)
+library(forecast) # for accuracy function
 
 # from https://s3-ap-south-1.amazonaws.com/av-blog-media/wp-content/uploads/2017/09/07122416/cereals.csv
 # via https://www.analyticsvidhya.com/blog/2017/09/creating-visualizing-neural-network-in-r/
@@ -16,6 +17,22 @@ test.proportion <- 0.3
 train.index <- sample(1:nrow(cereals), nrow(cereals)*train.proportion)
 train.data <- cereals[train.index,]
 test.data <- cereals[-train.index,]
+
+# look at relationships between rating and the predictor variables
+ggplot(data=train.data) +
+  geom_point(mapping = aes(x=calories, y=rating))
+
+ggplot(data=train.data) +
+  geom_point(mapping = aes(x=protein, y=rating))
+
+ggplot(data=train.data) +
+  geom_point(mapping = aes(x=fat, y=rating))
+
+ggplot(data=train.data) +
+  geom_point(mapping = aes(x=sodium, y=rating))
+
+ggplot(data=train.data) +
+  geom_point(mapping = aes(x=fiber, y=rating))
 
 # normalize all variables to a range [0,1]
 # TODO may want to redo this in a less fancy way
@@ -61,10 +78,34 @@ accuracy(test.data$rating, test.preds.unscaled.nn.1)
 # are these different than before?
 
 
-# TODO tune the model
-# show overfitting with high number of hidden nodes
-# reduce overfitting by limiting stepmax argument
+### model tuning ###
 
-# also try learning rate, momentum
+# try a range of values for the number of hidden nodes
+hidden.vals <- c(1,2,3,5,10,20,30,50,100,200,500,1000)
+rsq.results <- c()
+
+set.seed(12345)
+for (hidden.val in hidden.vals) {
+  
+  # train the model
+  nn.current <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.normalized, 
+                    hidden = hidden.val, linear.output = TRUE, stepmax = 10^5)
+  
+  # obtain predictions on the validation set
+  test.preds.raw.nn.current <- predict(nn.current, newdata=test.normalized)
+  
+  # measure the accuracy in terms of r-squared and save it
+  rsq.current <- cor(test.normalized$rating, test.preds.raw.nn.current) ^ 2
+  rsq.results <- c(rsq.results, rsq.current)
+}
+
+# plot accuracy vs # of hidden layers
+ggplot() +
+  geom_line(mapping = aes(x=hidden.vals, y=rsq.results)) +
+  xlab("# of Hidden Layers") + ylab("R-Squared") +
+  scale_x_log10()
+
+
+# TODO also try learning rate, momentum
 
 
