@@ -108,13 +108,18 @@ ratingmatrix.train <- as(ratings.matrix, "realRatingMatrix")
 ratingmatrix.train
 
 # item-based collaborative filtering recommendations
+
 # movies.rec <- Recommender(ratingmatrix.train, "IBCF")
+# save the recommender
+# saveRDS(movies.rec, "./association/movielens_recommender_large.rds")
+
+# load the already-saved recommender
 movies.rec <- readRDS("./association/movielens_recommender_large.rds")
+
+
 pred <- predict(movies.rec, ratingmatrix.train, type="ratings")
 View(as(pred,"matrix"))
 
-# save the recommender
-saveRDS(movies.rec, "./association/movielens_recommender_large.rds")
 
 
 
