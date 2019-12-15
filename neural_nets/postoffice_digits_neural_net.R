@@ -18,6 +18,9 @@ dim(train.data)
 train.data.t <- t(train.data)
 dim(train.data.t)
 
+# look at the first row
+train.data.t[1,]
+
 # same for test
 test.data <- h5read(file="./data/usps.h5", "/test/data")
 dim(test.data)
@@ -52,10 +55,10 @@ test.data.df$label <- as.factor(test.label)
 # limit steps just to limit runtime
 
 # save the model
-# saveRDS(nn.1, "./neural_nets/digits/digits_nn1.rds")
+# saveRDS(nn.1, "./neural_nets/digits_nn1.rds")
 
 # load the model
-nn.1 <- readRDS("./neural_nets/digits/digits_nn1.rds")
+nn.1 <- readRDS("./neural_nets/digits_nn1.rds")
 
 # obtain test probabilities
 test.probs <- predict(nn.1,
@@ -65,9 +68,28 @@ head(test.probs,2)
 dim(test.probs)
 levels(test.data.df$label)
 
-# confusionMatrix(test.preds, test.data.df$label)
-# table(test.preds, test.data.df$label)
+# pick out the digit
+test.preds.factor.index <- apply(test.probs, 1, which.max)
+test.preds <- levels(test.data.df$label)[test.preds.factor.index]
+head(test.preds)
 
+  # aside: which.max and apply()
+  which.max(c(1,2,3))
+  which.max(c(1,3,2))
+  m <- data.frame("a"=c(1,2),"b"=c(3,4),"c"=c(5,6))
+  m
+  apply(m, 1, sum)
+  apply(m, 2, sum)
+  apply(m, 1, max)
+  apply(m, 1, which.max)
+
+# now look at our actual accuracy
+test.preds <- as.factor(test.preds)
+confusionMatrix(test.preds, test.data.df$label)
+
+# look at the first 10 predictions and actual values
+head(test.preds,n=10)
+head(test.data.df$label,n=10)
 
 # create a directory to hold charts
 chart.dir <- "./neural_nets/digits"
@@ -127,7 +149,7 @@ for (img.index in 1:20) {
     theme(legend.position = "none") + coord_fixed()
   p
   
-  ggsave(filename = paste("./neural_nets/digits/train_image_",img.index,".png",sep=""), plot=p, width=5, height=5)
+  ggsave(filename = paste(chart.dir,"/train_image_",img.index,".png",sep=""), plot=p, width=5, height=5)
   
 }
 
