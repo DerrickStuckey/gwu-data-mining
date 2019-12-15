@@ -115,6 +115,9 @@ ggplot(data = zipcode.demos.sel.sample) +
   geom_boxplot(mapping = aes(x=cluster, y=population.norm))
 
 ggplot(data = zipcode.demos.sel.sample) + 
+  geom_point(mapping = aes(x=population.norm, y=pct_bachelors, col=cluster))
+
+ggplot(data = zipcode.demos.sel.sample) + 
   geom_point(mapping = aes(x=`pct_high_school`, `_18_to_24`, col=cluster))
 
 # what are these zip codes in cluster 4?
