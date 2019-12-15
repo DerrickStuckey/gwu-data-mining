@@ -44,6 +44,10 @@ ggplot(data=iris.numeric) +
 ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=cluster))
 
+# Sepal Length vs Petal Length visualization
+ggplot(data=iris.numeric) +
+  geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster))
+
 
 
 # try again, with 3 clusters
@@ -71,9 +75,14 @@ ggplot(data=iris.numeric) +
 ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=cluster))
 
+# Sepal Length vs Petal Length visualization
+ggplot(data=iris.numeric) +
+  geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster))
 
 # how well do the clusters it has found line up with the actual Species labels?
 table(km.1$cluster, iris.tibble$Species)
 
 
 # TODO try k-means with different numbers of iterations, visualizing the intermediate results after each iteration
+
+# TODO try other algo versions
