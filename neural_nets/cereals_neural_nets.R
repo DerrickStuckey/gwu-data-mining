@@ -8,7 +8,7 @@ library(forecast) # for accuracy function
 cereals <- read_csv("./data/cereals.csv")
 nrow(cereals)
 
-# training/test/validation split
+# training/test split
 set.seed(12345)
 train.proportion <- 0.7
 test.proportion <- 0.3
@@ -34,15 +34,27 @@ ggplot(data=train.data) +
 ggplot(data=train.data) +
   geom_point(mapping = aes(x=fiber, y=rating))
 
+
+### data preparation ###
+
 # normalize all variables to a range [0,1]
-# TODO may want to redo this in a less fancy way
-cols.max = apply(train.data, 2, max)
-cols.min = apply(train.data, 2, min)
+
+# get the min and max for each column
+cols.max = apply(train.data, 2, max) # applies max() function to each column
+cols.max
+cols.min = apply(train.data, 2, min) # applies min() function to each column
+cols.min
+
+# rescale the training and test data using these values
 train.scale <- scale(train.data, center = cols.min, scale = cols.max - cols.min)
 train.normalized = as.data.frame(train.scale)
 summary(train.normalized)
 test.scale <- scale(test.data, center = cols.min, scale = cols.max - cols.min)
 test.normalized = as.data.frame(test.scale)
+# note: test data normalization is still done using cols.min, cols.max from training data
+
+
+### build and test a basic model ###
 
 # train the neural net
 nn.1 <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.normalized, 
@@ -106,6 +118,6 @@ ggplot() +
   scale_x_log10()
 
 
-# TODO also try learning rate, momentum
+# note: other parameters can be tuned too: stepmax, learning rate, momentum
 
 
