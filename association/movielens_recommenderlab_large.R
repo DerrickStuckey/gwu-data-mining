@@ -108,15 +108,18 @@ ratingmatrix.train <- as(ratings.matrix, "realRatingMatrix")
 ratingmatrix.train
 
 # item-based collaborative filtering recommendations
-movies.rec <- Recommender(ratingmatrix.train, "IBCF")
+# movies.rec <- Recommender(ratingmatrix.train, "IBCF")
+movies.rec <- readRDS("./association/movielens_recommender_large.rds")
 pred <- predict(movies.rec, ratingmatrix.train, type="ratings")
 View(as(pred,"matrix"))
 
+# save the recommender
+saveRDS(movies.rec, "./association/movielens_recommender_large.rds")
 
 
 
 # look at the details for the historical ratings for an individual user
-# good: 226840
+# good: 226840, 134002, 106219
 selected.user.id <- selected.users[9]
 selected.user.ratings <-
   ratings.top %>% 
