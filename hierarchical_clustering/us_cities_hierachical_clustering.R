@@ -35,6 +35,12 @@ head(top.50.coords)
 dist.euclid <- dist(top.50.coords, method="euclidean")
 
 
+# create a directory to save charts
+chart.dir <- "./hierarchical_clustering/us_cities_charts"
+if(!dir.exists(chart.dir)) {
+  dir.create(chart.dir)
+}
+
 
 # perform clustering using average cluster distance
 hc.avg <- hclust(dist.euclid, method="average")
@@ -49,9 +55,9 @@ top.50.avg.clusters <- top.50.coords
 top.50.avg.clusters$cluster <- as.factor(hc.avg.clusters.5)
 
 ggplot(data=top.50.avg.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
   ggtitle("Method: Average")
-
+ggsave(paste(chart.dir,"/average_clustering.png",sep=""))
 
 
 # perform clustering using single cluster distance
@@ -67,9 +73,9 @@ top.50.single.clusters <- top.50.coords
 top.50.single.clusters$cluster <- as.factor(hc.single.clusters.5)
 
 ggplot(data=top.50.single.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
   ggtitle("Method: Single")
-
+ggsave(paste(chart.dir,"/single_clustering.png",sep=""))
 
 
 # perform clustering using complete cluster distance
@@ -85,6 +91,9 @@ top.50.complete.clusters <- top.50.coords
 top.50.complete.clusters$cluster <- as.factor(hc.complete.clusters.5)
 
 ggplot(data=top.50.complete.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
   ggtitle("Method: Complete")
+ggsave(paste(chart.dir,"/complete_clustering.png",sep=""))
 
+
+# TODO try other agglomeration methods e.g. centroid, Ward
