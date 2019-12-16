@@ -31,17 +31,18 @@ View(votes.only.numeric)
 row.names(votes.only.numeric) <- housevotes$`Class Name`
 
 # compute Jaccard distance on the numeric votes data
-dist.votes <- dist(votes.only.numeric, method="jaccard")
+dist.votes <- dist(votes.only.numeric, method="euclidean")
 
+# perform clustering
 hc1 <- hclust(dist.votes, method="average")
-plot(hc1)
 
+# view the cluster
 plot(hc1, hang=-1, ann=FALSE)
 
-# cut the tree at height 2.9
-single.split <- cutree(hc1, k=2.9)
+# cut the tree after the first split
+single.split <- cutree(hc1, k=2)
 head(single.split,n=10)
 
 # how well do the two groups line up with our class labels?
 table(single.split, names(single.split))
-length(single.split)
+
