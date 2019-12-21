@@ -88,10 +88,12 @@ ggplot(data=westroxbury) +
 
 # too crowded in some areas; take a random sample
 nrow(westroxbury)
-set.seed(12345)
-sample.index <- sample(row.names(westroxbury), 500)
+set.seed(12345) # ensures we will get the same sample each time
+sample.index <- sample(1:nrow(westroxbury), 500)
 head(sample.index)
 roxbury.sample <- westroxbury[sample.index,]
+dim(westroxbury)
+dim(roxbury.sample)
 
 # plot the sample only
 ggplot(data=roxbury.sample) + 
@@ -100,8 +102,8 @@ ggplot(data=roxbury.sample) +
 # still crowded; try a log scale instead
 ggplot(data=roxbury.sample) + 
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE, color=REMODEL)) + 
-  scale_x_continuous(trans='log2') +
-  scale_y_continuous(trans='log2')
+  scale_x_log10() + 
+  scale_y_log10()
 
 # use shape instead of color
 ggplot(data=roxbury.sample) + 
@@ -112,24 +114,18 @@ ggplot(data=roxbury.sample) +
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE)) + 
   facet_wrap(~ REMODEL, nrow=2)
 
-# try geom_smooth to show a fitted curve
-ggplot(data=roxbury.sample) + 
-  geom_smooth(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE))
-
-# show the fitted curve AND the actual points
-ggplot(data=roxbury.sample) + 
-  geom_smooth(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE)) + 
-  geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE))
-
 
 # add another variable, BEDROOMS, into the mix
 
 # distribution of values for REMODEL variable
+ggplot(data=westroxbury) + 
+  geom_bar(mapping=aes(x=REMODEL))
+
 # with number of bedrooms shaded
 ggplot(data=westroxbury) + 
   geom_bar(mapping=aes(x=REMODEL, fill=BEDROOMS))
-
 # why doesn't this work?
+
 summary(westroxbury$BEDROOMS)
 is.factor(westroxbury$BEDROOMS)
 
