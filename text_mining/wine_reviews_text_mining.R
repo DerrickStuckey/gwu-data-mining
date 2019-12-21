@@ -83,7 +83,7 @@ findFreqTerms(tdm.nostopwords, nrow(reviews.sample) * 0.20)
 findFreqTerms(tdm.stemmed, nrow(reviews.sample) * 0.20)
 
 
-# TODO try also droping infrequent terms
+# TODO try also dropping infrequent terms
 # tdm.unsparse <- removeSparseTerms(tdm.stemmed,0.999)
 # tdm.stemmed
 # tdm.unsparse
