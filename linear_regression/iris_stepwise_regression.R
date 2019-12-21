@@ -1,3 +1,5 @@
+library(stats) # for step() function
+
 # the 'iris' dataset is included with base R
 head(iris)
 dim(iris)
@@ -78,9 +80,6 @@ summary(species.lm)
 full.lm <- lm(data=train.data, Sepal.Length ~ .)
 summary(full.lm)
 
-# 'stats' should be loaded by default, but if not, load it before running step()
-# library(stats)
-
 # backward stepwise regression
 step.lm.backward <- step(full.lm, direction = "backward")
 summary(step.lm.backward)
@@ -110,6 +109,9 @@ summary(step.lm.backward.inter)
 
 # what looks like the best model?
 
+
+### Model Testing ###
+
 # test each model
 test.data$preds.full.lm <- predict(full.lm, newdata=test.data)
 test.data$preds.step.lm <- predict(step.lm.backward, newdata=test.data)
@@ -122,7 +124,8 @@ cor(test.data$preds.step.lm, test.data$Sepal.Length)^2
 cor(test.data$preds.step.inter.lm, test.data$Sepal.Length)^2
 cor(test.data$preds.petal.length.lm, test.data$Sepal.Length)^2
 
-# plot actual values vs. predictions for each
+
+# plot actual values vs. predictions for each model
 
 ggplot(data=test.data) + 
   geom_point(mapping = aes(x=preds.full.lm, y=Sepal.Length)) + 
