@@ -91,6 +91,7 @@ nrow(westroxbury)
 set.seed(12345) # ensures we will get the same sample each time
 sample.index <- sample(1:nrow(westroxbury), 500)
 head(sample.index)
+length(sample.index)
 roxbury.sample <- westroxbury[sample.index,]
 dim(westroxbury)
 dim(roxbury.sample)
@@ -146,7 +147,7 @@ heatmap(cor(subset(westroxbury,select=-c(REMODEL,BEDROOMS))))
 
 # plot combinations of variables
 library(GGally)
-ggpairs(subset(roxbury.sample,select=c(TOTAL.VALUE, BEDROOMS, LOT.SQFT)))
+ggpairs(roxbury.sample[,c("TOTAL.VALUE", "BEDROOMS", "LOT.SQFT")])
 
 # jitter example
 ggplot(data=roxbury.sample) + 
@@ -156,7 +157,7 @@ ggplot(data=roxbury.sample) +
   geom_jitter(mapping=aes(x=FLOORS, y=BEDROOMS))
 
 
-# Some aesthetic options
+### Aesthetic options ###
 
 # basic plot
 ggplot(data=roxbury.sample) + 
@@ -182,7 +183,7 @@ ggplot(data=roxbury.sample) +
 
 # change the colour
 ggplot(data=roxbury.sample) + 
-  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE), colour="darkblue") + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE), color="darkblue") + 
   xlab("Living Area") + ylab("Home Value") + 
   ggtitle("Home Value vs Bedrooms") + 
   theme(plot.title = element_text(hjust = 0.5))
