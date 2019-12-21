@@ -83,11 +83,15 @@ findFreqTerms(tdm.nostopwords, nrow(reviews.sample) * 0.20)
 findFreqTerms(tdm.stemmed, nrow(reviews.sample) * 0.20)
 
 
-# TODO also drop very infrequent terms
+# TODO try also droping infrequent terms
+# tdm.unsparse <- removeSparseTerms(tdm.stemmed,0.999)
+# tdm.stemmed
+# tdm.unsparse
 
 
 # TF-IDF weighting
 tfidf <- weightTfIdf(tdm.nostopwords)
+# tfidf <- weightTfIdf(tdm.unsparse)
 tfidf
 inspect(tfidf)
 # how is this different from a basic TDM?
@@ -104,7 +108,18 @@ lsa.tfidf <- lsa(tfidf, dim=10)
 
 # look at the words associated with each concept
 View(lsa.tfidf$tk)
-# TODO is there an elegant way to extract the top 5 words for each concept at once?
+
+# top 10 terms for each concept
+# TODO is there a more elegant way to do this?
+concepts.top.terms <- data.frame("rank"=1:10)
+for (j in 1:ncol(lsa.tfidf$tk)) {
+  top.terms <- row.names(lsa.tfidf$tk)[
+    order(lsa.tfidf$tk[,j], decreasing = TRUE)
+    ][1:10]
+  concepts.top.terms <- cbind(concepts.top.terms, top.terms)
+  names(concepts.top.terms)[length(names(concepts.top.terms))] <- paste("Concept",j)
+}
+View(concepts.top.terms)
 
 # there is also a value for each concept for each document
 document.concepts <- as.data.frame(as.matrix(lsa.tfidf$dk))
@@ -172,4 +187,6 @@ ggplot(mapping = aes(m = test.probs, d = test.data$Italian)) +
 
 # what did the model actually find?
 summary(italy.logistic)
+View(concepts.top.terms[,c('Concept 3','Concept 6','Concept 8')])
+
 
