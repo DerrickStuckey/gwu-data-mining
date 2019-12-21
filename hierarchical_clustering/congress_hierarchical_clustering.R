@@ -36,8 +36,8 @@ dist.votes <- dist(votes.only.numeric, method="euclidean")
 # perform clustering using average cluster distance
 hc1 <- hclust(dist.votes, method="average")
 
-# view the cluster
-plot(hc1, hang=-1, ann=FALSE)
+# view the cluster (without labels as they are not useful)
+plot(hc1, labels=FALSE)
 
 # cut the tree after the first split
 single.split <- cutree(hc1, k=2)
