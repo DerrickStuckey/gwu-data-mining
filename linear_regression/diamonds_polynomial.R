@@ -19,8 +19,24 @@ test.index <- sample(1:nrow(holdout.data), nrow(diamonds)*test.proportion)
 test.data <- holdout.data[test.index,]
 validation.data <- holdout.data[-test.index,]
 
+### a bit of data exploration ###
 
-### train a linear regression model using a single variable as predictor
+# 'price' data distribution
+summary(train.data$price)
+ggplot(data=train.data) +
+  geom_histogram(mapping = aes(x=price))
+
+# 'carat' data distribution
+summary(train.data$carat)
+ggplot(data=train.data) +
+  geom_histogram(mapping = aes(x=carat))
+
+# price vs carat
+ggplot(data=train.data[train.data.sample.idx,]) + 
+  geom_point(mapping = aes(x=carat,y=price))
+
+
+### train a linear regression model using a single variable, carat, as predictor
 carat.lm <- lm(data = train.data, price ~ carat)
 summary(carat.lm)
 
@@ -29,18 +45,25 @@ train.data$price.pred.carat <- predict(carat.lm, newdata=train.data)
 # sample just 1000 points from the training data for easy plotting
 train.data.sample.idx <- sample(1:nrow(train.data), 1000)
 
+
 # plot price vs. the model predictions
 ggplot(data=train.data[train.data.sample.idx,]) + 
   geom_point(mapping = aes(x=price.pred.carat,y=price)) +
-  coord_equal(ratio=1) + 
   geom_abline(intercept=0, slope=1, color="red")
-# coord_equal ensures the x and y scales are the same
-
-# note: some price predictions are less than 0 - why is this?
 
 # compare with the plot of price vs carat directly
 ggplot(data=train.data[train.data.sample.idx,]) + 
   geom_point(mapping = aes(x=carat,y=price))
+
+
+# plot price vs. the model predictions with forced equal x, y scales
+ggplot(data=train.data[train.data.sample.idx,]) + 
+  geom_point(mapping = aes(x=price.pred.carat,y=price)) +
+  coord_equal(ratio=1) +
+  geom_abline(intercept=0, slope=1, color="red")
+
+# note: some price predictions are less than 0 - why is this?
+
 
 # check out the distribution of residuals for this model
 train.data$carat.lm.residuals <- train.data$price - train.data$price.pred.carat
@@ -49,13 +72,6 @@ ggplot(data=train.data[train.data.sample.idx,]) +
   geom_vline(xintercept = 0, color="red")
 
 # linear regression assumes error is normally distributed - are we close?
-
-# look at the distributions of carat and price independently
-ggplot(data=train.data) +
-  geom_histogram(mapping = aes(x=carat))
-
-ggplot(data=train.data) +
-  geom_histogram(mapping = aes(x=price))
 
 
 ### Polynomial models ###
@@ -117,11 +133,10 @@ accuracy(validation.data$price.pred.carat.poly.3, validation.data$price)
 
 # R-squared
 cor(validation.data$price.pred.carat.lm, validation.data$price)^2
-cor(validation.data$price.pred.carat.poly.2, validation.data$price)
-cor(validation.data$price.pred.carat.poly.3, validation.data$price)
+cor(validation.data$price.pred.carat.poly.2, validation.data$price)^2
+cor(validation.data$price.pred.carat.poly.3, validation.data$price)^2
 
 # what about adjusted R-squared?
-
 
 
 ### Why not use higher-order polynomials all the time? ###
@@ -160,7 +175,8 @@ ggplot(data=train.data.tiny) +
   stat_function(geom = "line",
                 fun = function(x) tiny.poly.1$coefficients[1] + 
                   tiny.poly.1$coefficients[2]*x
-                )
+                ) + 
+  ggtitle("Linear Model")
 
 
 # 2nd-order polynomial
@@ -171,7 +187,8 @@ ggplot(data=train.data.tiny) +
                 fun = function(x) tiny.poly.2$coefficients[1] + 
                   tiny.poly.2$coefficients[2]*x + 
                   tiny.poly.2$coefficients[3]*x^2
-  )
+  ) + 
+  ggtitle("Polynomial Order 2")
 
 # 3rd-order polynomial
 tiny.poly.3$coefficients
@@ -182,7 +199,8 @@ ggplot(data=train.data.tiny) +
                   tiny.poly.3$coefficients[2]*x + 
                   tiny.poly.3$coefficients[3]*x^2 + 
                   tiny.poly.3$coefficients[4]*x^3
-  )
+  ) + 
+  ggtitle("Polynomial Order 3")
 
 
 # 5th-order polynomial
@@ -196,7 +214,8 @@ ggplot(data=train.data.tiny) +
                   tiny.poly.5$coefficients[4]*x^3 + 
                   tiny.poly.5$coefficients[5]*x^4 + 
                   tiny.poly.5$coefficients[6]*x^5
-  )
+  ) + 
+  ggtitle("Polynomial Order 5")
 
 # what happens when we extrapolate?
 ggplot(data=train.data.tiny) + 
@@ -208,7 +227,8 @@ ggplot(data=train.data.tiny) +
                   tiny.poly.5$coefficients[4]*x^3 + 
                   tiny.poly.5$coefficients[5]*x^4 + 
                   tiny.poly.5$coefficients[6]*x^5
-  ) + xlim(0,2)
+  ) + xlim(0,2) + 
+  ggtitle("Polynomial Order 5")
 
 # 8th-order polynomial
 tiny.poly.8$coefficients
@@ -224,7 +244,8 @@ ggplot(data=train.data.tiny) +
                   tiny.poly.8$coefficients[7]*x^6 + 
                   tiny.poly.8$coefficients[8]*x^7 + 
                   tiny.poly.8$coefficients[9]*x^8
-  )
+  ) + 
+  ggtitle("Polynomial Order 8")
 
 # check out the validation results
 validation.data$val.preds.tiny.poly.1 <- predict(tiny.poly.1, newdata = validation.data)
@@ -283,3 +304,9 @@ cor(validation.data$val.preds.tiny.poly.3, validation.data$price) ^ 2
 cor(validation.data$val.preds.tiny.poly.5, validation.data$price) ^ 2
 cor(validation.data$val.preds.tiny.poly.8, validation.data$price) ^ 2
 
+
+
+# what is our best guess at real model performance?
+# note: this is why we have validation and test data
+test.data$predicted.price <- predict(carat.lm.poly.3, newdata=test.data)
+cor(test.data$predicted.price, test.data$price) ^ 2
