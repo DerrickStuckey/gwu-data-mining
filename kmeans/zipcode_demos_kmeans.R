@@ -64,10 +64,9 @@ ggplot(data = zipcode.demos.sel.sample) +
 
 
 
-# all but population are already normalized to [0,1]
 
 # normalize population variable
-# TODO do this for the whole dataset
+# all other variables are already normalized to [0,1]
 
 # first, transform to log scale
 zipcode.demos.sel.sample$population.log <-
