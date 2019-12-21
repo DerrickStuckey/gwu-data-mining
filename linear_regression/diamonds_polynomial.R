@@ -32,7 +32,7 @@ ggplot(data=train.data) +
   geom_histogram(mapping = aes(x=carat))
 
 # price vs carat
-ggplot(data=train.data[train.data.sample.idx,]) + 
+ggplot(data=train.data[train.plot.sample.idx,]) + 
   geom_point(mapping = aes(x=carat,y=price))
 
 
@@ -43,21 +43,25 @@ summary(carat.lm)
 train.data$price.pred.carat <- predict(carat.lm, newdata=train.data)
 
 # sample just 1000 points from the training data for easy plotting
-train.data.sample.idx <- sample(1:nrow(train.data), 1000)
+train.plot.sample.idx <- sample(1:nrow(train.data), 1000)
 
 
 # plot price vs. the model predictions
-ggplot(data=train.data[train.data.sample.idx,]) + 
+ggplot(data=train.data[train.plot.sample.idx,]) + 
   geom_point(mapping = aes(x=price.pred.carat,y=price)) +
   geom_abline(intercept=0, slope=1, color="red")
 
 # compare with the plot of price vs carat directly
-ggplot(data=train.data[train.data.sample.idx,]) + 
+ggplot(data=train.data[train.plot.sample.idx,]) + 
   geom_point(mapping = aes(x=carat,y=price))
+
+# ...in other words
+ggplot(data=train.data[train.plot.sample.idx,]) + 
+  geom_point(mapping = aes(x=carat,y=price.pred.carat))
 
 
 # plot price vs. the model predictions with forced equal x, y scales
-ggplot(data=train.data[train.data.sample.idx,]) + 
+ggplot(data=train.data[train.plot.sample.idx,]) + 
   geom_point(mapping = aes(x=price.pred.carat,y=price)) +
   coord_equal(ratio=1) +
   geom_abline(intercept=0, slope=1, color="red")
@@ -67,7 +71,7 @@ ggplot(data=train.data[train.data.sample.idx,]) +
 
 # check out the distribution of residuals for this model
 train.data$carat.lm.residuals <- train.data$price - train.data$price.pred.carat
-ggplot(data=train.data[train.data.sample.idx,]) +
+ggplot(data=train.data[train.plot.sample.idx,]) +
   geom_histogram(mapping = aes(x=carat.lm.residuals)) + 
   geom_vline(xintercept = 0, color="red")
 
@@ -83,14 +87,14 @@ summary(carat.lm.poly.2)
 
 # plot price vs predicted price for the polynomial model
 train.data$price.pred.carat.poly.2 <- predict(carat.lm.poly.2, newdata=train.data)
-ggplot(data=train.data[train.data.sample.idx,]) + 
+ggplot(data=train.data[train.plot.sample.idx,]) + 
   geom_point(mapping = aes(x=price.pred.carat.poly.2,y=price)) +
   coord_equal(ratio=1) + 
   geom_abline(intercept=0, slope=1, color="red")
 
 # look at the distribution of residuals
 train.data$residuals.carat.poly.2 <- train.data$price - train.data$price.pred.carat.poly.2
-ggplot(data=train.data[train.data.sample.idx,]) +
+ggplot(data=train.data[train.plot.sample.idx,]) +
   geom_histogram(mapping = aes(x=residuals.carat.poly.2)) + 
   geom_vline(xintercept = 0, color="red")
 
@@ -101,14 +105,14 @@ summary(carat.lm.poly.3)
 # plot price vs predicted price for the 3rd-order polynomial model
 train.data$price.pred.carat.poly.3 <- predict(carat.lm.poly.3, newdata=train.data)
 
-ggplot(data=train.data[train.data.sample.idx,]) + 
+ggplot(data=train.data[train.plot.sample.idx,]) + 
   geom_point(mapping = aes(x=price.pred.carat.poly.3,y=price)) +
   coord_equal(ratio=1) + 
   geom_abline(intercept=0, slope=1, color="red")
 
 # look at the distribution of residuals for the poly 3 model
 train.data$residuals.carat.poly.3 <- train.data$price - train.data$price.pred.carat.poly.3
-ggplot(data=train.data[train.data.sample.idx,]) +
+ggplot(data=train.data[train.plot.sample.idx,]) +
   geom_histogram(mapping = aes(x=residuals.carat.poly.3)) + 
   geom_vline(xintercept = 0, color="red")
 
