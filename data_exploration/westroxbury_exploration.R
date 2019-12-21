@@ -2,7 +2,13 @@
 # https://www.dataminingbook.com/book/r-edition
 westroxbury <- read.csv("./data/WestRoxbury.csv")
 
-# take a quick look at the data
+
+### basic R data functions ###
+
+# view the whole dataset
+View(westroxbury)
+
+# some other useful 'quick look' functions
 head(westroxbury)
 dim(westroxbury)
 names(westroxbury)
@@ -19,12 +25,24 @@ avector
 avector + 1
 anothervector <- c(avector,99)
 anothervector
+westroxbury[anothervector,]
+onethroughten <- 1:10
+onethroughten
 
 # select individual columns (and rows 1-10)
 westroxbury[1:10,1]
 westroxbury[1:10,2]
 westroxbury$TOTAL.VALUE[1:10]
 westroxbury$TAX[1:10]
+
+# other row/column selection tricks
+head(westroxbury)
+head(westroxbury[-1,])
+head(westroxbury[-c(1,3,5),])
+head(westroxbury[,1:3])
+head(westroxbury[,-(1:3)])
+head(westroxbury[,-c(1,2,3)])
+head(westroxbury[c(1,2,3),-c(1,2,3)])
 
 # view the whole table
 View(westroxbury)
@@ -34,11 +52,15 @@ mean(westroxbury$TOTAL.VALUE)
 median(westroxbury$TOTAL.VALUE)
 summary(westroxbury$TOTAL.VALUE)
 
+summary(westroxbury$FLOORS)
 table(westroxbury$FLOORS)
 table(westroxbury$REMODEL)
 
 # correlation between two variables
 cor(westroxbury$TOTAL.VALUE, westroxbury$LOT.SQFT)
+
+
+### data visualization ###
 
 # ggplot library
 # install.packages("ggplot2")
