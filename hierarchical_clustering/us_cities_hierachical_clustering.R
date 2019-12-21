@@ -11,9 +11,11 @@ us.cities <-
   separate(Coordinates, into=c("latitude","longitude"), sep=",", convert = TRUE)
 us.cities
 
+# top 50 largest US cities only
 top.50 <- us.cities %>%
   filter(Rank <= 50)
 
+# look at the top few
 top.50 %>%
   arrange(Rank)
 
