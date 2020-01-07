@@ -21,20 +21,20 @@ ggplot() +
   xlim(0,10) + ylim(0,10)
 
 # make a guess at the parameters for b0 and b1 and plot with that line added
-b0.est <- 2
-b1.est <- 0.3
+b0.guess <- 2
+b1.guess <- 0.3
 ggplot() + 
   geom_point(mapping = aes(x=x, y=y)) + 
-  geom_abline(mapping = aes(intercept = b0.est, slope = b1.est))
+  geom_abline(mapping = aes(intercept = b0.guess, slope = b1.guess))
 
 # try another guess
-b0.est <- 3
-b1.est <- 0.4
+b0.guess <- 3
+b1.guess <- 0.4
 ggplot() + 
   geom_point(mapping = aes(x=x, y=y)) + 
-  geom_abline(mapping = aes(intercept = b0.est, slope = b1.est))
+  geom_abline(mapping = aes(intercept = b0.guess, slope = b1.guess))
 
-# actually use a linear model
+# actually use a linear model to estimate b0 and b1
 linear.model <- lm(y ~ x)
 summary(linear.model)
 
@@ -51,6 +51,15 @@ ggplot() +
 
 # why did the linear model choose these parameters instead of 3 and 0.4 ?
 
-# TODO look at residuals
+# calculate SSE (sum of squared errors) for the "guess" model
+preds.guess <- b0.guess + b1.guess * x
+errors.guess <- preds.guess - y
+errors.guess
+sum.squared.errors.guess <- sum(errors.guess^2)
+squared.errors.guess
 
+# calculate SSE for the linear model
+preds.lm <- b0.lm + b1.lm * x
+sum.squared.errors.lm <- sum((preds.lm - y)^2)
+sum.squared.errors.lm
 
