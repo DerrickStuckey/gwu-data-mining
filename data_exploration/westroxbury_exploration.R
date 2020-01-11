@@ -115,10 +115,6 @@ ggplot(data=roxbury.sample) +
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE)) + 
   facet_wrap(~ REMODEL, nrow=2)
 
-# look at distribution of values for "REMODEL" alone
-# with a bar plot
-ggplot(data=westroxbury) + 
-  geom_bar(mapping=aes(x=REMODEL))
 
 # make a box plot of Lot Sq. Ft. vs Remodel type
 ggplot(data=westroxbury) + 
@@ -176,10 +172,17 @@ ggpairs(roxbury.sample[,c("TOTAL.VALUE", "BEDROOMS", "LOT.SQFT")])
 # jitter example
 ggplot(data=roxbury.sample) + 
   geom_point(mapping=aes(x=FLOORS, y=BEDROOMS))
+# what's wrong here?
 
+# geom_jitter shows the points in a way that is less accurate
+# but far more useful
 ggplot(data=roxbury.sample) + 
   geom_jitter(mapping=aes(x=FLOORS, y=BEDROOMS))
 
+# tune the spacing
+ggplot(data=roxbury.sample) + 
+  geom_jitter(mapping=aes(x=FLOORS, y=BEDROOMS),
+              width=0.1, height=0.2)
 
 ### Aesthetic options ###
 
@@ -227,6 +230,14 @@ ggplot(data=roxbury.sample) +
   theme(plot.title = element_text(hjust = 0.5))
 is.factor(roxbury.sample$BEDROOMS)
 is.factor(roxbury.sample$REMODEL)
+
+# and what is going on here?
+ggplot(data=roxbury.sample) + 
+  # geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE), color="darkblue") + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE, color="darkblue")) + 
+  xlab("Living Area") + ylab("Home Value") + 
+  ggtitle("Home Value vs Bedrooms") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
 # customize the colors used
 p <- ggplot(data=roxbury.sample) + 
