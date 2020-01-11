@@ -82,10 +82,6 @@ ggplot(data=westroxbury) +
 ggplot(data=westroxbury) + 
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE, color=REMODEL))
 
-# look at distribution of values for "REMODEL" alone
-ggplot(data=westroxbury) + 
-  geom_bar(mapping=aes(x=REMODEL))
-
 # too crowded in some areas; take a random sample
 nrow(westroxbury)
 set.seed(12345) # ensures we will get the same sample each time
@@ -110,10 +106,38 @@ ggplot(data=roxbury.sample) +
 ggplot(data=roxbury.sample) + 
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE, shape=REMODEL))
 
+# make the points a bit larger to see the shapes clearly
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE, shape=REMODEL), size=2)
+
 # plot each of the "remodel" types in separate charts
 ggplot(data=roxbury.sample) + 
   geom_point(mapping = aes(x=LOT.SQFT, y=TOTAL.VALUE)) + 
   facet_wrap(~ REMODEL, nrow=2)
+
+# look at distribution of values for "REMODEL" alone
+# with a bar plot
+ggplot(data=westroxbury) + 
+  geom_bar(mapping=aes(x=REMODEL))
+
+# make a box plot of Lot Sq. Ft. vs Remodel type
+ggplot(data=westroxbury) + 
+  geom_boxplot(mapping=aes(x=REMODEL, y=LOT.SQFT))
+
+# remove outliers
+ggplot(data=westroxbury) + 
+  geom_boxplot(mapping=aes(x=REMODEL, y=LOT.SQFT),
+               outlier.size = -1)
+
+# remove outliers and manually set the y limits
+ggplot(data=westroxbury) + 
+  geom_boxplot(mapping=aes(x=REMODEL, y=LOT.SQFT),
+               outlier.size = -1) +
+  ylim(0,15000)
+
+# or just use a base R boxplot
+boxplot(westroxbury$LOT.SQFT ~ westroxbury$REMODEL,
+        outline = FALSE)
 
 
 # add another variable, BEDROOMS, into the mix
