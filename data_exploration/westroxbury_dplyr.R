@@ -66,6 +66,9 @@ westroxbury.sorted
 # sort by value descending
 arrange(westroxbury, desc(`TOTAL VALUE`))
 
+# non-dplyr version
+westroxbury.sorted <- westroxbury[order(westroxbury$`TOTAL VALUE`, decreasing = TRUE),]
+westroxbury.sorted
 
 ## select columns
 
@@ -94,9 +97,78 @@ names(all.but.two)
 
 ## add new variables
 
-# tax rate
+# value per square foot
+mutate(westroxbury, value.per.sqft = `TOTAL VALUE` / `LOT SQFT`)
+names(westroxbury)
 
+westroxbury.2 <- mutate(westroxbury, value.per.sqft = `TOTAL VALUE` / `LOT SQFT`)
+names(westroxbury.2)
+summary(westroxbury.2$value.per.sqft)
 
+## data aggregation with "summarize"
+
+# average square footage
+summarize(westroxbury, avg.sq.ft = mean(`LOT SQFT`))
+mean(westroxbury$`LOT SQFT`)
+
+# note: the result of summarize is a tibble
+# tibbles don't display all digits by default
+# this is annoying, but we can deal with this a few ways:
+x <- summarize(westroxbury, avg.sq.ft = mean(`LOT SQFT`))
+x
+as.data.frame(x)
+as.numeric(x)
+View(x)
+
+# or by just not using tibbles in the first place
+summarize(westroxbury.dataframe, avg.sq.ft = mean(LOT.SQFT))
+
+# average square footage and living area
+summarize(westroxbury, 
+          avg.sq.ft = mean(`LOT SQFT`), 
+          avg.living.area = mean(`LIVING AREA`))
+
+# group by remodel
+remodel.groups <- group_by(westroxbury, REMODEL)
+summarise(remodel.groups,
+          avg.sq.ft = mean(`LOT SQFT`), 
+          avg.living.area = mean(`LIVING AREA`))
 
 ## pipe operator: %>%
 
+# equivalent statements:
+mean(westroxbury.2$`TOTAL VALUE`)
+westroxbury.2$`TOTAL VALUE` %>% mean()
+
+# the pipe just inserts the first argument
+# you can still use additional arguments
+mean(westroxbury.2$`TOTAL VALUE`, na.rm = TRUE)
+westroxbury.2$`TOTAL VALUE` %>% mean(na.rm=TRUE)
+
+# why use %>% ?
+# it allows us to string statements together
+
+# average value of houses with 1 floor
+westroxbury %>%
+  filter(FLOORS == 1) %>%
+  summarize(avg.value = mean(`TOTAL VALUE`))
+
+# equivalent without pipes:
+summarize(
+  filter(westroxbury, FLOORS == 1),
+  avg.value = mean(`TOTAL VALUE`)
+  )
+
+# average value of houses recent remodeled houses, 
+# grouped by number of baths
+# ranked descending
+westroxbury %>%
+  filter(REMODEL == "Recent") %>%
+  mutate(BATHS = `FULL BATH` + 0.5 * `HALF BATH`) %>%
+  group_by(BATHS) %>%
+  summarise(
+    AVG.VALUE = mean(`TOTAL VALUE`)
+  ) %>% 
+  arrange(
+    desc(AVG.VALUE)
+  )
