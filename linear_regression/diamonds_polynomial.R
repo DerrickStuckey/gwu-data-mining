@@ -135,12 +135,39 @@ accuracy(validation.data$price.pred.carat.poly.3, validation.data$price)
 # MPE: Mean Percentage Error
 # MAPE: Mean Absolute Percentage Error
 
-# R-squared
+# simple R-squared for validation data predictions vs validation data actual prices
 cor(validation.data$price.pred.carat.lm, validation.data$price)^2
 cor(validation.data$price.pred.carat.poly.2, validation.data$price)^2
 cor(validation.data$price.pred.carat.poly.3, validation.data$price)^2
 
-# what about adjusted R-squared?
+# is this a good measure of actual model performance?
+# does it have any weak spots?
+cor(validation.data$price.pred.carat.lm, validation.data$price)^2
+cor(validation.data$price.pred.carat.lm + 100000, validation.data$price)^2
+
+# an unbiased statistic that is comparable to R-squared
+# but against out-of-sample data
+rsq.holdout <- function(preds, actuals) {
+  SSE <- sum((actuals - preds) ^ 2)
+  SST <- sum((actuals - mean(actuals)) ^ 2)
+  rsq.holdout.value <- (1 - SSE / SST)
+  return(rsq.holdout.value)
+}
+
+# both versions for simple linear model
+cor(validation.data$price.pred.carat.lm, validation.data$price)^2
+rsq.holdout(validation.data$price.pred.carat.lm, validation.data$price)
+
+# both versions for poly 2 model
+cor(validation.data$price.pred.carat.poly.2, validation.data$price)^2
+rsq.holdout(validation.data$price.pred.carat.poly.2, validation.data$price)
+
+# both versions for poly 3 model
+cor(validation.data$price.pred.carat.poly.3, validation.data$price)^2
+rsq.holdout(validation.data$price.pred.carat.poly.3, validation.data$price)
+
+# what about adjusted R-squared? Do we need to account for model complexity when 
+# measuring against out-of-sample data?
 
 
 ### Why not use higher-order polynomials all the time? ###
@@ -301,13 +328,12 @@ accuracy(validation.data$val.preds.tiny.poly.8, validation.data$price)
 # MPE: Mean Percentage Error
 # MAPE: Mean Absolute Percentage Error
 
-# R-squared
+# simple R-squared for validation data
 cor(validation.data$val.preds.tiny.poly.1, validation.data$price) ^ 2
 cor(validation.data$val.preds.tiny.poly.2, validation.data$price) ^ 2
 cor(validation.data$val.preds.tiny.poly.3, validation.data$price) ^ 2
 cor(validation.data$val.preds.tiny.poly.5, validation.data$price) ^ 2
 cor(validation.data$val.preds.tiny.poly.8, validation.data$price) ^ 2
-
 
 
 # what is our best guess at real model performance?
