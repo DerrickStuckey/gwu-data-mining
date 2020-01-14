@@ -270,4 +270,14 @@ ggplot(data=roxbury.sample) +
   theme_economist() + 
   theme(plot.title = element_text(hjust = 0.5))
 
+# also, we can define the data within aes() instead of up front:
+ggplot() + 
+  geom_point(mapping=aes(x=roxbury.sample$LIVING.AREA, 
+                         y=roxbury.sample$TOTAL.VALUE))
+
+# and the data does not need to be in a data frame
+# we can just use vectors directly if we want
+ggplot() + 
+  geom_point(mapping=aes(x=c(0,1,2,3,4,5,6), y=c(5,0,3,2,4,1,6)))
+
 
