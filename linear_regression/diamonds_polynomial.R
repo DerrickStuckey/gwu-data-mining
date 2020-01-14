@@ -32,6 +32,13 @@ ggplot(data=train.data) +
   geom_histogram(mapping = aes(x=carat))
 
 # price vs carat
+ggplot(data=train.data) + 
+  geom_point(mapping = aes(x=carat,y=price))
+
+# sample just 1000 points from the training data for easy plotting
+train.plot.sample.idx <- sample(1:nrow(train.data), 1000)
+
+# price vs carat (sample only)
 ggplot(data=train.data[train.plot.sample.idx,]) + 
   geom_point(mapping = aes(x=carat,y=price))
 
@@ -41,9 +48,6 @@ carat.lm <- lm(data = train.data, price ~ carat)
 summary(carat.lm)
 
 train.data$price.pred.carat <- predict(carat.lm, newdata=train.data)
-
-# sample just 1000 points from the training data for easy plotting
-train.plot.sample.idx <- sample(1:nrow(train.data), 1000)
 
 
 # plot price vs. the model predictions
@@ -168,6 +172,16 @@ rsq.holdout(validation.data$price.pred.carat.poly.3, validation.data$price)
 
 # what about adjusted R-squared? Do we need to account for model complexity when 
 # measuring against out-of-sample data?
+
+
+# what is our best guess at real model performance?
+# note: this is why we have validation and test data
+# best.model <- carat.lm
+# best.model <- carat.lm.poly.2
+# best.model <- carat.lm.poly.3
+test.data$predicted.price <- predict(best.model, newdata=test.data)
+accuracy(test.data$predicted.price, test.data$price)
+rsq.holdout(test.data$predicted.price, test.data$price)
 
 
 ### Why not use higher-order polynomials all the time? ###
@@ -327,16 +341,3 @@ accuracy(validation.data$val.preds.tiny.poly.8, validation.data$price)
 # MAE: Mean Absolute Error
 # MPE: Mean Percentage Error
 # MAPE: Mean Absolute Percentage Error
-
-# simple R-squared for validation data
-cor(validation.data$val.preds.tiny.poly.1, validation.data$price) ^ 2
-cor(validation.data$val.preds.tiny.poly.2, validation.data$price) ^ 2
-cor(validation.data$val.preds.tiny.poly.3, validation.data$price) ^ 2
-cor(validation.data$val.preds.tiny.poly.5, validation.data$price) ^ 2
-cor(validation.data$val.preds.tiny.poly.8, validation.data$price) ^ 2
-
-
-# what is our best guess at real model performance?
-# note: this is why we have validation and test data
-test.data$predicted.price <- predict(carat.lm.poly.3, newdata=test.data)
-cor(test.data$predicted.price, test.data$price) ^ 2
