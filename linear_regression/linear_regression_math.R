@@ -1,4 +1,6 @@
 
+### generate some data
+
 # generate a vector of random values between 0 and 1
 set.seed(12345)
 x <- runif(10, min=0, max=10)
@@ -10,10 +12,14 @@ b1 <- 0.5
 
 # add random error terms
 errs <- rnorm(10, mean=0, sd=1)
+# note: rnorm() generates random data from a normal distribution
 errs
 
 y <- b0 + b1 * x + errs
 y
+
+
+### analyze our generated data
 
 # plot y vs x
 ggplot() + 
@@ -108,4 +114,30 @@ accuracy(preds.lm, y)
 # compare with the "guess" values
 accuracy(preds.guess, y)
 # are the model predictions best on every measure?
+
+
+
+### add an outlier
+outlier.x <- 0
+outlier.y <- 10
+
+x <- c(x, outlier.x)
+y <- c(y, outlier.y)
+
+# train a new linear regression model after adding this outlier
+linear.model.outlier <- lm(y ~ x)
+summary(linear.model.outlier)
+
+# plot the points with original and new linear models
+b0.lm.out <- linear.model.outlier$coefficients[1]
+b1.lm.out <- linear.model.outlier$coefficients[2]
+ggplot() + 
+  geom_point(mapping = aes(x=x, y=y)) + 
+  geom_abline(mapping = aes(intercept = b0.lm.out, 
+                            slope = b1.lm.out),
+              col = "blue") + 
+  geom_abline(mapping = aes(intercept = b0.lm, 
+                            slope = b1.lm),
+              col = "red") + 
+  xlim(0,10) + ylim(0,10)
 
