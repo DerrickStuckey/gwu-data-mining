@@ -1,6 +1,7 @@
 # from "Data Mining for Business Analytics"
 # https://www.dataminingbook.com/book/r-edition
 westroxbury <- read.csv("./data/WestRoxbury.csv")
+# how did I know where to find this file?
 
 
 ### basic R data functions ###
@@ -25,7 +26,10 @@ avector
 avector + 1
 anothervector <- c(avector,99)
 anothervector
+avector
 westroxbury[anothervector,]
+
+# create a vector of a specified range of integers
 onethroughten <- 1:10
 onethroughten
 
@@ -43,9 +47,6 @@ head(westroxbury[,1:3])
 head(westroxbury[,-(1:3)])
 head(westroxbury[,-c(1,2,3)])
 head(westroxbury[c(1,2,3),-c(1,2,3)])
-
-# view the whole table
-View(westroxbury)
 
 # some summary stats
 mean(westroxbury$TOTAL.VALUE)
