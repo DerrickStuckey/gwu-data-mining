@@ -277,7 +277,11 @@ ggplot() +
 
 # and the data does not need to be in a data frame
 # we can just use vectors directly if we want
+x.vector <- c(0,1,2,3,4,5,6)
+y.vector <- c(5,0,3,2,4,1,6)
 ggplot() + 
-  geom_point(mapping=aes(x=c(0,1,2,3,4,5,6), y=c(5,0,3,2,4,1,6)))
+  geom_point(mapping=aes(x=x.vector, y=y.vector))
 
-
+# same data in a line graph
+ggplot() + 
+  geom_line(mapping=aes(x=x.vector, y=y.vector))
