@@ -71,6 +71,10 @@ library(ggplot2)
 ggplot(data=westroxbury) + 
   geom_histogram(mapping=aes(x=TOTAL.VALUE))
 
+# histogram with specified number of bins
+ggplot(data=westroxbury) + 
+  geom_histogram(mapping=aes(x=TOTAL.VALUE), bins=50)
+
 # density plot of total value (like histogram but with proportion)
 ggplot(data=westroxbury) + 
   geom_density(mapping=aes(x=TOTAL.VALUE))
@@ -90,6 +94,7 @@ sample.index <- sample(1:nrow(westroxbury), 500)
 head(sample.index)
 length(sample.index)
 roxbury.sample <- westroxbury[sample.index,]
+  # just like westroxbury[c(1,3,5),]
 dim(westroxbury)
 dim(roxbury.sample)
 
@@ -166,7 +171,7 @@ ggplot(data=westroxbury) +
 # (all the variables except REMODEL and BEDROOMS are numeric)
 heatmap(cor(subset(westroxbury,select=-c(REMODEL,BEDROOMS))))
 
-# plot combinations of variables
+# plot combinations of variables (choose just 3 variables to keep it reasonable)
 library(GGally)
 ggpairs(roxbury.sample[,c("TOTAL.VALUE", "BEDROOMS", "LOT.SQFT")])
 
