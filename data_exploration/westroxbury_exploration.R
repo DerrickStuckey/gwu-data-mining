@@ -55,6 +55,7 @@ summary(westroxbury$TOTAL.VALUE)
 
 summary(westroxbury$FLOORS)
 table(westroxbury$FLOORS)
+summary(westroxbury$REMODEL)
 table(westroxbury$REMODEL)
 
 # correlation between two variables
@@ -126,6 +127,13 @@ ggplot(data=roxbury.sample) +
 ggplot(data=westroxbury) + 
   geom_boxplot(mapping=aes(x=REMODEL, y=LOT.SQFT))
 
+# violin plot of value vs number of floors
+# (need to make FLOORS a factor for geom_violin to recognize it as categorical)
+ggplot(data=westroxbury) + 
+  geom_violin(mapping=aes(x=as.factor(FLOORS), y=TOTAL.VALUE))
+
+
+
 # remove outliers
 ggplot(data=westroxbury) + 
   geom_boxplot(mapping=aes(x=REMODEL, y=LOT.SQFT),
@@ -155,6 +163,7 @@ ggplot(data=westroxbury) +
 
 summary(westroxbury$BEDROOMS)
 is.factor(westroxbury$BEDROOMS)
+is.numeric(westroxbury$BEDROOMS)
 
 # make BEDROOMS variable a factor, and try again
 westroxbury$BEDROOMS <- as.factor(westroxbury$BEDROOMS)
@@ -169,7 +178,11 @@ ggplot(data=westroxbury) +
 
 # simple heatmap of correlations between numeric variables
 # (all the variables except REMODEL and BEDROOMS are numeric)
-heatmap(cor(subset(westroxbury,select=-c(REMODEL,BEDROOMS))))
+heatmap(
+  cor(
+    subset(westroxbury,select=-c(REMODEL,BEDROOMS))
+    )
+  )
 
 # plot combinations of variables (choose just 3 variables to keep it reasonable)
 library(GGally)
@@ -205,7 +218,7 @@ ggplot(data=roxbury.sample) +
 ggplot(data=roxbury.sample) + 
   geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
   xlab("Living Area") + ylab("Home Value") + 
-  ggtitle("Home Value vs Bedrooms")
+  ggtitle("Home Value vs Living Area")
 
 # center the title
 ggplot(data=roxbury.sample) + 
@@ -239,8 +252,8 @@ is.factor(roxbury.sample$REMODEL)
 
 # and what is going on here?
 ggplot(data=roxbury.sample) + 
-  # geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE), color="darkblue") + 
-  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE, color="darkblue")) + 
+  # geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE), color="darkblue") +
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE, color="darkblue")) +
   xlab("Living Area") + ylab("Home Value") + 
   ggtitle("Home Value vs Bedrooms") + 
   theme(plot.title = element_text(hjust = 0.5))
@@ -261,7 +274,7 @@ ggplot(data=roxbury.sample) +
   geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
   xlab("Living Area") + ylab("Home Value") + 
   ggtitle("Home Value vs Bedrooms") + 
-  theme_minimal() + 
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
 
@@ -281,6 +294,7 @@ ggplot() +
   geom_point(mapping=aes(x=roxbury.sample$LIVING.AREA, 
                          y=roxbury.sample$TOTAL.VALUE))
 
+
 # and the data does not need to be in a data frame
 # we can just use vectors directly if we want
 x.vector <- c(0,1,2,3,4,5,6)
@@ -291,3 +305,12 @@ ggplot() +
 # same data in a line graph
 ggplot() + 
   geom_line(mapping=aes(x=x.vector, y=y.vector))
+
+
+# curve fit example using geom_smooth
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) +
+  geom_smooth(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE),
+              method=lm)
+
+
