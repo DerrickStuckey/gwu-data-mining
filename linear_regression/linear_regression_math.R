@@ -52,9 +52,12 @@ linear.model$coefficients[2]
   xm <- mean(x)
   ym <- mean(y)
   b1.calc <- sum( (x-xm)*(y-ym) ) / sum( (x-xm)^2 )
+  b1.calc
+    # alternatively
+    b1.calc <- cov(x, y) / var(x)
+    b1.calc
   b0.calc <- ym - b1.calc*xm
   b0.calc
-  b1.calc
   linear.model$coefficients
 
 b0.lm <- linear.model$coefficients[1]
