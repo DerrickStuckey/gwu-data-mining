@@ -1,3 +1,4 @@
+library(ggplot2)
 
 ### generate some data
 
