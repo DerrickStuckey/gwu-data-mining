@@ -19,6 +19,10 @@ test.index <- sample(1:nrow(holdout.data), nrow(diamonds)*test.proportion)
 test.data <- holdout.data[test.index,]
 validation.data <- holdout.data[-test.index,]
 
+dim(train.data)
+dim(validation.data)
+dim(test.data)
+
 ### a bit of data exploration ###
 
 # 'price' data distribution
@@ -120,7 +124,11 @@ ggplot(data=train.data[train.plot.sample.idx,]) +
   geom_histogram(mapping = aes(x=residuals.carat.poly.3)) + 
   geom_vline(xintercept = 0, color="red")
 
+# do these residuals appear normally distributed?
+# are they highly skewed?
+
 # compare performance of each model against the validation set
+# which do you expect to perform best?
 
 # compute predicted price by each model for the validation set
 validation.data$price.pred.carat.lm <- predict(carat.lm, newdata=validation.data)
@@ -145,30 +153,30 @@ cor(validation.data$price.pred.carat.poly.2, validation.data$price)^2
 cor(validation.data$price.pred.carat.poly.3, validation.data$price)^2
 
 # is this a good measure of actual model performance?
-# does it have any weak spots?
+# does it have any issues?
 cor(validation.data$price.pred.carat.lm, validation.data$price)^2
 cor(validation.data$price.pred.carat.lm + 100000, validation.data$price)^2
 
 # an unbiased statistic that is comparable to R-squared
 # but against out-of-sample data
-rsq.holdout <- function(preds, actuals) {
+rsq.test <- function(preds, actuals) {
   SSE <- sum((actuals - preds) ^ 2)
   SST <- sum((actuals - mean(actuals)) ^ 2)
-  rsq.holdout.value <- (1 - SSE / SST)
-  return(rsq.holdout.value)
+  rsq.test.value <- (1 - SSE / SST)
+  return(rsq.test.value)
 }
 
 # both versions for simple linear model
 cor(validation.data$price.pred.carat.lm, validation.data$price)^2
-rsq.holdout(validation.data$price.pred.carat.lm, validation.data$price)
+rsq.test(validation.data$price.pred.carat.lm, validation.data$price)
 
 # both versions for poly 2 model
 cor(validation.data$price.pred.carat.poly.2, validation.data$price)^2
-rsq.holdout(validation.data$price.pred.carat.poly.2, validation.data$price)
+rsq.test(validation.data$price.pred.carat.poly.2, validation.data$price)
 
 # both versions for poly 3 model
 cor(validation.data$price.pred.carat.poly.3, validation.data$price)^2
-rsq.holdout(validation.data$price.pred.carat.poly.3, validation.data$price)
+rsq.test(validation.data$price.pred.carat.poly.3, validation.data$price)
 
 # what about adjusted R-squared? Do we need to account for model complexity when 
 # measuring against out-of-sample data?
@@ -181,7 +189,7 @@ rsq.holdout(validation.data$price.pred.carat.poly.3, validation.data$price)
 # best.model <- carat.lm.poly.3
 test.data$predicted.price <- predict(best.model, newdata=test.data)
 accuracy(test.data$predicted.price, test.data$price)
-rsq.holdout(test.data$predicted.price, test.data$price)
+rsq.test(test.data$predicted.price, test.data$price)
 
 
 ### Why not use higher-order polynomials all the time? ###
@@ -194,7 +202,7 @@ train.data.tiny <- train.data[train.data.tiny.index,]
 ggplot(data=train.data.tiny) + 
   geom_point(mapping = aes(x = carat, y = price))
 
-# train our 3 polynomial models on the tiny dataset
+# train several polynomial models on the tiny dataset
 tiny.poly.1 <- lm(data=train.data.tiny, price ~ carat)
 summary(tiny.poly.1)
 
@@ -211,6 +219,10 @@ summary(tiny.poly.5)
 tiny.poly.8 <- lm(data=train.data.tiny, price ~ carat + I(carat^2) + I(carat^3)
                   + I(carat^4) + I(carat^5) + I(carat^6) + I(carat^7)+ I(carat^8))
 summary(tiny.poly.8)
+
+# how does R-squared change when we add terms?
+# what about adjusted R-squared?
+
 # look at the curves fit by each model
 
 # simple linear model
