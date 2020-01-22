@@ -302,6 +302,7 @@ ggplot(data=train.data.tiny) +
                   tiny.poly.8$coefficients[8]*x^7 + 
                   tiny.poly.8$coefficients[9]*x^8
   ) + 
+  xlim(0.2,1.6) + ylim(0,15000) + 
   ggtitle("Polynomial Order 8")
 
 # check out the validation results
