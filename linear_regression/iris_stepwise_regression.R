@@ -42,6 +42,9 @@ ggplot(data=train.data) +
 ggplot(data=train.data) + 
   geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=Species))
 
+ggplot(data=train.data) + 
+  geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length))
+
 # note: there appear to be different relationships between these variables 
 # for different species
 
@@ -69,6 +72,7 @@ summary(species.lm)
 
   # aside: what does a linear model with only categorical predictors actually do?
   species.lm.preds <- predict(species.lm, newdata = train.data)
+  head(species.lm.preds)
   table(species.lm.preds)
   
   library(tidyverse)
@@ -112,21 +116,15 @@ summary(step.lm.backward.inter)
 
 ### Model Testing ###
 
-# test each model
+# produce predictions for the test set for each model
 test.data$preds.full.lm <- predict(full.lm, newdata=test.data)
 test.data$preds.step.lm <- predict(step.lm.backward, newdata=test.data)
+test.data$peds.inter.lm <- predict(inter.lm, newdata=test.data)
 test.data$preds.step.inter.lm <- predict(step.lm.backward.inter, newdata = test.data)
 test.data$preds.petal.length.lm <- predict(petal.length.lm, newdata = test.data)
 
-# R-squared for the test results
-cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.step.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.step.inter.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.petal.length.lm, test.data$Sepal.Length)^2
-
 
 # plot actual values vs. predictions for each model
-
 ggplot(data=test.data) + 
   geom_point(mapping = aes(x=preds.full.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
@@ -147,4 +145,46 @@ ggplot(data=test.data) +
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Petal Length Only")
 
+# accuracy metrics for each model
+library(forecast)
+accuracy(test.data$preds.full.lm, test.data$Sepal.Length)
+accuracy(test.data$preds.step.lm, test.data$Sepal.Length)
+accuracy(test.data$peds.inter.lm, test.data$Sepal.Length)
+accuracy(test.data$preds.step.inter.lm, test.data$Sepal.Length)
+accuracy(test.data$preds.petal.length.lm, test.data$Sepal.Length)
+
+# R-squared for the test results
+cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
+cor(test.data$preds.step.lm, test.data$Sepal.Length)^2
+cor(test.data$peds.inter.lm, test.data$Sepal.Length)^2
+cor(test.data$preds.step.inter.lm, test.data$Sepal.Length)^2
+cor(test.data$preds.petal.length.lm, test.data$Sepal.Length)^2
+
+# is this a good measure of actual model performance?
+# does it have any issues?
+cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
+cor(test.data$preds.full.lm + 10, test.data$Sepal.Length)^2
+
+# an unbiased metric that is comparable to R-squared
+# but against out-of-sample data
+rsq.test <- function(preds, actuals) {
+  SSE <- sum((actuals - preds) ^ 2)
+  SST <- sum((actuals - mean(actuals)) ^ 2)
+  rsq.test.value <- (1 - SSE / SST)
+  return(rsq.test.value)
+}
+
+# "Test R-squared" for each model
+rsq.test(test.data$preds.full.lm, test.data$Sepal.Length)
+rsq.test(test.data$preds.step.lm, test.data$Sepal.Length)
+rsq.test(test.data$peds.inter.lm, test.data$Sepal.Length)
+rsq.test(test.data$preds.step.inter.lm, test.data$Sepal.Length)
+rsq.test(test.data$preds.petal.length.lm, test.data$Sepal.Length)
+
+# for comparison:
+cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
+rsq.test(test.data$preds.full.lm, test.data$Sepal.Length)
+
+cor(test.data$preds.full.lm+1, test.data$Sepal.Length)^2
+rsq.test(test.data$preds.full.lm+1, test.data$Sepal.Length)
 
