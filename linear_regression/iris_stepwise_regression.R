@@ -105,6 +105,7 @@ summary(step.lm.forward)
 # add an interaction term
 inter.lm.1 <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species)
 summary(inter.lm.1)
+# why isn't there a Sepal.Width:Speciessetosa term?
 
 # add a bunch of interaction terms
 inter.lm <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species + 
