@@ -103,8 +103,14 @@ summary(step.lm.forward)
 ### Feature Engineering ###
 
 # add an interaction term
+inter.lm.1 <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species)
+summary(inter.lm.1)
+
+# add a bunch of interaction terms
 inter.lm <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species + 
-                 Petal.Length*Species + Petal.Width*Species)
+                 Petal.Length*Species + Petal.Width*Species + 
+                 Petal.Width * Sepal.Width + Sepal.Width * Petal.Length + 
+                 Petal.Length * Petal.Width)
 summary(inter.lm)
 
 # run stepwise regression again
@@ -119,7 +125,7 @@ summary(step.lm.backward.inter)
 # produce predictions for the test set for each model
 test.data$preds.full.lm <- predict(full.lm, newdata=test.data)
 test.data$preds.step.lm <- predict(step.lm.backward, newdata=test.data)
-test.data$peds.inter.lm <- predict(inter.lm, newdata=test.data)
+test.data$preds.inter.lm <- predict(inter.lm, newdata=test.data)
 test.data$preds.step.inter.lm <- predict(step.lm.backward.inter, newdata = test.data)
 test.data$preds.petal.length.lm <- predict(petal.length.lm, newdata = test.data)
 
@@ -136,6 +142,11 @@ ggplot(data=test.data) +
   ggtitle("Stepwise")
 
 ggplot(data=test.data) + 
+  geom_point(mapping = aes(x=preds.inter.lm, y=Sepal.Length)) + 
+  geom_abline(intercept = 0, slope = 1, color = "red") + 
+  ggtitle("Full Interaction Terms")
+
+ggplot(data=test.data) + 
   geom_point(mapping = aes(x=preds.step.inter.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Stepwise with Interaction Terms")
@@ -149,14 +160,14 @@ ggplot(data=test.data) +
 library(forecast)
 accuracy(test.data$preds.full.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.step.lm, test.data$Sepal.Length)
-accuracy(test.data$peds.inter.lm, test.data$Sepal.Length)
+accuracy(test.data$preds.inter.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.step.inter.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.petal.length.lm, test.data$Sepal.Length)
 
 # R-squared for the test results
 cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
 cor(test.data$preds.step.lm, test.data$Sepal.Length)^2
-cor(test.data$peds.inter.lm, test.data$Sepal.Length)^2
+cor(test.data$preds.inter.lm, test.data$Sepal.Length)^2
 cor(test.data$preds.step.inter.lm, test.data$Sepal.Length)^2
 cor(test.data$preds.petal.length.lm, test.data$Sepal.Length)^2
 
@@ -177,7 +188,7 @@ rsq.test <- function(preds, actuals) {
 # "Test R-squared" for each model
 rsq.test(test.data$preds.full.lm, test.data$Sepal.Length)
 rsq.test(test.data$preds.step.lm, test.data$Sepal.Length)
-rsq.test(test.data$peds.inter.lm, test.data$Sepal.Length)
+rsq.test(test.data$preds.inter.lm, test.data$Sepal.Length)
 rsq.test(test.data$preds.step.inter.lm, test.data$Sepal.Length)
 rsq.test(test.data$preds.petal.length.lm, test.data$Sepal.Length)
 
