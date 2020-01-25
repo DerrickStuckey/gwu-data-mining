@@ -99,6 +99,11 @@ summary(step.lm.forward)
 
 # any difference?
 
+# pick the 2 "best" predictors (at least according to stepwise regression)
+step.lm.forward.2 <- step(dummy.lm, direction = "forward",
+                        scope=list(lower=dummy.lm, upper=full.lm),
+                        steps=2)
+summary(step.lm.forward.2)
 
 ### Feature Engineering ###
 
