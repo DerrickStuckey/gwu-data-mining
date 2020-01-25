@@ -98,17 +98,24 @@ names(all.but.two)
 ## add new variables
 
 # value per square foot
-mutate(westroxbury, value.per.sqft = `TOTAL VALUE` / `LOT SQFT`)
+mutate(westroxbury, 
+       value.per.sqft = `TOTAL VALUE` / `LOT SQFT`
+       )
 names(westroxbury)
 
-westroxbury.2 <- mutate(westroxbury, value.per.sqft = `TOTAL VALUE` / `LOT SQFT`)
+# create a new tibble that holds this new value
+westroxbury.2 <- mutate(westroxbury, 
+                        value.per.sqft = `TOTAL VALUE` / `LOT SQFT`
+                        )
 names(westroxbury.2)
 summary(westroxbury.2$value.per.sqft)
 
 ## data aggregation with "summarize"
 
 # average square footage
-summarize(westroxbury, avg.sq.ft = mean(`LOT SQFT`))
+summarize(westroxbury, 
+          avg.sq.ft = mean(`LOT SQFT`)
+          )
 mean(westroxbury$`LOT SQFT`)
 
 # note: the result of summarize is a tibble
@@ -121,7 +128,9 @@ as.numeric(x)
 View(x)
 
 # or by just not using tibbles in the first place
-summarize(westroxbury.dataframe, avg.sq.ft = mean(LOT.SQFT))
+summarize(westroxbury.dataframe, 
+          avg.sq.ft = mean(LOT.SQFT)
+          )
 
 # average square footage and living area
 summarize(westroxbury, 
@@ -143,7 +152,8 @@ westroxbury.2$`TOTAL VALUE` %>% mean()
 # the pipe just inserts the first argument
 # you can still use additional arguments
 mean(westroxbury.2$`TOTAL VALUE`, na.rm = TRUE)
-westroxbury.2$`TOTAL VALUE` %>% mean(na.rm=TRUE)
+westroxbury.2$`TOTAL VALUE` %>% 
+  mean(na.rm=TRUE)
 
 # why use %>% ?
 # it allows us to string statements together
@@ -158,6 +168,7 @@ summarize(
   filter(westroxbury, FLOORS == 1),
   avg.value = mean(`TOTAL VALUE`)
   )
+# same operations, but specified in a different order
 
 # average value of houses recent remodeled houses, 
 # grouped by number of baths
@@ -172,3 +183,5 @@ westroxbury %>%
   arrange(
     desc(AVG.VALUE)
   )
+
+
