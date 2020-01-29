@@ -44,6 +44,9 @@ ggplot() +
 # actually use a linear model to estimate b0 and b1
 linear.model <- lm(y ~ x)
 summary(linear.model)
+cor(preds.lm,y) ^ 2
+cor(x,y) ^ 2
+cor(x, y + 1000) ^ 2
 
 linear.model$coefficients
 linear.model$coefficients[1]
@@ -93,6 +96,7 @@ me.lm <- mean(errors.lm)
 me.lm
 
 # RMSE (root mean squared error)
+mse.lm <- mean(errors.lm^2)
 mse.lm <- sum.squared.errors.lm / length(errors.lm)
 rmse.lm <- sqrt(mse.lm)
 rmse.lm
@@ -101,6 +105,7 @@ rmse.lm
 abs.errors.lm <- abs(errors.lm)
 abs.errors.lm
 mae.lm <- mean(abs.errors.lm)
+mae.lm
 
 # MPE (mean percentage error)
 mpe.lm <- mean(errors.lm / y) * 100
@@ -109,6 +114,9 @@ mpe.lm
 # MAPE (mean absolute percentage error)
 mape.lm <- mean(abs.errors.lm / y) * 100
 mape.lm
+
+mape2.lm <- mean(abs.errors.lm / preds.lm) * 100
+mape2.lm
 
 # or we can get these values much more easily from the accuracy() function
 # in the "forecast" package 
@@ -144,4 +152,8 @@ ggplot() +
                             slope = b1.lm),
               col = "red") + 
   xlim(0,10) + ylim(0,10)
+
+preds.lm.out <- b0.lm.out + b1.lm.out * x
+
+accuracy(preds.lm.out, y)
 
