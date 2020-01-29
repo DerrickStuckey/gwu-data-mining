@@ -8,7 +8,7 @@ dim(iris)
 # https://www.math.umd.edu/~petersd/666/html/iris_pca.html
 # https://www.snaplogic.com/machine-learning-showcase/iris-flower-classification
 
-# training / test split (no validation set this time)
+# training / test split (no final test set this time)
 set.seed(12345)
 train.proportion <- 0.67
 test.proportion <- 0.33
@@ -64,7 +64,6 @@ summary(petal.width.lm)
 # Sepal Width as predictor
 sepal.width.lm <- lm(data = train.data, Sepal.Length ~ Sepal.Width)
 summary(sepal.width.lm)
-# what does the coefficient mean?
 
 # Species 
 species.lm <- lm(data = train.data, Sepal.Length ~ Species)
@@ -97,7 +96,8 @@ step.lm.forward <- step(dummy.lm, direction = "forward",
                         scope=list(lower=dummy.lm, upper=full.lm))
 summary(step.lm.forward)
 
-# any difference?
+# any difference in predictors used?
+# any difference in coefficients?
 
 # pick the 2 "best" predictors (at least according to stepwise regression)
 step.lm.forward.2 <- step(dummy.lm, direction = "forward",
@@ -162,6 +162,8 @@ ggplot(data=test.data) +
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Petal Length Only")
 
+# do these look like good relationships?
+
 # accuracy metrics for each model
 library(forecast)
 accuracy(test.data$preds.full.lm, test.data$Sepal.Length)
@@ -169,6 +171,9 @@ accuracy(test.data$preds.step.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.inter.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.step.inter.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.petal.length.lm, test.data$Sepal.Length)
+
+# which model performs best against the test set?
+# have any of the models overfit the training data? how can we tell?
 
 # R-squared for the test results
 cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
