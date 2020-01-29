@@ -10,14 +10,19 @@ dim(iris)
 
 # training / test split (no final test set this time)
 set.seed(12345)
-train.proportion <- 0.67
-test.proportion <- 0.33
+train.proportion <- 0.6
+validation.proportion <- 0.2
+test.proportion <- 0.2
 
+# select training data
 train.index <- sample(1:nrow(iris), nrow(iris)*train.proportion)
 train.data <- iris[train.index,]
-test.data <- iris[-train.index,]
-dim(train.data)
-dim(test.data)
+
+# select test and validation from what's left over
+holdout.data <- iris[-train.index,]
+test.index <- sample(1:nrow(holdout.data), nrow(iris)*test.proportion)
+test.data <- holdout.data[test.index,]
+validation.data <- holdout.data[-test.index,]
 
 ### data exploration ###
 
@@ -42,6 +47,7 @@ ggplot(data=train.data) +
 ggplot(data=train.data) + 
   geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=Species))
 
+# notice the difference if we ignore species:
 ggplot(data=train.data) + 
   geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length))
 
@@ -123,41 +129,49 @@ summary(inter.lm)
 step.lm.backward.inter <- step(inter.lm, direction="backward")
 summary(step.lm.backward.inter)
 
-# what looks like the best model?
+# what looks like the best model, according to R-squared? Adjusted R-squared?
+
+
+# what looks like the best model? (according to RMSE)
+# sqrt(mean(full.lm$residuals^2))
+# sqrt(mean(step.lm.backward$residuals^2))
+# sqrt(mean(inter.lm$residuals^2))
+# sqrt(mean(step.lm.backward.inter$residuals^2))
+# sqrt(mean(petal.length.lm$residuals^2))
 
 
 ### Model Testing ###
 
-# produce predictions for the test set for each model
-test.data$preds.full.lm <- predict(full.lm, newdata=test.data)
-test.data$preds.step.lm <- predict(step.lm.backward, newdata=test.data)
-test.data$preds.inter.lm <- predict(inter.lm, newdata=test.data)
-test.data$preds.step.inter.lm <- predict(step.lm.backward.inter, newdata = test.data)
-test.data$preds.petal.length.lm <- predict(petal.length.lm, newdata = test.data)
+# produce predictions for the validation set for each model
+validation.data$preds.full.lm <- predict(full.lm, newdata=validation.data)
+validation.data$preds.step.lm <- predict(step.lm.backward, newdata=validation.data)
+validation.data$preds.inter.lm <- predict(inter.lm, newdata=validation.data)
+validation.data$preds.step.inter.lm <- predict(step.lm.backward.inter, newdata = validation.data)
+validation.data$preds.petal.length.lm <- predict(petal.length.lm, newdata = validation.data)
 
 
 # plot actual values vs. predictions for each model
-ggplot(data=test.data) + 
+ggplot(data=validation.data) + 
   geom_point(mapping = aes(x=preds.full.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Full Linear Model")
 
-ggplot(data=test.data) + 
+ggplot(data=validation.data) + 
   geom_point(mapping = aes(x=preds.step.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Stepwise")
 
-ggplot(data=test.data) + 
+ggplot(data=validation.data) + 
   geom_point(mapping = aes(x=preds.inter.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Full Interaction Terms")
 
-ggplot(data=test.data) + 
+ggplot(data=validation.data) + 
   geom_point(mapping = aes(x=preds.step.inter.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Stepwise with Interaction Terms")
 
-ggplot(data=test.data) + 
+ggplot(data=validation.data) + 
   geom_point(mapping = aes(x=preds.petal.length.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Petal Length Only")
@@ -166,47 +180,68 @@ ggplot(data=test.data) +
 
 # accuracy metrics for each model
 library(forecast)
+accuracy(validation.data$preds.full.lm, validation.data$Sepal.Length)
+accuracy(validation.data$preds.step.lm, validation.data$Sepal.Length)
+accuracy(validation.data$preds.inter.lm, validation.data$Sepal.Length)
+accuracy(validation.data$preds.step.inter.lm, validation.data$Sepal.Length)
+accuracy(validation.data$preds.petal.length.lm, validation.data$Sepal.Length)
+
+# which model performs best against the validation set?
+# have any of the models overfit the training data? how can we tell?
+
+# R-squared for the validation results
+cor(validation.data$preds.full.lm, validation.data$Sepal.Length)^2
+cor(validation.data$preds.step.lm, validation.data$Sepal.Length)^2
+cor(validation.data$preds.inter.lm, validation.data$Sepal.Length)^2
+cor(validation.data$preds.step.inter.lm, validation.data$Sepal.Length)^2
+cor(validation.data$preds.petal.length.lm, validation.data$Sepal.Length)^2
+
+# is this a good measure of actual model performance?
+# does it have any issues?
+cor(validation.data$preds.full.lm, validation.data$Sepal.Length)^2
+cor(validation.data$preds.full.lm + 10, validation.data$Sepal.Length)^2
+
+# an unbiased metric that is comparable to R-squared
+# but against out-of-sample data
+rsq.validation <- function(preds, actuals) {
+  SSE <- sum((actuals - preds) ^ 2)
+  SST <- sum((actuals - mean(actuals)) ^ 2)
+  rsq.validation.value <- (1 - SSE / SST)
+  return(rsq.validation.value)
+}
+
+# "validation R-squared" for each model
+rsq.validation(validation.data$preds.full.lm, validation.data$Sepal.Length)
+rsq.validation(validation.data$preds.step.lm, validation.data$Sepal.Length)
+rsq.validation(validation.data$preds.inter.lm, validation.data$Sepal.Length)
+rsq.validation(validation.data$preds.step.inter.lm, validation.data$Sepal.Length)
+rsq.validation(validation.data$preds.petal.length.lm, validation.data$Sepal.Length)
+
+# for comparison:
+cor(validation.data$preds.full.lm, validation.data$Sepal.Length)^2
+rsq.validation(validation.data$preds.full.lm, validation.data$Sepal.Length)
+
+cor(validation.data$preds.full.lm+1, validation.data$Sepal.Length)^2
+rsq.validation(validation.data$preds.full.lm+1, validation.data$Sepal.Length)
+
+# which model do we think is really the "best", with what we've seen so far?
+
+
+# produce predictions for the test set for each model
+test.data$preds.full.lm <- predict(full.lm, newdata=test.data)
+test.data$preds.step.lm <- predict(step.lm.backward, newdata=test.data)
+test.data$preds.inter.lm <- predict(inter.lm, newdata=test.data)
+test.data$preds.step.inter.lm <- predict(step.lm.backward.inter, newdata = test.data)
+test.data$preds.petal.length.lm <- predict(petal.length.lm, newdata = test.data)
+
+# accuracy against the test set
 accuracy(test.data$preds.full.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.step.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.inter.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.step.inter.lm, test.data$Sepal.Length)
 accuracy(test.data$preds.petal.length.lm, test.data$Sepal.Length)
 
-# which model performs best against the test set?
-# have any of the models overfit the training data? how can we tell?
+# are the test results similar?
+# should we change our mind about which model is best?
 
-# R-squared for the test results
-cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.step.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.inter.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.step.inter.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.petal.length.lm, test.data$Sepal.Length)^2
-
-# is this a good measure of actual model performance?
-# does it have any issues?
-cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
-cor(test.data$preds.full.lm + 10, test.data$Sepal.Length)^2
-
-# an unbiased metric that is comparable to R-squared
-# but against out-of-sample data
-rsq.test <- function(preds, actuals) {
-  SSE <- sum((actuals - preds) ^ 2)
-  SST <- sum((actuals - mean(actuals)) ^ 2)
-  rsq.test.value <- (1 - SSE / SST)
-  return(rsq.test.value)
-}
-
-# "Test R-squared" for each model
-rsq.test(test.data$preds.full.lm, test.data$Sepal.Length)
-rsq.test(test.data$preds.step.lm, test.data$Sepal.Length)
-rsq.test(test.data$preds.inter.lm, test.data$Sepal.Length)
-rsq.test(test.data$preds.step.inter.lm, test.data$Sepal.Length)
-rsq.test(test.data$preds.petal.length.lm, test.data$Sepal.Length)
-
-# for comparison:
-cor(test.data$preds.full.lm, test.data$Sepal.Length)^2
-rsq.test(test.data$preds.full.lm, test.data$Sepal.Length)
-
-cor(test.data$preds.full.lm+1, test.data$Sepal.Length)^2
-rsq.test(test.data$preds.full.lm+1, test.data$Sepal.Length)
-
+# what is our best estimate of the model's "true" performance?
