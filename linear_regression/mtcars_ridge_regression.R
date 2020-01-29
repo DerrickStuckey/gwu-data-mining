@@ -1,7 +1,10 @@
+# for linearRidge function
 library(ridge)
 
+library(tidyverse)
+
 # load included "mtcars" dataset
-mtcars
+data(mtcars)
 
 head(mtcars)
 dim(mtcars)
@@ -20,6 +23,7 @@ test.data <- mtcars[-train.idx,]
 # with lambda (coefficient penalty parameter) = 0.1
 ridge.lm <- linearRidge(mpg ~ ., data=train.data, lambda = 0.1)
 summary(ridge.lm)
+# "Scaled estimate" - why is this necessary?
 
 # with lambda (coefficient penalty parameter) = 0.2
 ridge.lm.2 <- linearRidge(mpg ~ ., data=train.data, lambda = 0.2)
@@ -32,6 +36,10 @@ head(ridge.lm.2$coef)
 # which model has bigger parameters on average?
 sum(abs(ridge.lm$coef))
 sum(abs(ridge.lm.2$coef))
+
+# the total "penalty" terms for each version:
+sum(ridge.lm$coef^2)
+sum(ridge.lm.2$coef^2)
 
 # what about lambda = 1? 100? 0?
 
@@ -53,10 +61,14 @@ sd(ridge.preds)
 # which are actually better?
 ggplot() + 
   geom_point(mapping = aes(x=basic.preds, y=test.data$mpg)) + 
-  ggtitle("Basic Linear Regression")
+  ggtitle("Basic Linear Regression") + 
+  xlim(10,35) + 
+  geom_abline(mapping = aes(intercept=0,slope=1), col="red")
 ggplot() + 
   geom_point(mapping = aes(x=ridge.preds, y=test.data$mpg)) + 
-  ggtitle("Ridge Regression")
+  ggtitle("Ridge Regression") + 
+  xlim(10,35) + 
+  geom_abline(mapping = aes(intercept=0,slope=1), col="red")
 
 library(forecast)
 accuracy(basic.preds, test.data$mpg)
