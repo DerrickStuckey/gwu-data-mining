@@ -15,7 +15,6 @@ westroxbury.tibble
 
 # compare with a regular dataframe:
 westroxbury.dataframe <- read.csv("./data/WestRoxbury.csv")
-westroxbury.dataframe
 
 westroxbury.dataframe
 westroxbury.tibble
@@ -36,13 +35,13 @@ westroxbury
 
 ## filtering
 
-# filter by number of floors
+# filter by number of floors using dplyr filter() function
 single.floor.homes <- filter(westroxbury, FLOORS == 1)
 single.floor.homes
 table(westroxbury$FLOORS)
 table(single.floor.homes$FLOORS)
 
-# this is totally equivalent to:
+# this is totally equivalent to (base R):
 single.floor.homes <- westroxbury[westroxbury$FLOORS==1,]
 table(westroxbury$FLOORS)
 table(single.floor.homes$FLOORS)
@@ -55,7 +54,7 @@ table(multi.floor.homes$FLOORS)
 
 ## sorting
 
-# sort the tibble using arrange() function
+# sort the tibble using dplyr arrange() function
 arrange(westroxbury, `TOTAL VALUE`)
 
 # did we change the original tibble or make a new one?
@@ -66,17 +65,22 @@ westroxbury.sorted
 # sort by value descending
 arrange(westroxbury, desc(`TOTAL VALUE`))
 
-# non-dplyr version
+# Base R (non-dplyr) version
 westroxbury.sorted <- westroxbury[order(westroxbury$`TOTAL VALUE`, decreasing = TRUE),]
 westroxbury.sorted
 
 ## select columns
 
 # select only kitchen and fireplace columns
+# select() function from dplyr
 kitchen.fireplace <- select(westroxbury, KITCHEN, FIREPLACE)
 kitchen.fireplace
 names(westroxbury)
 names(kitchen.fireplace)
+
+# base R
+kitchen.fireplace.2 <- westroxbury[,c("KITCHEN","FIREPLACE")]
+kitchen.fireplace.2
 
 # select all but one column
 all.but.one <- select(westroxbury, -`TOTAL VALUE`)
@@ -95,7 +99,7 @@ all.but.two <- select(westroxbury, -c(`TOTAL VALUE`, TAX))
 all.but.two
 names(all.but.two)
 
-## add new variables
+## add new variables using dplyr mutate() function
 
 # value per square foot
 mutate(westroxbury, 
@@ -110,12 +114,14 @@ westroxbury.2 <- mutate(westroxbury,
 names(westroxbury.2)
 summary(westroxbury.2$value.per.sqft)
 
-## data aggregation with "summarize"
+## data aggregation with dplyr summarize() function
 
 # average square footage
 summarize(westroxbury, 
           avg.sq.ft = mean(`LOT SQFT`)
           )
+
+# equivalent to:
 mean(westroxbury$`LOT SQFT`)
 
 # note: the result of summarize is a tibble
@@ -156,7 +162,7 @@ westroxbury.2$`TOTAL VALUE` %>%
   mean(na.rm=TRUE)
 
 # why use %>% ?
-# it allows us to string statements together
+# it allows us to string operations together
 
 # average value of houses with 1 floor
 westroxbury %>%
@@ -170,6 +176,7 @@ summarize(
   )
 # same operations, but specified in a different order
 
+# string many operations together in a single statement
 # average value of houses recent remodeled houses, 
 # grouped by number of baths
 # ranked descending
