@@ -68,21 +68,100 @@ dim(train.data)
 dim(test.data)
 dim(validation.data)
 
-# TODO add heatmap of correlations, other visualizations
+# explore some basic relationships
+table(train.data$`CD Account`,train.data$Loan.Status)
+table(train.data$`Securities Account`,train.data$Loan.Status)
+table(train.data$CreditCard,train.data$Loan.Status)
+cor(train.data$`CD Account`,train.data$Loan.Status=="Accepts")
+cor(train.data$`Securities Account`,train.data$Loan.Status=="Accepts")
+cor(train.data$CreditCard,train.data$Loan.Status=="Accepts")
 
-# try with just a few variables
-bd.nb <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account`,
+
+## first model
+
+# train a naive bayes model using just a single variable
+bd.nb.1 <- naiveBayes(Loan.Status ~ `CD Account`,
                     data=train.data)
+bd.nb.1
 
-bd.nb
+# prob(Accepts | CD Account ) = prob(Accepts) * prob(CD Account | Accepts) / prob(CD Account)
+p.accepts <- mean(train.data$Loan.Status=="Accepts")
+p.rejects <- 1 - p.accepts
+p.cd.if.accepts <- mean(train.data$`CD Account`[train.data$Loan.Status=="Accepts"])
+p.cd.if.rejects <- mean(train.data$`CD Account`[train.data$Loan.Status=="Rejects"])
+p.accepts.if.cd <- p.accepts * p.cd.if.accepts / 
+  (p.accepts * p.cd.if.accepts + p.rejects * p.cd.if.rejects)
+
+# equivalently in the 1-predictor case:
+  p.cd <- mean(train.data$`CD Account`)
+  p.accepts.if.cd <- p.accepts * p.cd.if.accepts / 
+    p.cd
+
+p.accepts.if.cd
+
+# prob(Accepts | No CD Account ) = prob(Accepts) * prob(No CD Account | Accepts) / prob(No CD Account)
+p.no.cd <- 1 - p.cd
+p.no.cd.if.accepts <- 1 - p.cd.if.accepts
+p.accepts.if.no.cd <- p.accepts * p.no.cd.if.accepts / p.no.cd
+p.accepts.if.no.cd
+
+
+# look at predictions this model makes for a few examples
+example.data <- data.frame('CD Account'=c(TRUE,TRUE,FALSE,FALSE),
+                           'Securities Account'=c(TRUE,FALSE,TRUE,FALSE))
+names(example.data) <- c('CD Account','Securities Account') # fix name formatting
+example.data$preds.bd.nb.1 <- predict(bd.nb.1, newdata = example.data, type = "raw")
+head(example.data)
+
+# compare with manually computed probabilities
+p.accepts.if.cd
+p.accepts.if.no.cd
+
+
+### next model
+
+# add another variable
+bd.nb.2 <- naiveBayes(Loan.Status ~ `CD Account` + `Securities Account`,
+                    data=train.data)
+bd.nb.2
 
 # manually verify the conditional probabilities
 train.data %>%
   group_by(Loan.Status) %>%
   summarise(
-    securities.pct = mean(`Securities Account`),
-    cd.account.pct = mean(`CD Account`)
+    cd.account.pct = mean(`CD Account`),
+    securities.pct = mean(`Securities Account`)
   )
+
+# manually compute predictions some example cases
+p.securities.if.accepts <- mean(train.data$`Securities Account`[train.data$Loan.Status=="Accepts"])
+p.securities.if.rejects <- mean(train.data$`Securities Account`[train.data$Loan.Status=="Rejects"])
+p.securities <- p.accepts * p.securities.if.accepts + (1-p.accepts) * p.securities.if.rejects
+
+# probability of "Accepts" if CD Account AND Securities Account
+p.accepts.if.cd.securities <- (p.accepts * p.securities.if.accepts * p.cd.if.accepts) /
+  (p.accepts * p.securities.if.accepts * p.cd.if.accepts + 
+     p.rejects * p.securities.if.rejects * p.cd.if.rejects)
+p.accepts.if.cd.securities
+
+# probability of "Accepts" if No CD Account and Securities Account
+p.no.cd.if.rejects <- 1 - p.cd.if.rejects
+p.accepts.if.no.cd.securities <- (p.accepts * p.securities.if.accepts * p.no.cd.if.accepts) /
+  (p.accepts * p.securities.if.accepts * p.no.cd.if.accepts + 
+     p.rejects * p.securities.if.rejects * p.no.cd.if.rejects)
+p.accepts.if.no.cd.securities
+
+# look at predictions this model makes for a few examples
+example.data <- data.frame('CD Account'=c(TRUE,TRUE,FALSE,FALSE),
+                           'Securities Account'=c(TRUE,FALSE,TRUE,FALSE))
+names(example.data) <- c('CD Account','Securities Account') # fix name formatting
+example.data$preds.bd.nb.2 <- predict(bd.nb.2, newdata = example.data, type = "raw")
+head(example.data)
+
+# compare with manually computed probabilities
+p.accepts.if.cd.securities
+p.accepts.if.no.cd.securities
+# etc...
 
 # predicted probability of each class
 validation.probabilities.1 <- predict(bd.nb, newdata = validation.data, type = "raw")
@@ -90,14 +169,12 @@ head(validation.probabilities.1)
 summary(validation.probabilities.1)
 table(validation.probabilities.1[,1]) # only 4 possible values since we have only 2 binary predictors
 
-# TODO manually calculate the probabilties for a few example data points
-
 # force the model to actually choose a class
 validation.predictions.1 <- predict(bd.nb, newdata = validation.data, type = "class")
 head(validation.predictions.1)
 summary(validation.predictions.1)
 
-# look at a confusion matrix (from the 'caret' library)
+# look at a confusion matrix (confusionMatrix() function from the 'caret' library)
 confusionMatrix(validation.predictions.1, validation.data$Loan.Status)
 
 #             Reference
