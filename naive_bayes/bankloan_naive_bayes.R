@@ -15,7 +15,7 @@ library(tidyverse)
 # https://www.dataminingbook.com/book/r-edition
 bankdata <- read_csv("./data/UniversalBank.csv")
 bankdata
-View(bankdata)
+# View(bankdata)
 
 # clean up some column types
 # doesn't change any results, just easier to read
@@ -36,7 +36,8 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        Online = col_logical(),
                        CreditCard = col_logical()
                      ))
-View(bankdata)
+# View(bankdata)
+# TODO try just reading as a regular dataframe
 
 # construct a factor version of the target variable
 # the e1071 version of Naive Bayes requires the target variable to be a factor
@@ -129,8 +130,8 @@ bd.nb.2
 train.data %>%
   group_by(Loan.Status) %>%
   summarise(
-    cd.account.pct = mean(`CD Account`),
-    securities.pct = mean(`Securities Account`)
+    cd.account.prob = mean(`CD Account`),
+    securities.prob = mean(`Securities Account`)
   )
 
 # manually compute predictions some example cases
@@ -163,65 +164,93 @@ p.accepts.if.cd.securities
 p.accepts.if.no.cd.securities
 # etc...
 
+
+## validation predictions
+
 # predicted probability of each class
-validation.probabilities.1 <- predict(bd.nb, newdata = validation.data, type = "raw")
-head(validation.probabilities.1)
-summary(validation.probabilities.1)
-table(validation.probabilities.1[,1]) # only 4 possible values since we have only 2 binary predictors
+validation.data$probs.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "raw")
+head(validation.data$probs.nb.2)
+summary(validation.data$probs.nb.2)
+round(validation.data$probs.nb.2,3)[,1] %>% table()
+# only 4 possible values since we have only 2 binary predictors
 
 # force the model to actually choose a class
-validation.predictions.1 <- predict(bd.nb, newdata = validation.data, type = "class")
-head(validation.predictions.1)
-summary(validation.predictions.1)
+validation.data$preds.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "class")
+# TODO seeing error here but only if run after raw predictions, fine if run first
+head(validation.data$preds.nb.2)
+summary(validation.data$preds.nb.2)
 
 # look at a confusion matrix (confusionMatrix() function from the 'caret' library)
-confusionMatrix(validation.predictions.1, validation.data$Loan.Status)
+confusionMatrix(validation.data$preds.nb.2, validation.data$Loan.Status)
 
 #             Reference
 # Prediction Accepts Rejects
 # Accepts      11      25
 # Rejects      80     884
 
-# Sensitivity: accuracy when the true value is "Accepts"
-11 / (11+80)
+# Recall aka "Sensitivity": accuracy when the true value is "Accepts"
+# Recall = True Positives / (True Positives + False Negatives)
+11 / (11 + 80)
 
-# Sensitivity: accuracy when the true value is "Rejects"
+# Specificity: accuracy when the true value is "Rejects"
+# Specificity = True Negatives / (True Negatives + False Positives)
 884 / (884 + 25)
 
-# Balanced Accuracy: average of the two
-# aka accuracy if each case was equally common
+# Precision aka "Positive Predictive Value": Accuracy when predicting is "Accepts"
+# Precision = True Positives / (True Positives + False Positives)
+11 / (11 + 25)
+
+# Balanced Accuracy: average of Sensitivity (Recall) and Specificity
+# Balanced Accuracy = accuracy if each case were equally common
 (0.1208791 + 0.9724972) / 2
 
 
 # use a different threshold for predicting likely loan 
-validation.predictions.1b <- validation.probabilities.1[,1] > 0.5
-summary(validation.predictions.1b)
+# we have to format these as factors or confusionMatrix() will throw an error
+validation.data$preds.nb.2.b <- ifelse(validation.data$probs.nb.2[,1] > 0.25,
+                                    "Accepts","Rejects")
+validation.data$preds.nb.2.b <- factor(validation.data$preds.nb.2.b)
+summary(validation.data$preds.nb.2.b)
 
-validation.predictions.1c <- ifelse(validation.probabilities.1[,1] > 0.25,
-                                   "Accepts","Rejects")
-validation.predictions.1c <- factor(validation.predictions.1c)
-summary(validation.predictions.1c)
-
-confusionMatrix(validation.predictions.1c, validation.data$Loan.Status)
-
+confusionMatrix(validation.data$preds.nb.2, validation.data$Loan.Status)
+confusionMatrix(validation.data$preds.nb.2.b, validation.data$Loan.Status)
+# how do Sensitivity, Specificity change?
 
 # plot a lift curve (using 'gains' library)
 gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
-              validation.probabilities.1[,1],
+              validation.data$probs.nb.2[,1],
               groups=4)
+# groups=4 because we only have 4 possible predicted values
+# (4 total combinations of 2 binary variables)
 
 # set up lift chart variables
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
 xvals <- c(0,gain$cume.obs)
+
+# plot the lift chart
 ggplot() + 
   geom_line(mapping = aes(x=xvals, y=yvals)) +
   xlab("Offers Made") + ylab("Number Accepted") + 
-  ggtitle("Model #1 Validation") + 
+  ggtitle("Model #2 Validation Lift") + 
   theme(plot.title = element_text(hjust = 0.5)) + 
   geom_abline(intercept = c(0,0), 
               slope=total.accepted/nrow(validation.data),
               linetype="dashed")
+
+# use plotROC instead of gains library for a simple ROC plot
+library(plotROC)
+ggplot(mapping = aes(m = validation.data$probs.nb.2[,1], 
+                     d = validation.data$Loan.Status=="Accepts")) + 
+  geom_roc(n.cuts=4,labels=FALSE) + 
+  style_roc(theme = theme_grey) + 
+  ggtitle("Model #2 Validation ROC") + 
+  theme(plot.title = element_text(hjust = 0.5))
+# n.cuts is analagous to 'groups' in the lift chart
+
+
+
+## Model 3
 
 # look at some numeric variables that could be added
 boxplot(train.data$Age ~ train.data$Loan.Status)
