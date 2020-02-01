@@ -37,7 +37,6 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        CreditCard = col_logical()
                      ))
 # View(bankdata)
-# TODO try just reading as a regular dataframe
 
 # construct a factor version of the target variable
 # the e1071 version of Naive Bayes requires the target variable to be a factor
@@ -168,20 +167,21 @@ p.accepts.if.no.cd.securities
 ## validation predictions
 
 # predicted probability of each class
-validation.data$probs.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "raw")
-head(validation.data$probs.nb.2)
-summary(validation.data$probs.nb.2)
-round(validation.data$probs.nb.2,3)[,1] %>% table()
+val.probs.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "raw")
+head(val.probs.nb.2)
+summary(val.probs.nb.2)
+round(val.probs.nb.2,3)[,1] %>% table()
 # only 4 possible values since we have only 2 binary predictors
 
 # force the model to actually choose a class
-validation.data$preds.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "class")
-# TODO seeing error here but only if run after raw predictions, fine if run first
-head(validation.data$preds.nb.2)
-summary(validation.data$preds.nb.2)
+val.preds.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "class")
+# note: this throws an error if you actually append the predictions to the 
+# validation.data dataframe, but keeping the predictions as a separate vector works
+head(val.preds.nb.2)
+summary(val.preds.nb.2)
 
 # look at a confusion matrix (confusionMatrix() function from the 'caret' library)
-confusionMatrix(validation.data$preds.nb.2, validation.data$Loan.Status)
+confusionMatrix(val.preds.nb.2, validation.data$Loan.Status)
 
 #             Reference
 # Prediction Accepts Rejects
@@ -207,18 +207,18 @@ confusionMatrix(validation.data$preds.nb.2, validation.data$Loan.Status)
 
 # use a different threshold for predicting likely loan 
 # we have to format these as factors or confusionMatrix() will throw an error
-validation.data$preds.nb.2.b <- ifelse(validation.data$probs.nb.2[,1] > 0.25,
+val.preds.nb.2.b <- ifelse(val.probs.nb.2[,1] > 0.25,
                                     "Accepts","Rejects")
-validation.data$preds.nb.2.b <- factor(validation.data$preds.nb.2.b)
-summary(validation.data$preds.nb.2.b)
+val.preds.nb.2.b <- factor(val.preds.nb.2.b)
+summary(val.preds.nb.2.b)
 
-confusionMatrix(validation.data$preds.nb.2, validation.data$Loan.Status)
-confusionMatrix(validation.data$preds.nb.2.b, validation.data$Loan.Status)
+confusionMatrix(val.preds.nb.2, validation.data$Loan.Status)
+confusionMatrix(val.preds.nb.2.b, validation.data$Loan.Status)
 # how do Sensitivity, Specificity change?
 
 # plot a lift curve (using 'gains' library)
 gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
-              validation.data$probs.nb.2[,1],
+              val.probs.nb.2[,1],
               groups=4)
 # groups=4 because we only have 4 possible predicted values
 # (4 total combinations of 2 binary variables)
@@ -240,7 +240,7 @@ ggplot() +
 
 # use plotROC instead of gains library for a simple ROC plot
 library(plotROC)
-ggplot(mapping = aes(m = validation.data$probs.nb.2[,1], 
+ggplot(mapping = aes(m = val.probs.nb.2[,1], 
                      d = validation.data$Loan.Status=="Accepts")) + 
   geom_roc(n.cuts=4,labels=FALSE) + 
   style_roc(theme = theme_grey) + 
@@ -265,68 +265,36 @@ table(train.data$Income.Level)
 
 # choose our breaks explicitly so they can be applied to training, validation, and test sets
 income.breaks <- c(0,50,100,150,Inf)
+# use cut() function to convert Income to a factor using the chosen breaks
 train.data$Income.Level <- cut(train.data$Income,breaks=income.breaks)
 validation.data$Income.Level <- cut(validation.data$Income,breaks=income.breaks)
 test.data$Income.Level <- cut(test.data$Income,breaks=income.breaks)
 table(train.data$Income.Level)
 is.factor(train.data$Income.Level)
 
-# add 'Income' and some other variables
-bd.nb.2 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level,
+# add 'Income'
+bd.nb.3 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level,
                     data=train.data)
-
-bd.nb.2
+bd.nb.3
 
 # predicted probability of each class using the updated model
-validation.probabilities.2 <- predict(bd.nb.2, newdata = validation.data, type = "raw")
-head(validation.probabilities.2)
-summary(validation.probabilities.2)
-table(validation.probabilities.2[,1])
+val.probs.3 <- predict(bd.nb.3, newdata = validation.data, type = "raw")
+head(val.probs.3)
+summary(val.probs.3)
+table(val.probs.3[,1])
 
 # force the model to actually choose a class
-validation.predictions.2 <- predict(bd.nb.2, newdata = validation.data, type = "class")
-head(validation.predictions.2)
-summary(validation.predictions.2)
+val.preds.3 <- predict(bd.nb.3, newdata = validation.data, type = "class")
+head(val.preds.3)
+summary(val.preds.3)
 
 # look at a confusion matrix for the updated model
-confusionMatrix(validation.predictions.2, validation.data$Loan.Status)
+confusionMatrix(val.preds.3, validation.data$Loan.Status)
 
 # plot a gain chart for the updated model
 gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
-              validation.probabilities.2[,1],
+              val.probs.3[,1],
               groups=16)
-
-total.accepted <- sum(validation.data$Loan.Status=="Accepts")
-yvals <- c(0,gain$cume.pct.of.total*total.accepted)
-xvals <- c(0,gain$cume.obs)
-ggplot() + 
-  geom_line(mapping = aes(x=xvals, y=yvals)) +
-  xlab("Offers Made") + ylab("Number Accepted") + 
-  ggtitle("Model #2 Validation") + 
-  theme(plot.title = element_text(hjust = 0.5)) + 
-  geom_abline(intercept = c(0,0), 
-              slope=total.accepted/nrow(validation.data),
-              linetype="dashed")
-
-
-
-# try a model with all available categorical variables
-bd.nb.3 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level + Education + Family + 
-                        CreditCard + Online,
-                      data=train.data)
-
-validation.predictions.3 <- predict(bd.nb.3, newdata = validation.data, type = "class")
-head(validation.predictions.3)
-summary(validation.predictions.3)
-
-# look at a confusion matrix for the updated model
-confusionMatrix(validation.predictions.3, validation.data$Loan.Status)
-
-# plot a gain chart for the updated model
-validation.probabilities.3 <- predict(bd.nb.3, newdata = validation.data, type = "raw")
-gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
-              validation.probabilities.3[,1],
-              groups=100)
 
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
 yvals <- c(0,gain$cume.pct.of.total*total.accepted)
@@ -340,26 +308,24 @@ ggplot() +
               slope=total.accepted/nrow(validation.data),
               linetype="dashed")
 
+## Model 4
 
-# What about Zip Code?
-summary(train.data$`ZIP Code`)
+# try a model with all available categorical variables (and Income)
 bd.nb.4 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level + Education + Family + 
-                        CreditCard + Online + `ZIP Code`,
+                        CreditCard + Online,
                       data=train.data)
 
-bd.nb.4
-
-validation.predictions.4 <- predict(bd.nb.4, newdata = validation.data, type = "class")
-head(validation.predictions.4)
-summary(validation.predictions.4)
+val.preds.4 <- predict(bd.nb.4, newdata = validation.data, type = "class")
+head(val.preds.4)
+summary(val.preds.4)
 
 # look at a confusion matrix for the updated model
-confusionMatrix(validation.predictions.4, validation.data$Loan.Status)
+confusionMatrix(val.preds.4, validation.data$Loan.Status)
 
 # plot a gain chart for the updated model
-validation.probabilities.4 <- predict(bd.nb.4, newdata = validation.data, type = "raw")
+val.probs.4 <- predict(bd.nb.4, newdata = validation.data, type = "raw")
 gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
-              validation.probabilities.4[,1],
+              val.probs.4[,1],
               groups=100)
 
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
@@ -375,60 +341,92 @@ ggplot() +
               linetype="dashed")
 
 
+## Model 5
+
+# What about Zip Code?
+summary(train.data$`ZIP Code`)
+bd.nb.5 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level + Education + Family + 
+                        CreditCard + Online + `ZIP Code`,
+                      data=train.data)
+
+bd.nb.5
+
+val.preds.5 <- predict(bd.nb.5, newdata = validation.data, type = "class")
+head(val.preds.5)
+summary(val.preds.5)
+
+# look at a confusion matrix for the updated model
+confusionMatrix(val.preds.5, validation.data$Loan.Status)
+
+# plot a gain chart for the updated model
+validation.probabilities.5 <- predict(bd.nb.5, newdata = validation.data, type = "raw")
+gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
+              validation.probabilities.5[,1],
+              groups=100)
+
+total.accepted <- sum(validation.data$Loan.Status=="Accepts")
+yvals <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals <- c(0,gain$cume.obs)
+ggplot() + 
+  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  xlab("Offers Made") + ylab("Number Accepted") + 
+  ggtitle("Model #5 Validation") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.accepted/nrow(validation.data),
+              linetype="dashed")
+
 
 
 ### Evaluate Against the Final Test Set ###
 
 # Which model do you think will perform best against the final test set?
-test.predictions.1 <- predict(bd.nb, newdata = test.data, type = "class")
-test.predictions.2 <- predict(bd.nb.2, newdata = test.data, type = "class")
-test.predictions.3 <- predict(bd.nb.3, newdata = test.data, type = "class")
-test.predictions.4 <- predict(bd.nb.4, newdata = test.data, type = "class")
+test.preds.2 <- predict(bd.nb.2, newdata = test.data, type = "class")
+test.preds.3 <- predict(bd.nb.3, newdata = test.data, type = "class")
+test.preds.4 <- predict(bd.nb.4, newdata = test.data, type = "class")
+test.preds.5 <- predict(bd.nb.5, newdata = test.data, type = "class")
 
 # look at a confusion matrix of test results for each model
-confusionMatrix(test.predictions.1, test.data$Loan.Status)
-confusionMatrix(test.predictions.2, test.data$Loan.Status)
-confusionMatrix(test.predictions.3, test.data$Loan.Status)
-confusionMatrix(test.predictions.4, test.data$Loan.Status)
+confusionMatrix(test.preds.2, test.data$Loan.Status)
+confusionMatrix(test.preds.3, test.data$Loan.Status)
+confusionMatrix(test.preds.4, test.data$Loan.Status)
+confusionMatrix(test.preds.5, test.data$Loan.Status)
 
 # plot lift for each model
 total.accepted <- sum(test.data$Loan.Status=="Accepts")
 
-test.probabilities.1 <- predict(bd.nb, newdata = test.data, type = "raw")
-test.gain.1 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
-                     test.probabilities.1[,1],
-              groups=100)
-test.xvals.1 <- c(0,test.gain.1$cume.obs)
-test.yvals.1 <- c(0,test.gain.1$cume.pct.of.total*total.accepted)
-
-test.probabilities.2 <- predict(bd.nb.2, newdata = test.data, type = "raw")
+test.probs.2 <- predict(bd.nb.2, newdata = test.data, type = "raw")
 test.gain.2 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
-                     test.probabilities.2[,1],
+                     test.probs.2[,1],
                      groups=100)
 
 test.xvals.2 <- c(0,test.gain.2$cume.obs)
 test.yvals.2 <- c(0,test.gain.2$cume.pct.of.total*total.accepted)
 
-test.probabilities.3 <- predict(bd.nb.3, newdata = test.data, type = "raw")
+test.probs.3 <- predict(bd.nb.3, newdata = test.data, type = "raw")
 test.gain.3 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
-                     test.probabilities.3[,1],
+                     test.probs.3[,1],
                      groups=100)
 
 test.xvals.3 <- c(0,test.gain.3$cume.obs)
 test.yvals.3 <- c(0,test.gain.3$cume.pct.of.total*total.accepted)
 
-test.probabilities.4 <- predict(bd.nb.4, newdata = test.data, type = "raw")
+test.probs.4 <- predict(bd.nb.4, newdata = test.data, type = "raw")
 test.gain.4 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
-                     test.probabilities.4[,1],
+                     test.probs.4[,1],
                      groups=100)
 
 test.xvals.4 <- c(0,test.gain.4$cume.obs)
 test.yvals.4 <- c(0,test.gain.4$cume.pct.of.total*total.accepted)
 
+test.probs.5 <- predict(bd.nb.5, newdata = test.data, type = "raw")
+test.gain.5 <- gains(ifelse(test.data$Loan.Status=="Accepts",1,0), 
+                     test.probs.5[,1],
+                     groups=100)
+test.xvals.5 <- c(0,test.gain.5$cume.obs)
+test.yvals.5 <- c(0,test.gain.5$cume.pct.of.total*total.accepted)
+
 # create a dataframe with all the gain values together
-test.gain.1 <- data.frame("offers"=test.xvals.1,
-                          "acceptances"=test.yvals.1,
-                          "model"="Model 1")
 test.gain.2 <- data.frame("offers"=test.xvals.2,
                           "acceptances"=test.yvals.2,
                           "model"="Model 2")
@@ -438,7 +436,10 @@ test.gain.3 <- data.frame("offers"=test.xvals.3,
 test.gain.4 <- data.frame("offers"=test.xvals.4,
                           "acceptances"=test.yvals.4,
                           "model"="Model 4")
-test.results.combined <- rbind(test.gain.1, test.gain.2, test.gain.3, test.gain.4)
+test.gain.5 <- data.frame("offers"=test.xvals.5,
+                          "acceptances"=test.yvals.5,
+                          "model"="Model 5")
+test.results.combined <- rbind(test.gain.2, test.gain.3, test.gain.4, test.gain.5)
 
 ggplot(data=test.results.combined) + 
   geom_line(mapping = aes(x=offers, y=acceptances, color=model)) +
@@ -449,11 +450,4 @@ ggplot(data=test.results.combined) +
               slope=total.accepted/nrow(validation.data),
               linetype="dashed")
 
-
-# use plotROC instead of gains library for a simple ROC plot
-library(plotROC)
-# rocplot <- 
-ggplot(mapping = aes(m = test.probabilities.1[,1], d = test.data$Loan.Status=="Accepts")) + 
-  geom_roc(n.cuts=20,labels=FALSE) + 
-  style_roc(theme = theme_grey) 
 
