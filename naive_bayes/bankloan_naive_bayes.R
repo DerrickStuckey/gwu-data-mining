@@ -2,9 +2,12 @@
 # install.packages("gains")
 # install.packages("e1071")
 
+# for naiveBayes() function
+library(e1071)
+
+# for lift charts
 library(caret)
 library(gains)
-library(e1071)
 
 library(tidyverse)
 
@@ -34,11 +37,15 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        CreditCard = col_logical()
                      ))
 View(bankdata)
-bankdata$Loan.Status <- "Rejects"
-bankdata$Loan.Status[bankdata$`Personal Loan`] <- "Accepts"
-# the e1071 version of Naive Bayes has problems if the target class is anything other than type 'factor'
+
+# construct a factor version of the target variable
+# the e1071 version of Naive Bayes requires the target variable to be a factor
 # https://stackoverflow.com/questions/10942003/predict-returns-nothing-for-type-class-works-fine-with-type-raw
+table(bankdata$`Personal Loan`)
+bankdata$Loan.Status <- "Rejects"
+bankdata$Loan.Status[bankdata$`Personal Loan`==1] <- "Accepts"
 bankdata$Loan.Status <- factor(bankdata$Loan.Status)
+table(bankdata$Loan.Status)
 
 # training/test/validation split
 set.seed(12345)
