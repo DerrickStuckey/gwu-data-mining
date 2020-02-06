@@ -181,8 +181,10 @@ round(val.probs.nb.2,3)[,1] %>% table()
 
 # force the model to actually choose a class
 val.preds.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "class")
-# note: this throws an error if you actually append the predictions to the 
-# validation.data dataframe, but keeping the predictions as a separate vector works
+# note: this throws an error if validation.data has a column for probability predictions
+# but can be avoided by either a) keeping the probability predictions as a separate vector
+# or b) removing the probabilities column from validation.data before passing it as newdata, e.g.
+# newdata = select(validation.data,-probs.nb.2)
 head(val.preds.nb.2)
 summary(val.preds.nb.2)
 
