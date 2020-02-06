@@ -6,8 +6,10 @@
 library(e1071)
 
 # for lift charts
-library(caret)
 library(gains)
+
+# for confusionMatrix
+library(caret)
 
 library(tidyverse)
 
@@ -17,8 +19,11 @@ bankdata <- read_csv("./data/UniversalBank.csv")
 bankdata
 # View(bankdata)
 
-# clean up some column types
-# doesn't change any results, just easier to read
+# check column types
+table(bankdata$`Securities Account`)
+is.logical(bankdata$`Securities Account`)
+
+# re-import and specify type for each column
 bankdata <- read_csv("./data/UniversalBank.csv",
                      col_types = cols(
                        ID = col_double(),
@@ -41,6 +46,7 @@ bankdata <- read_csv("./data/UniversalBank.csv",
 # construct a factor version of the target variable
 # the e1071 version of Naive Bayes requires the target variable to be a factor
 # https://stackoverflow.com/questions/10942003/predict-returns-nothing-for-type-class-works-fine-with-type-raw
+# and results will be easier to read if we use clear labels e.g. "Accepts", "Rejects"
 table(bankdata$`Personal Loan`)
 bankdata$Loan.Status <- "Rejects"
 bankdata$Loan.Status[bankdata$`Personal Loan`==1] <- "Accepts"
@@ -110,7 +116,7 @@ p.accepts.if.no.cd
 example.data <- data.frame('CD Account'=c(TRUE,TRUE,FALSE,FALSE),
                            'Securities Account'=c(TRUE,FALSE,TRUE,FALSE))
 names(example.data) <- c('CD Account','Securities Account') # fix name formatting
-example.data$preds.bd.nb.1 <- predict(bd.nb.1, newdata = example.data, type = "raw")
+example.data$probs.bd.nb.1 <- predict(bd.nb.1, newdata = example.data, type = "raw")
 head(example.data)
 
 # compare with manually computed probabilities
@@ -155,7 +161,7 @@ p.accepts.if.no.cd.securities
 example.data <- data.frame('CD Account'=c(TRUE,TRUE,FALSE,FALSE),
                            'Securities Account'=c(TRUE,FALSE,TRUE,FALSE))
 names(example.data) <- c('CD Account','Securities Account') # fix name formatting
-example.data$preds.bd.nb.2 <- predict(bd.nb.2, newdata = example.data, type = "raw")
+example.data$probs.bd.nb.2 <- predict(bd.nb.2, newdata = example.data, type = "raw")
 head(example.data)
 
 # compare with manually computed probabilities
@@ -314,6 +320,7 @@ ggplot() +
 bd.nb.4 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level + Education + Family + 
                         CreditCard + Online,
                       data=train.data)
+bd.nb.4
 
 val.preds.4 <- predict(bd.nb.4, newdata = validation.data, type = "class")
 head(val.preds.4)
@@ -348,7 +355,6 @@ summary(train.data$`ZIP Code`)
 bd.nb.5 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level + Education + Family + 
                         CreditCard + Online + `ZIP Code`,
                       data=train.data)
-
 bd.nb.5
 
 val.preds.5 <- predict(bd.nb.5, newdata = validation.data, type = "class")
