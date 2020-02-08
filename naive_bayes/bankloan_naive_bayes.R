@@ -49,7 +49,7 @@ bankdata <- read_csv("./data/UniversalBank.csv",
 # and results will be easier to read if we use clear labels e.g. "Accepts", "Rejects"
 table(bankdata$`Personal Loan`)
 bankdata$Loan.Status <- "Rejects"
-bankdata$Loan.Status[bankdata$`Personal Loan`==1] <- "Accepts"
+bankdata$Loan.Status[bankdata$`Personal Loan`] <- "Accepts"
 bankdata$Loan.Status <- factor(bankdata$Loan.Status)
 table(bankdata$Loan.Status)
 
@@ -221,7 +221,13 @@ val.preds.nb.2.b <- factor(val.preds.nb.2.b)
 summary(val.preds.nb.2.b)
 
 confusionMatrix(val.preds.nb.2, validation.data$Loan.Status)
+# Sensitivity : 0.1209          
+# Specificity : 0.9725     
+# Pos Pred Value : 0.3056 
 confusionMatrix(val.preds.nb.2.b, validation.data$Loan.Status)
+# Sensitivity : 0.2967         
+# Specificity : 0.9593         
+# Pos Pred Value : 0.4219      
 # how do Sensitivity, Specificity change?
 
 # plot a lift curve (using 'gains' library)
@@ -271,14 +277,18 @@ hist(train.data$Income)
 train.data$Income.Level <- cut(train.data$Income,breaks=4)
 table(train.data$Income.Level)
 
+val.income.cuts <- cut(validation.data$Income,breaks=4)
+table(val.income.cuts)
+
 # choose our breaks explicitly so they can be applied to training, validation, and test sets
 income.breaks <- c(0,50,100,150,Inf)
 # use cut() function to convert Income to a factor using the chosen breaks
-train.data$Income.Level <- cut(train.data$Income,breaks=income.breaks)
+train.data$Income.Level <- cut(train.data$Income, breaks=income.breaks)
 validation.data$Income.Level <- cut(validation.data$Income,breaks=income.breaks)
 test.data$Income.Level <- cut(test.data$Income,breaks=income.breaks)
 table(train.data$Income.Level)
 is.factor(train.data$Income.Level)
+table(validation.data$Income.Level)
 
 # add 'Income'
 bd.nb.3 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level,
