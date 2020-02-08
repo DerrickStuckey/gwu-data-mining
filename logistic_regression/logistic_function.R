@@ -1,9 +1,9 @@
 library(tidyverse)
 
 # define the logistic response function
-logistic.response <- function(x) { 
+logistic.response <- function(l) { 
   return(
-    1 / (1 + exp(-1*x) )
+    1 / (1 + exp(-1*l) )
   )
 }
 
@@ -19,49 +19,49 @@ logistic.response(1)
 logistic.response(-1)
 
 # create a set of inputs to plot
-x <- seq(-7,7,0.1)
-head(x)
-tail(x)
+l <- seq(-7,7,0.1)
+head(l)
+tail(l)
 
 # plot the logistic response function from -10 to 10
 ggplot() + 
-  geom_line(mapping = aes(x=x, y=logistic.response(x))) + 
-  ylab("Logistic Response")
+  geom_line(mapping = aes(x=l, y=logistic.response(l))) + 
+  xlab("\U2113") + ylab("p")
 
 # plot for a greater range
-x.2 <- seq(-100,100,0.1)
+l.2 <- seq(-100,100,0.1)
 
 ggplot() + 
-  geom_line(mapping = aes(x=x.2, y=logistic.response(x.2))) + 
-  ylab("Logistic Response")
+  geom_line(mapping = aes(x=l.2, y=logistic.response(l.2))) + 
+  xlab("\U2113") + ylab("p")
 
 
 # probit function
-y <- seq(0,1,by=0.01)
+p <- seq(0,1,by=0.01)
 
 # probit is the quantile function for the normal distribution
-# we use its inverse, so defined with "y" input instead of "x"
-probit <- function(y) {
+# we use its inverse, so defined with "p" input instead of "l"
+probit <- function(p) {
   return(
-    qnorm(y, mean = 0, sd=1)
+    qnorm(p, mean = 0, sd=1)
   )
 }
 
 # compare logistic function and probit
-x <- seq(-6,6,by=0.1)
-y <- seq(0,1,by=0.01)
+g <- seq(-6,6,by=0.1)
+p <- seq(0,1,by=0.01)
 
-# construct dataframe with x, y values using both functions
-logistic.vals <- data.frame(x=x,
-                            y=logistic.response(x),
+# construct dataframe with p,g values using both functions
+logistic.vals <- data.frame(x=l,
+                            y=logistic.response(l),
                             Function="logistic")
-probit.vals <- data.frame(x=probit(y),
-                          y=y,
+probit.vals <- data.frame(x=probit(p),
+                          y=p,
                           Function="probit")
 combined.vals <- rbind(logistic.vals, probit.vals)
 
 ggplot(data=combined.vals) + 
-  geom_line(mapping = aes(x=x, y=y, col=Function)) +
-  xlab("x") + ylab("y") + 
+  geom_line(mapping = aes(x=l, y=p, col=Function)) +
+  xlab("\U2113") + ylab("p") + 
   xlim(-5,5)
 
