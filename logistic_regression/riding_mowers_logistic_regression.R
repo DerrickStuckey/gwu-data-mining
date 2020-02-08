@@ -22,7 +22,7 @@ dim(riding.mowers)
 train.proportion <- 2/3
 train.size <- nrow(riding.mowers) * train.proportion
 train.size
-set.seed(12345)
+set.seed(123456)
 train.idx <- sample(1:nrow(riding.mowers),
                     train.size)
 train.data <- riding.mowers[train.idx,]
@@ -35,10 +35,14 @@ table(test.data$Ownership)
 # is this OK?
 
 
+# try a different split
+# set.seed(12345)
+
 # train a model on Income only
 income.glm <- glm(Owner ~ Income,
                   data=train.data,
-                  family="binomial")
+                  family=binomial)
+# probit regression: family = binomial(link = "probit")
 summary(income.glm)
 
 # what would this model predict for different ranges of incomes?
