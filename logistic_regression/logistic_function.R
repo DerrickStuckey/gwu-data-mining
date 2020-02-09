@@ -52,11 +52,11 @@ g <- seq(-6,6,by=0.1)
 p <- seq(0,1,by=0.01)
 
 # construct dataframe with p,g values using both functions
-logistic.vals <- data.frame(x=l,
-                            y=logistic.response(l),
+logistic.vals <- data.frame(l=l,
+                            p=logistic.response(l),
                             Function="logistic")
-probit.vals <- data.frame(x=probit(p),
-                          y=p,
+probit.vals <- data.frame(l=probit(p),
+                          p=p,
                           Function="probit")
 combined.vals <- rbind(logistic.vals, probit.vals)
 
