@@ -228,10 +228,22 @@ ggplot() +
   ylim(c(0.5,1)) + 
   scale_x_log10()
 
+# which model performed best in terms of balanced accuracy?
+best.index <- which.max(balanced.accuracy)
+best.index
+k.vals[best.index]
+
+# test the best model against the actual test set
+loan.knn.preds.test <- knn(train = train.data.norm[,selected.vars],
+                      test = test.data.norm[,selected.vars],
+                      cl = train.data.norm$Loan.Status,
+                      k=k.vals[best.index])
+
+# our unbiased estimate of actual model performance
+confusionMatrix(loan.knn.preds.test, test.data.norm$Loan.Status,
+                positive = "Accepts")
+
 
 # TODO now try over-sampling the target class "Accepts"
-
-
-# TODO test the best model against the actual test set
 
 
