@@ -97,7 +97,7 @@ cor(train.data$Income, train.data.norm$Income)
 # note how this model setup is different - we jump straight to predictions
 # there is no real "training" for a knn model, as there are no coefficients to be estimated
 # we can just choose our predictors, and choose 'k'
-loan.knn.3.preds <- knn(train = train.data.norm[,selected.vars],
+loan.knn.3.preds <- FNN::knn(train = train.data.norm[,selected.vars],
                  test = validation.data.norm[,selected.vars],
                  cl = train.data.norm$Loan.Status,
                  k=3)
@@ -147,7 +147,7 @@ confusionMatrix(loan.knn.3.preds, validation.data.norm$Loan.Status,
 # try a different value of 'k'
 
 # predict Loan Status with a k-nearest neighbors model with k=5
-loan.knn.5.preds <- knn(train = train.data.norm[,selected.vars],
+loan.knn.5.preds <- FNN::knn(train = train.data.norm[,selected.vars],
                         test = validation.data.norm[,selected.vars],
                         cl = train.data.norm$Loan.Status,
                         k=5)
@@ -192,7 +192,7 @@ specificity.vals <- c()
 # and measure the accuracy
 k.vals <- c(1, 3, 5, 9, 15, 21, 25, 31, 51, 99)
 for (k.val in k.vals) {
-  loan.knn.preds <- knn(train = train.data.norm[,selected.vars],
+  loan.knn.preds <- FNN::knn(train = train.data.norm[,selected.vars],
                         test = validation.data.norm[,selected.vars],
                         cl = train.data.norm$Loan.Status,
                         k=k.val)
@@ -234,7 +234,7 @@ best.index
 k.vals[best.index]
 
 # test the best model against the actual test set
-loan.knn.preds.test <- knn(train = train.data.norm[,selected.vars],
+loan.knn.preds.test <- FNN::knn(train = train.data.norm[,selected.vars],
                       test = test.data.norm[,selected.vars],
                       cl = train.data.norm$Loan.Status,
                       k=k.vals[best.index])
@@ -242,6 +242,8 @@ loan.knn.preds.test <- knn(train = train.data.norm[,selected.vars],
 # our unbiased estimate of actual model performance
 confusionMatrix(loan.knn.preds.test, test.data.norm$Loan.Status,
                 positive = "Accepts")
+
+# would 'Zip Code' be a good predictor to add?
 
 
 # TODO now try over-sampling the target class "Accepts"
