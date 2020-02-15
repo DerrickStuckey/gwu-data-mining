@@ -1,6 +1,7 @@
 # install.packages("caret")
 library(caret)
 library(tidyverse)
+library(FNN) # for knn function
 
 # from "Data Mining for Business Analytics"
 # https://www.dataminingbook.com/book/r-edition
@@ -9,7 +10,6 @@ bankdata
 View(bankdata)
 
 # clean up some column types
-# doesn't change any results, just easier to read
 bankdata <- read_csv("./data/UniversalBank.csv",
                      col_types = cols(
                        ID = col_double(),
@@ -28,9 +28,11 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        CreditCard = col_logical()
                      ))
 View(bankdata)
+
+# construct a factor variable to use as output for our knn model
 bankdata$Loan.Status <- "Rejects"
 bankdata$Loan.Status[bankdata$`Personal Loan`] <- "Accepts"
-bankdata$Loan.Status <- as.factor(bankdata$Loan.Status)
+bankdata$Loan.Status <- factor(bankdata$Loan.Status,levels=c("Accepts","Rejects"))
 
 # training/test/validation split
 set.seed(12345)
@@ -48,12 +50,18 @@ test.index <- sample(1:nrow(holdout.data), nrow(bankdata)*test.proportion)
 test.data <- holdout.data[test.index,]
 validation.data <- holdout.data[-test.index,]
 
+# check sizes
+dim(train.data)
+dim(validation.data)
+dim(test.data)
+
 # set up dataframes to hold normalized values
 train.data.norm <- train.data
 validation.data.norm <- validation.data
 test.data.norm <- test.data
+# why do we have to normalize?
 
-# select a subset of variables
+# select a subset of numeric variables
 head(train.data)
 selected.vars <- c("Age","Experience","Income","Education")
 
@@ -76,42 +84,125 @@ sd(train.data$Age)
 mean(train.data.norm$Age)
 sd(train.data.norm$Age)
 
+mean(train.data.norm$Income)
+sd(train.data.norm$Income)
+
+# but we haven't lost any information
+head(train.data$Age)
+head(train.data.norm$Age)
+cor(train.data$Age, train.data.norm$Age)
+cor(train.data$Income, train.data.norm$Income)
+
 # predict Loan Status with a k-nearest neighbors model with k=3
+# note how this model setup is different - we jump straight to predictions
+# there is no real "training" for a knn model, as there are no coefficients to be estimated
+# we can just choose our predictors, and choose 'k'
 loan.knn.3.preds <- knn(train = train.data.norm[,selected.vars],
                  test = validation.data.norm[,selected.vars],
                  cl = train.data.norm$Loan.Status,
                  k=3)
 
+# look at our predictions
+head(loan.knn.3.preds)
 summary(loan.knn.3.preds)
 summary(validation.data.norm$Loan.Status)
 
-confusionMatrix(loan.knn.3.preds, validation.data.norm$Loan.Status)
+# other attributes available from our predictions
+names(attributes(loan.knn.3.preds))
+head(attr(loan.knn.3.preds, "nn.index"))
 
-# TODO look at a few specific data points in validation dataset as examples
+# find the neighbors for the first data point in the validation data
+first.point.neighbor.indexes <- attr(loan.knn.3.preds, "nn.index")[1,]
+first.point.neighbor.indexes
+first.point.neighbors <- train.data.norm[first.point.neighbor.indexes,selected.vars]
 
-### try different values of k to see how they perform ###
+# compare the first point and its neighbors
+validation.data.norm[1,selected.vars]
+first.point.neighbors
 
-# predict Loan Status with a k-nearest neighbors model with k=4
-loan.knn.4.preds <- knn(train = train.data.norm[,selected.vars],
+# non-normalized versions:
+validation.data[1,selected.vars]
+train.data[first.point.neighbor.indexes,selected.vars]
+
+# check the distance calculation
+head(attr(loan.knn.3.preds, "nn.dist"))
+first.point.first.neighbor.distance <- attr(loan.knn.3.preds, "nn.dist")[1,1]
+first.point.first.neighbor.distance
+
+validation.data.norm[1,selected.vars]
+first.point.neighbors[1,selected.vars]
+
+# compute the distance manually and compare
+variable.distances <- validation.data.norm[1,selected.vars] - first.point.neighbors[1,selected.vars]
+variable.distances
+sqrt( sum(variable.distances^2) )
+first.point.first.neighbor.distance
+
+# confusion matrix for the whole set of predictions
+confusionMatrix(loan.knn.3.preds, validation.data.norm$Loan.Status,
+                positive="Accepts")
+# note: 'positive' parameter defines which class we want to consider positive
+
+
+# try a different value of 'k'
+
+# predict Loan Status with a k-nearest neighbors model with k=5
+loan.knn.5.preds <- knn(train = train.data.norm[,selected.vars],
                         test = validation.data.norm[,selected.vars],
                         cl = train.data.norm$Loan.Status,
-                        k=4)
+                        k=5)
 
-confusionMatrix(loan.knn.4.preds, validation.data.norm$Loan.Status)
+confusionMatrix(loan.knn.5.preds, validation.data.norm$Loan.Status,
+                positive="Accepts")
+
+# what if we want to tune our Sensitivity / Specificity trade-off?
+# we need to add the 'prob' parameter to get probability values
+loan.knn.5.preds <- FNN::knn(train = train.data.norm[,selected.vars],
+                             test = validation.data.norm[,selected.vars],
+                             cl = train.data.norm$Loan.Status,
+                             k=5,
+                             prob=TRUE)
+
+# 'prob' = proportion of votes for the "winning" class
+loan.knn.5.probabilities <- attr(loan.knn.5.preds,'prob')
+head(loan.knn.5.probabilities)
+table(loan.knn.5.probabilities)
+
+# convert these to probabilities of "Accepts"
+loan.knn.5.prob.accepts <- ifelse(loan.knn.5.preds=="Accepts",
+                                  loan.knn.5.probabilities,
+                                  1-loan.knn.5.probabilities)
+table(loan.knn.5.prob.accepts)
+
+# now we can create an ROC curve
+library(plotROC)
+ggplot(mapping = aes(m = loan.knn.5.prob.accepts, 
+                     d = validation.data$Loan.Status=="Accepts")) +
+  geom_roc(n.cuts=100,labels=FALSE) + 
+  style_roc(theme = theme_grey)
 
 
-# try several different values of k
+### try several different values of k to see how they perform ###
+
+# arrays to hold our sensitivity and specificity for each model
 sensitivity.vals <- c()
 specificity.vals <- c()
-k.vals <- 1:10
+
+# for each value of k, build a knn model, obtain validation predictions, 
+# and measure the accuracy
+k.vals <- c(1, 3, 5, 9, 15, 21, 25, 31, 51, 99)
 for (k.val in k.vals) {
   loan.knn.preds <- knn(train = train.data.norm[,selected.vars],
                         test = validation.data.norm[,selected.vars],
                         cl = train.data.norm$Loan.Status,
                         k=k.val)
-  cf <- confusionMatrix(loan.knn.preds, validation.data.norm$Loan.Status)
-  sensitivity.vals <- c(sensitivity.vals, cf$byClass['Sensitivity'])
-  specificity.vals <- c(specificity.vals, cf$byClass['Specificity'])
+  # obtain accuracy metrics from a confusion matrix
+  cf <- confusionMatrix(loan.knn.preds, validation.data.norm$Loan.Status, positive="Accepts")
+  sensitivity <- cf$byClass['Sensitivity']
+  specificity <- cf$byClass['Specificity']
+  # save off our accuracy metrics for this model
+  sensitivity.vals <- c(sensitivity.vals, sensitivity)
+  specificity.vals <- c(specificity.vals, specificity)
 }
 
 # construct a dataframe to check out the results
@@ -125,19 +216,18 @@ results.df <- rbind(sensitivity.df, specificity.df)
 
 # plot sensitivity and specificity vs k
 ggplot(results.df) + 
-  geom_line(mapping = aes(x=k, y=value, col=metric)) + 
-  ylim(c(0.5,1))
-  # ylim(c(0,1))
+  geom_point(mapping = aes(x=k, y=value, col=metric)) + 
+  ylim(c(0,1)) + 
+  scale_x_log10()
 
 balanced.accuracy <- (sensitivity.vals + specificity.vals) / 2
 
 # plot balanced accuracy vs k
 ggplot() + 
-  geom_line(mapping = aes(x=k.vals, y=balanced.accuracy)) + 
-  ylim(c(0.7,1))
+  geom_point(mapping = aes(x=k.vals, y=balanced.accuracy)) + 
+  ylim(c(0.5,1)) + 
+  scale_x_log10()
 
-# what happens if we try really large values of k?
-k.vals <- c(1, 3, 5, 9, 15, 21, 25, 31, 51, 99)
 
 # TODO now try over-sampling the target class "Accepts"
 
