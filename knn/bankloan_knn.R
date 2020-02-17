@@ -246,6 +246,3 @@ confusionMatrix(loan.knn.preds.test, test.data.norm$Loan.Status,
 # would 'Zip Code' be a good predictor to add?
 
 
-# TODO now try over-sampling the target class "Accepts"
-
-
