@@ -1,6 +1,7 @@
 library(rpart)
 library(rpart.plot)
 library(gains)
+library(tidyverse)
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
@@ -10,7 +11,10 @@ dim(titanic.data)
 
 # confusionMatrix() works best if the target is a factor
 # rather than a numeric or logical variable
+table(titanic.data$Survived)
+titanic.data$Survived <- ifelse(titanic.data$Survived,"Y","N")
 titanic.data$Survived <- as.factor(titanic.data$Survived)
+table(titanic.data$Survived)
 
 # partition into training and test sets
 set.seed(12345)
@@ -47,7 +51,9 @@ surv.tree.1 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class")
 
-prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
+# visualize the tree
+prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Default")
 
 # try some different parameters for minsplit, minbucket, maxdepth, 
 # cp (complexity parameter; default = 0.01)
@@ -57,15 +63,22 @@ surv.tree.2 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      method="class"
                      ,maxdepth=3
                      )
-prp(surv.tree.2, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
-
+prp(surv.tree.2, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Maxdepth 3")
+# compare with original
+prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Default")
 
 surv.tree.3 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class"
                      ,minsplit=40
                      )
-prp(surv.tree.3, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
+prp(surv.tree.3, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Minsplit 40")
+# compare with original
+prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Default")
 
 
 surv.tree.4 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
@@ -73,7 +86,11 @@ surv.tree.4 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      method="class",
                      cp=0.002
 )
-prp(surv.tree.4, type=1, extra=1, under=TRUE, split.font=2, varlen=-10)
+prp(surv.tree.4, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="CP 0.002")
+# compare with original
+prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Default")
 
 # measure performance against a validation set
 validation.data$preds.tree.1 <- predict(surv.tree.1,
