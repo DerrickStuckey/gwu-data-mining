@@ -1,7 +1,8 @@
-library(rpart)
-library(rpart.plot)
+library(rpart) # for rpart function
+library(rpart.plot) # for prp function to plot rpart trees
 library(gains)
 library(tidyverse)
+library(caret) # for confusionMatrix
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
@@ -58,6 +59,8 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 # try some different parameters for minsplit, minbucket, maxdepth, 
 # cp (complexity parameter; default = 0.01)
 # ?rpart.control explains meaning of these parameters
+
+# Maxdepth
 surv.tree.2 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class"
@@ -69,6 +72,8 @@ prp(surv.tree.2, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default")
 
+
+# Minsplit
 surv.tree.3 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class"
@@ -81,6 +86,7 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default")
 
 
+# Complexity Parameter
 surv.tree.4 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class",
@@ -90,7 +96,45 @@ prp(surv.tree.4, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="CP 0.002")
 # compare with original
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
-    main="Default")
+    main="Default (CP = 0.01)")
+
+# Complexity Parameter
+surv.tree.5 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
+                     data=train.data,
+                     method="class",
+                     cp=0.1
+)
+prp(surv.tree.5, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="CP 0.1")
+# compare with original
+prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Default (CP = 0.01)")
+
+# Split type
+surv.tree.6 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
+                     data=train.data,
+                     method="class",
+                     parms = list(split = "information")
+                     # ,cp=0.005
+)
+prp(surv.tree.6, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Information (Entropy) Splitting")
+# compare with original
+prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Default (Gini Splitting)")
+
+# Add 'Age', a variable with missing values
+surv.tree.7 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age,
+                     data=train.data,
+                     method="class"
+)
+prp(surv.tree.7, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="With 'Age'")
+# compare with original
+prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Original")
+# note: this is why we prune rather than limiting growth up front
+
 
 # measure performance against a validation set
 validation.data$preds.tree.1 <- predict(surv.tree.1,
@@ -102,43 +146,31 @@ confusionMatrix(validation.data$preds.tree.1,
                 validation.data$Survived)
 
 # get probabilities instead
-probs.tree.1 <- predict(surv.tree.1,
+val.probs.1 <- predict(surv.tree.1,
                         newdata=validation.data,
                         type="prob")
-head(probs.tree.1)
-validation.data$survival.probs.1 <- probs.tree.1[,2]
+head(val.probs.1)
+validation.data$survival.probs.1 <- val.probs.1[,2]
 
 # aside: where do these probabilities actually come from?
+# check out their distribution:
+val.probs.1[,2] %>% round(3) %>% table()
+353 / (81 + 353)
+119 / (6 + 119)
 
-# plot a lift chart with the probabilities
-gain <- gains(as.numeric(validation.data$Survived), 
-              validation.data$survival.probs.1,
-              groups=10)
-gain
-
-# set up lift chart variables
-total.survived <- sum(as.numeric(validation.data$Survived))
-yvals <- c(0,gain$cume.pct.of.total*total.survived)
-xvals <- c(0,gain$cume.obs)
-
-# plot the actual lift chart
-ggplot() + 
-  geom_line(mapping = aes(x=xvals, y=yvals)) +
-  xlab("Predicted Survivors") + ylab("Actual Survivors") + 
-  ggtitle("Tree #1 Validation") + 
-  theme(plot.title = element_text(hjust = 0.5)) + 
-  geom_abline(intercept = c(0,0), 
-              slope=total.survived/nrow(validation.data),
-              linetype="dashed")
-
-# aside: not too many actual points on the curve - why is this?
-table(validation.data$survival.probs.1)
+# plot an ROC curve of validation performance
+library(plotROC)
+ggplot(mapping = aes(m = validation.data$survival.probs.1, 
+                     d = validation.data$Survived=="Y")) +
+  geom_roc(n.cuts=100,labels=FALSE) + 
+  style_roc(theme = theme_grey) + 
+  ggtitle("Tree 1 Validation")
 
 
 ### Parameter Tuning ###
 
 # plot accuracy vs training, accuracy vs holdout against CP
-cps <- c(0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1)
+cps <- c(0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002, 0.0001)
 balanced.accuracy.train <- c()
 balanced.accuracy.val <- c()
 
@@ -179,14 +211,23 @@ val.accuracy <- data.frame("cp"=cps,
                              "dataset"="Validation",
                              "accuracy"=balanced.accuracy.val)
 full.accuracy <- rbind(train.accuracy, val.accuracy)
+head(full.accuracy)
+
+# log-scale of CP
+full.accuracy$log.cp <- log(full.accuracy$cp)
 
 # plot the performance vs. complexity parameter
+# in reverse
 ggplot(data=full.accuracy) + 
-  geom_line(mapping = aes(x=cp, y=accuracy, col=dataset)) + 
+  geom_line(mapping = aes(x=log.cp, y=accuracy, col=dataset)) + 
   ylab("Balanced Accuracy") + 
-  scale_x_log10(labels = scales::label_number(accuracy=0.001))
+  xlab("Complexity Parameter") +
+  scale_x_reverse() + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
+# which complexity parameter actually performs best?
+best.cp.index <- which.max(val.accuracy$accuracy)
+cps[best.cp.index]
 
-# NOTES:
-# apparently rpart has no problem with variables that have some NA values e.g. Embarked, Age
 
