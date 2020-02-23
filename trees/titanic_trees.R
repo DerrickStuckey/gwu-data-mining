@@ -50,7 +50,8 @@ length(unique(train.data$Embarked))
 # aka those which are either numeric or have a small number of classes
 surv.tree.1 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
-                     method="class")
+                     method="class",
+                     cp=0.02713178)
 
 # visualize the tree
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
@@ -136,7 +137,10 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 # note: this is why we prune rather than limiting growth up front
 
 
-# measure performance against a validation set
+# variable importance
+surv.tree.1$variable.importance
+
+## measure performance against a validation set
 validation.data$preds.tree.1 <- predict(surv.tree.1,
                                         newdata=validation.data,
                                         type="class")
@@ -235,7 +239,8 @@ full.accuracy$cp.inverse <- 1 / full.accuracy$cp
 ggplot(data=full.accuracy) + 
   geom_line(mapping = aes(x=cp.inverse, y=accuracy, col=dataset)) + 
   ylab("Balanced Accuracy") + 
-  xlab("Complexity Parameter (Inverse)") +
+  # xlab("Complexity Parameter (Inverse)") +
+  xlab("Model Complexity ->") +
   scale_x_log10() + 
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
@@ -250,5 +255,55 @@ ggplot(data=full.accuracy) +
 # which complexity parameter actually performs best?
 best.cp.index <- which.max(val.accuracy$accuracy)
 cps[best.cp.index]
+
+
+
+### Actually, rpart does this for us automatically ###
+set.seed(12345)
+surv.tree.xval <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age,
+                      data=train.data,
+                      method="class",
+                      minsplit=2,
+                      minbucket=1,
+                      maxdepth=30,
+                      xval=10,
+                      cp=0.001)
+
+# view the complexity parameter table
+surv.tree.xval$cptable
+
+# make it a dataframe
+cp.df <- data.frame(surv.tree.xval$cptable)
+
+# drop the first row as it's a big outlier
+cp.df <- cp.df[-1,]
+head(cp.df)
+
+# View validation performance vs CP for the rpart cptable
+ggplot(data=cp.df) + 
+  geom_line(mapping = aes(x=CP, y=xerror)) + 
+  scale_x_reverse() + 
+  scale_y_reverse() + 
+  xlab("Complexity Parameter (reverse)") + 
+  ylab("Cross-Validation Performance (1 - Error)")
+
+
+# prune the tree using the best complexity parameter
+best.cp.index <- which.min(surv.tree.xval$cptable[,"xerror"])
+best.cp <- surv.tree.xval$cptable[best.cp.index,"CP"]
+best.cp
+pruned <- prune(surv.tree.xval, cp=best.cp)
+
+# what has changed?
+nrow(surv.tree.xval$splits)
+nrow(pruned$splits)
+surv.tree.xval$variable.importance
+pruned$variable.importance
+
+# Visualize the pruned tree
+prp(pruned, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Pruned")
+
+
 
 
