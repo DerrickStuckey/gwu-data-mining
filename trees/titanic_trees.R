@@ -181,7 +181,10 @@ validation.data$preds.tree.name <- predict(surv.tree.name,
 ### Parameter Tuning ###
 
 # plot accuracy vs training, accuracy vs holdout against CP
-cps <- c(0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002, 0.0001)
+# cps <- c(0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005, 0.0002, 0.0001)
+cps <- c(0.1, 0.07, 0.05, 0.03, 0.02, 0.015,
+         0.01, 0.007, 0.005, 0.003, 0.002, 0.0015,
+         0.001, 0.0007, 0.0005, 0.0003, 0.0002, 0.00015, 0.0001)
 balanced.accuracy.train <- c()
 balanced.accuracy.val <- c()
 
@@ -224,18 +227,25 @@ val.accuracy <- data.frame("cp"=cps,
 full.accuracy <- rbind(train.accuracy, val.accuracy)
 head(full.accuracy)
 
-# log-scale of CP
-full.accuracy$log.cp <- log(full.accuracy$cp)
+# take the inverse of Complexity Parameter 
+# so that x axis shows increasing complexity
+full.accuracy$cp.inverse <- 1 / full.accuracy$cp
 
-# plot the performance vs. complexity parameter
-# in reverse
+# plot the performance vs. complexity parameter inverse
 ggplot(data=full.accuracy) + 
-  geom_line(mapping = aes(x=log.cp, y=accuracy, col=dataset)) + 
+  geom_line(mapping = aes(x=cp.inverse, y=accuracy, col=dataset)) + 
   ylab("Balanced Accuracy") + 
-  xlab("Complexity Parameter") +
-  scale_x_reverse() + 
+  xlab("Complexity Parameter (Inverse)") +
+  scale_x_log10() + 
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
+
+# actual complexity parameter (non-inverse)
+ggplot(data=full.accuracy) + 
+  geom_line(mapping = aes(x=cp, y=accuracy, col=dataset)) + 
+  ylab("Balanced Accuracy") + 
+  xlab("Complexity Parameter") +
+  scale_x_log10()
 
 # which complexity parameter actually performs best?
 best.cp.index <- which.max(val.accuracy$accuracy)
