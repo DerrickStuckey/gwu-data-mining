@@ -95,3 +95,12 @@ ggplot(data=comp.df.2) +
   geom_line(mapping = aes(x=Proportion.A, y=Value, col=Metric)) +
   xlab("Class A Proportion")
 
+# 3-class example:
+prop.a <- 0.4
+prop.b <- 0.3
+prop.c <- 0.3
+
+proportions.2 <- c(prop.a, prop.b, prop.c)
+gini.impurity(proportions.2)
+entropy(proportions.2)
+
