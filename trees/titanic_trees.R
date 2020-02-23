@@ -167,6 +167,17 @@ ggplot(mapping = aes(m = validation.data$survival.probs.1,
   ggtitle("Tree 1 Validation")
 
 
+## Train using unique factors e.g. Cabin, Name
+surv.tree.name <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age + Name,
+                     data=train.data,
+                     method="class"
+)
+validation.data$preds.tree.name <- predict(surv.tree.name,
+                                        newdata=validation.data,
+                                        type="class")
+# this is why we don't use variables which are "too unique"
+
+
 ### Parameter Tuning ###
 
 # plot accuracy vs training, accuracy vs holdout against CP
