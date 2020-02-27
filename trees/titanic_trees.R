@@ -50,8 +50,7 @@ length(unique(train.data$Embarked))
 # aka those which are either numeric or have a small number of classes
 surv.tree.1 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
-                     method="class",
-                     cp=0.02713178)
+                     method="class")
 
 # visualize the tree
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
@@ -91,10 +90,10 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 surv.tree.4 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class",
-                     cp=0.002
+                     cp=0.1
 )
 prp(surv.tree.4, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
-    main="CP 0.002")
+    main="CP 0.1")
 # compare with original
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default (CP = 0.01)")
@@ -103,10 +102,10 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 surv.tree.5 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class",
-                     cp=0.1
+                     cp=0.002
 )
 prp(surv.tree.5, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
-    main="CP 0.1")
+    main="CP 0.002")
 # compare with original
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default (CP = 0.01)")
