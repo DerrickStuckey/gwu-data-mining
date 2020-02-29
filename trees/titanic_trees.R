@@ -40,7 +40,9 @@ table(train.data$Parch)
 length(unique(train.data$Ticket))
 summary(train.data$Fare)
 length(unique(train.data$Cabin))
+summary(is.na(train.data$Cabin))
 length(unique(train.data$Embarked))
+summary(is.na(train.data$Embarked))
 
 # 'Age' is probably useful but has many missing values
 # come back to this later
@@ -115,7 +117,7 @@ surv.tree.6 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class",
                      parms = list(split = "information")
-                     # ,cp=0.005
+                     ,cp=0.005
 )
 prp(surv.tree.6, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Information (Entropy) Splitting")
@@ -158,7 +160,7 @@ validation.data$survival.probs.1 <- val.probs.1[,2]
 # aside: where do these probabilities actually come from?
 # check out their distribution:
 val.probs.1[,2] %>% round(3) %>% table()
-353 / (81 + 353)
+81 / (81 + 353)
 119 / (6 + 119)
 
 # plot an ROC curve of validation performance
@@ -253,6 +255,7 @@ ggplot(data=full.accuracy) +
 
 # which complexity parameter actually performs best?
 best.cp.index <- which.max(val.accuracy$accuracy)
+best.cp.index
 cps[best.cp.index]
 
 
@@ -302,7 +305,7 @@ pruned$variable.importance
 # Visualize the pruned tree
 prp(pruned, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Pruned")
-
+prp(pruned)
 
 
 
