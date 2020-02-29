@@ -5,12 +5,15 @@ library(gains)
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
-titanic.data <- read_csv("./data/titanic/train.csv")
-titanic.data
+titanic.data <- read.csv("./data/titanic/train.csv")
 dim(titanic.data)
+lapply(titanic.data, class)
 
 # make 'Survived' a factor so randomForest() will treat it as a classification problem
+table(titanic.data$Survived)
+titanic.data$Survived <- ifelse(titanic.data$Survived,"Y","N")
 titanic.data$Survived <- as.factor(titanic.data$Survived)
+table(titanic.data$Survived)
 
 # need to make character type predictors into
 # factors for randomForest() to accept them
@@ -29,14 +32,15 @@ validation.data <- titanic.data[-train.index,]
 # check out the data
 View(train.data)
 
-# try a model with all "tidy" variables
-# aka those which are either numeric or have a small number of classes
+# try a model with all variables which are either numeric or have a small number of classes
 surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Age + Embarked,
                      data=train.data)
 summary(surv.rf.1)
 
+# annoyingly, randomForest() does not automatically deal with missing values as rpart() does
 # which variables have missing values?
-summary(train.data)
+summary(is.na(train.data))
+summary(is.na(validation.data))
 
 # for now, just drop the variables with missing values
 surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare,
@@ -85,24 +89,24 @@ ggplot() +
 # what about the variables we left out?
 # what values should we use in place of missing values?
 
-# let's create a new variable using 'Age', but with no missing values
+# impute 'Age' using median age
 median.age <- median(train.data$Age, na.rm = TRUE)
 median.age
-train.data$Age.Full <- train.data$Age
-train.data$Age.Full[is.na(train.data$Age.Full)] <- median.age
+train.data$Age.Imputed <- train.data$Age
+train.data$Age.Imputed[is.na(train.data$Age.Imputed)] <- median.age
 summary(train.data$Age)
-summary(train.data$Age.Full)
+summary(train.data$Age.Imputed)
 
-# same for 'Embarked'
+# impute 'Embarked' using the mode (most common value)
 summary(train.data$Embarked)
 mode.embarked <- "S"
-train.data$Embarked.Full <- train.data$Embarked
-train.data$Embarked.Full[is.na(train.data$Embarked.Full)] <- mode.embarked
-summary(train.data$Embarked.Full)
+train.data$Embarked.Imputed <- train.data$Embarked
+train.data$Embarked.Imputed[is.na(train.data$Embarked.Imputed)] <- mode.embarked
+summary(train.data$Embarked.Imputed)
 
 # train a new random forest using the same variables as before, plus the new ones
 surv.rf.2 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
-                            Age.Full + Embarked.Full,
+                            Age.Imputed + Embarked.Imputed,
                           data=train.data)
 summary(surv.rf.2)
 
@@ -112,10 +116,10 @@ validation.data$preds.rf.2 <- predict(surv.rf.2,
                                       type="class")
 
 # we have to also fill in the missing values for the validation set
-validation.data$Age.Full <- validation.data$Age
-validation.data$Age.Full[is.na(validation.data$Age.Full)] <- median.age
-validation.data$Embarked.Full <- validation.data$Embarked
-validation.data$Embarked.Full[is.na(validation.data$Embarked.Full)] <- mode.embarked
+validation.data$Age.Imputed <- validation.data$Age
+validation.data$Age.Imputed[is.na(validation.data$Age.Imputed)] <- median.age
+validation.data$Embarked.Imputed <- validation.data$Embarked
+validation.data$Embarked.Imputed[is.na(validation.data$Embarked.Imputed)] <- mode.embarked
 
 # why don't we use median(validation.data$Age) 
 # or the mode of validation.data$Embarked ?
@@ -186,7 +190,7 @@ surv.rf.2$importance
 # classification (sqrt(p) where p is number of variables in x) and regression (p/3)
 
 # try mtry between 1 and 7 (the total number of variables)
-# default is sqrt(7)
+# default is sqrt(# of variables) = sqrt(7) ~ 3
 mtry.vals <- c(1:7)
 mtry.results <- c()
 
@@ -194,9 +198,10 @@ for (mtry.val in mtry.vals) {
   print(mtry.val)
   # train a random forest with mtry = mtry.val
   rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
-                               Age.Full + Embarked.Full,
+                               Age.Imputed + Embarked.Imputed,
                              data=train.data,
-                             mtry = mtry.val)
+                             mtry = mtry.val,
+                             ntree=200)
   
   # obtain predictions for the current model 
   # and "Balanced Accuracy" for those predictions
@@ -208,14 +213,54 @@ for (mtry.val in mtry.vals) {
 
 # plot the results
 ggplot() + 
-  geom_line(mapping = aes(x=mtry.vals, y=mtry.results)) + 
+  geom_point(mapping = aes(x=mtry.vals, y=mtry.results)) + 
   xlab("mtry") + ylab("Balanced Accuracy")
 
 # how can we be more confident that these results are not just due to random luck?
+mtry.vals <- rep(c(1:7),5)
+mtry.results <- c()
+
+# re-run the for loop
+
+# plot the results with geom_jitter
+ggplot() + 
+  geom_jitter(mapping = aes(x=mtry.vals, y=mtry.results), width=0.1) + 
+  xlab("mtry") + ylab("Balanced Accuracy")
+
+# this is an improvement, but can we do even better?
+
+
+# try several different values for sampsize
+sampsize.vals <- rep(c(10,20,50,100,200,300,400,500,668),10)
+sampsize.results <- c()
+
+for (sampsize.val in sampsize.vals) {
+  print(sampsize.val)
+  # train a random forest with sampsize = sampsize.val
+  rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                               Age.Imputed + Embarked.Imputed,
+                             data=train.data,
+                             ntree = 200,
+                             mtry=4,
+                             sampsize=sampsize.val)
+  
+  # obtain predictions for the current model 
+  # and "Balanced Accuracy" for those predictions
+  rf.preds <- predict(rf.current, newdata=validation.data)
+  cm <- confusionMatrix(rf.preds, validation.data$Survived)
+  balanced.accuracy <- cm$byClass['Balanced Accuracy']
+  sampsize.results <- c(sampsize.results, balanced.accuracy)
+}
+
+# plot the results
+ggplot() + 
+  geom_jitter(mapping = aes(x=sampsize.vals, y=sampsize.results), width=0.01) + 
+  xlab("sampsize") + ylab("Balanced Accuracy") + 
+  scale_x_log10()
+
 
 
 # try several different values for ntree
-# ntree.vals <- c(1,2,5,10,20,50,100,200,500,1000,2000)
 ntree.vals <- rep(c(1,2,5,10,20,50,100,200,500,1000,2000),5)
 ntree.results <- c()
 
@@ -223,9 +268,11 @@ for (ntree.val in ntree.vals) {
   print(ntree.val)
   # train a random forest with ntree = ntree.val
   rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
-                               Age.Full + Embarked.Full,
+                               Age.Imputed + Embarked.Imputed,
                              data=train.data,
-                             ntree = ntree.val)
+                             ntree = ntree.val,
+                             mtry=4,
+                             sampsize=300)
   
   # obtain predictions for the current model 
   # and "Balanced Accuracy" for those predictions
@@ -237,9 +284,14 @@ for (ntree.val in ntree.vals) {
 
 # plot the results
 ggplot() + 
-  geom_point(mapping = aes(x=ntree.vals, y=ntree.results)) + 
+  geom_jitter(mapping = aes(x=ntree.vals, y=ntree.results), width=0.1, height=0) + 
   xlab("ntree") + ylab("Balanced Accuracy") + 
   scale_x_log10()
-# if too many points are overlapping, try geom_jitter instead
+
+# why are we getting different results for a single value of ntree?
+
+
+
+
 
 
