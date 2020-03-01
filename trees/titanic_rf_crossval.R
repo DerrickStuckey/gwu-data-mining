@@ -62,7 +62,7 @@ trainval.data$fold <- fold.labels
 table(trainval.data$fold)
 head(trainval.data$fold,10)
 
-# try different values of mtry between 1 and 7 (the total number of variables)
+## try different values of mtry between 1 and 7 (the total number of variables)
 mtry.vals <- c(1:7)
 # mtry.vals <- rep(c(1:7),5)
 folds <- unique(trainval.data$fold)
@@ -127,7 +127,8 @@ ggplot(data=mtry.results.df) +
   geom_boxplot(mapping = aes(x=factor(mtry), y=balanced.accuracy)) + 
   xlab("mtry") + ylab("Balanced Accuracy")
 
-# repeat for nodesize
+
+## 'nodesize' parameter
 nodesize.vals <- c(1,2,3,4,5,7,10,15,20,30,50,100,200,300)
 folds <- unique(trainval.data$fold)
 attempt.nodesize.used <- c()
@@ -232,6 +233,69 @@ ggplot(data=nodesize.results.df) +
   geom_boxplot(mapping = aes(x=factor(nodesize), y=balanced.accuracy)) + 
   xlab("nodesize") + ylab("Balanced Accuracy")
 
+## 'sampsize' param
+sampsize.vals <- rep(c(10,20,50,100,200,300,400,500),5)
+folds <- unique(trainval.data$fold)
+attempt.sampsize.used <- c()
+attempt.results <- c()
+attempt.fold.values <- c()
+
+# select training and validation data for each fold
+for (current.fold in folds) {
+  # validation data is the selected fold
+  validation.data <- trainval.data %>% filter(fold == current.fold)
+  # training data is all other folds
+  train.data <- trainval.data %>% filter(fold != current.fold)
+  
+  # impute missing values for 'Age' and 'Embarked'
+  train.data$Age.Imputed <- ifelse(is.na(train.data$Age),
+                                   median(train.data$Age, na.rm=TRUE),
+                                   train.data$Age)
+  validation.data$Age.Imputed <- ifelse(is.na(validation.data$Age),
+                                        median(train.data$Age, na.rm=TRUE),
+                                        validation.data$Age)
+  
+  # now try each parameter value for each fold
+  for (sampsize.val in sampsize.vals) {
+    print(paste("fold:",current.fold))
+    print(paste("sampsize value:", sampsize.val))
+    # train a random forest with sampsize = sampsize.val
+    rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                                 Age.Imputed + Embarked.Imputed,
+                               data=train.data,
+                               sampsize = sampsize.val,
+                               ntree=200)
+    
+    # obtain predictions for the current model 
+    # and "Balanced Accuracy" for those predictions
+    rf.preds <- predict(rf.current, newdata=validation.data)
+    cm <- confusionMatrix(rf.preds, validation.data$Survived)
+    balanced.accuracy <- cm$byClass['Balanced Accuracy']
+    
+    # save off the results and settings for this attempt
+    attempt.results <- c(attempt.results, balanced.accuracy)
+    attempt.sampsize.used <- c(attempt.sampsize.used, sampsize.val)
+    attempt.fold.values <- c(attempt.fold.values, current.fold)
+  }
+}
+
+# create a dataframe to hold all the results for these attempts
+sampsize.results.df <- data.frame("fold"=factor(attempt.fold.values),
+                                  "sampsize"=attempt.sampsize.used,
+                                  "balanced.accuracy"=attempt.results)
+head(sampsize.results.df)
+
+# plot the results
+ggplot(data=sampsize.results.df) + 
+  geom_boxplot(mapping = aes(x=factor(sampsize), y=balanced.accuracy)) + 
+  xlab("sampsize") + ylab("Balanced Accuracy")
+
+sampsize.results.df %>% 
+  group_by(sampsize) %>%
+  summarise(
+    avg.balanced.accuracy = mean(balanced.accuracy)
+  )
+
 
 ### Test against Kaggle-provided test set ###
 
@@ -256,6 +320,7 @@ rf.optimized <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare +
                              data=trainval.data,
                              nodesize = 3,
                              mtry = 3,
+                             sampsize = 500,
                              ntree=500)
 
 # compare with a 'vanilla' random forest using default parameters
