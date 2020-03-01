@@ -148,7 +148,7 @@ for (current.fold in folds) {
     # save off the results and settings for this attempt
     attempt.results <- c(attempt.results, balanced.accuracy)
     attempt.nodesize.used <- c(attempt.nodesize.used, nodesize.val)
-    attempt.fold.values <- c(attempt.fold.values, fold)
+    attempt.fold.values <- c(attempt.fold.values, current.fold)
   }
 }
 
@@ -156,7 +156,7 @@ for (current.fold in folds) {
 nodesize.results.df <- data.frame("fold"=factor(attempt.fold.values),
                                   "nodesize"=attempt.nodesize.used,
                                   "balanced.accuracy"=attempt.results)
-View(nodesize.results.df)
+# View(nodesize.results.df)
 
 # plot the results
 ggplot(data=nodesize.results.df) + 
@@ -177,7 +177,26 @@ attempt.fold.values <- c()
 # repeat the for-loops
 
 # now, just take the average for each parameter value
+nodesize.results.df <- data.frame("fold"=factor(attempt.fold.values),
+                                  "nodesize"=attempt.nodesize.used,
+                                  "balanced.accuracy"=attempt.results)
+nodesize.results.agg <- 
+  nodesize.results.df %>%
+  group_by(nodesize) %>%
+  summarise(
+    avg.balanced.accuracy = mean(balanced.accuracy)
+  )
+nodesize.results.agg
 
+# plot the results, useing geom_line now as results should be stable
+ggplot(data=nodesize.results.agg) + 
+  geom_line(mapping = aes(x=nodesize, y=avg.balanced.accuracy, col=fold)) + 
+  scale_x_log10() + 
+  xlab("nodesize") + ylab("Balanced Accuracy")
 
-
+# or to see the variation for each nodesize value:
+ggplot(data=nodesize.results.df) + 
+  geom_boxplot(mapping = aes(x=factor(nodesize), y=balanced.accuracy)) + 
+  xlab("nodesize") + ylab("Balanced Accuracy")
+# have to make nodesize a factor for boxplot to use it for grouping
 
