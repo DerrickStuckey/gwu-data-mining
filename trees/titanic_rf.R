@@ -230,7 +230,43 @@ ggplot() +
 # this is an improvement, but can we do even better?
 
 
+# try several different values for nodesize
+set.seed(12345)
+nodesize.vals <- rep(c(1,2,3,4,5,7,10,15,20,30,50,100,200,300),10)
+nodesize.results <- c()
+
+for (nodesize.val in nodesize.vals) {
+  print(nodesize.val)
+  # train a random forest with nodesize = nodesize.val
+  rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                               Age.Imputed + Embarked.Imputed,
+                             data=train.data,
+                             ntree = 200,
+                             mtry=4,
+                             nodesize=nodesize.val)
+  
+  # obtain predictions for the current model 
+  # and "Balanced Accuracy" for those predictions
+  rf.preds <- predict(rf.current, newdata=validation.data)
+  cm <- confusionMatrix(rf.preds, validation.data$Survived)
+  balanced.accuracy <- cm$byClass['Balanced Accuracy']
+  nodesize.results <- c(nodesize.results, balanced.accuracy)
+}
+
+# plot the results
+ggplot() + 
+  geom_jitter(mapping = aes(x=nodesize.vals, y=nodesize.results), width=0.01) + 
+  xlab("nodesize") + ylab("Balanced Accuracy") + 
+  scale_x_log10()
+
+# boxplot alternative
+ggplot() + 
+  geom_boxplot(mapping = aes(x=factor(nodesize.vals), y=nodesize.results)) + 
+  xlab("nodesize") + ylab("Balanced Accuracy")
+
+
 # try several different values for sampsize
+set.seed(12345)
 sampsize.vals <- rep(c(10,20,50,100,200,300,400,500,668),10)
 sampsize.results <- c()
 
