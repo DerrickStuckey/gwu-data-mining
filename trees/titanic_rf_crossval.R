@@ -6,50 +6,66 @@ library(tidyverse)
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
-titanic.data <- read.csv("./data/titanic/train.csv")
-dim(titanic.data)
-lapply(titanic.data, class)
+trainval.data <- read.csv("./data/titanic/train.csv")
+test.data <- read.csv("./data/titanic/test.csv")
+dim(trainval.data)
+lapply(trainval.data, class)
 
 # make 'Survived' a factor so randomForest() will treat it as a classification problem
-table(titanic.data$Survived)
-titanic.data$Survived <- ifelse(titanic.data$Survived,"Y","N")
-titanic.data$Survived <- as.factor(titanic.data$Survived)
-table(titanic.data$Survived)
+trainval.data$Survived <- as.factor(trainval.data$Survived)
 
 # need to make character type predictors into
 # factors for randomForest() to accept them
-titanic.data$Sex <- as.factor(titanic.data$Sex)
-titanic.data$Embarked <- as.factor(titanic.data$Embarked)
+trainval.data$Sex <- as.factor(trainval.data$Sex)
+test.data$Sex <- as.factor(test.data$Sex)
 
-# go ahead and impute missing values for 'Embarked' as we're just going to always use 'S'
-titanic.data$Embarked.Imputed <- titanic.data$Embarked
-titanic.data$Embarked.Imputed[is.na(titanic.data$Embarked.Imputed)] <- 'S'
-titanic.data$Embarked.Imputed <- factor(titanic.data$Embarked.Imputed)
+# Annoyingly, the implementation of randomForest() does not automatically handle missing
+# values, as it is based on a slightly different tree implementation than rpart()
 
-# partition into training and test sets
+# Go ahead and impute missing values for 'Embarked' as we're just going to always use 'S'
+# as it's the most common class by a large margin
+table(trainval.data$Embarked)
+trainval.data$Embarked.Imputed <- trainval.data$Embarked
+trainval.data$Embarked.Imputed[is.na(trainval.data$Embarked.Imputed)] <- 'S'
+trainval.data$Embarked.Imputed[trainval.data$Embarked.Imputed==""] <- 'S'
+trainval.data$Embarked.Imputed <- factor(trainval.data$Embarked.Imputed)
+table(trainval.data$Embarked.Imputed)
+
+test.data$Embarked.Imputed <- test.data$Embarked
+test.data$Embarked.Imputed[is.na(test.data$Embarked.Imputed)] <- 'S'
+test.data$Embarked.Imputed[test.data$Embarked.Imputed==""] <- 'S'
+test.data$Embarked.Imputed <- factor(test.data$Embarked.Imputed)
+table(test.data$Embarked.Imputed)
+
+
+# we will impute Age separately for each split
+# this is probably overkill, but just to be safe
+
+# partition into k 'folds' for cross-validation
 set.seed(12345)
 num.folds <- 5
 
-nrow(titanic.data)
+nrow(trainval.data)
 
 # create k fold labels
-fold.labels.base <- 1:nrow(titanic.data) %% num.folds
+fold.labels.base <- 1:nrow(trainval.data) %% num.folds
 head(fold.labels.base,10)
 
 # randomize the fold labels
-random.index <- sample(1:nrow(titanic.data), nrow(titanic.data), replace=FALSE)
+random.index <- sample(1:nrow(trainval.data), nrow(trainval.data), replace=FALSE)
 head(random.index,10)
 fold.labels <- fold.labels.base[random.index]
 head(fold.labels,10)
 
 # apply the fold labels to the data
-titanic.data$fold <- fold.labels
-table(titanic.data$fold)
-head(titanic.data$fold,10)
+trainval.data$fold <- fold.labels
+table(trainval.data$fold)
+head(trainval.data$fold,10)
 
 # try different values of mtry between 1 and 7 (the total number of variables)
 mtry.vals <- c(1:7)
-folds <- unique(titanic.data$fold)
+# mtry.vals <- rep(c(1:7),5)
+folds <- unique(trainval.data$fold)
 attempt.mtry.used <- c()
 attempt.results <- c()
 attempt.fold.values <- c()
@@ -57,9 +73,9 @@ attempt.fold.values <- c()
 # select training and validation data for each fold
 for (current.fold in folds) {
   # validation data is the selected fold
-  validation.data <- titanic.data %>% filter(fold == current.fold)
+  validation.data <- trainval.data %>% filter(fold == current.fold)
   # training data is all other folds
-  train.data <- titanic.data %>% filter(fold != current.fold)
+  train.data <- trainval.data %>% filter(fold != current.fold)
   
   # impute missing values for 'Age' and 'Embarked'
   train.data$Age.Imputed <- ifelse(is.na(train.data$Age),
@@ -71,7 +87,7 @@ for (current.fold in folds) {
   
   # now try each parameter value for each fold
   for (mtry.val in mtry.vals) {
-    print(paste("fold:",fold))
+    print(paste("fold:",current.fold))
     print(paste("mtry value:", mtry.val))
     # train a random forest with mtry = mtry.val
     rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
@@ -97,18 +113,23 @@ for (current.fold in folds) {
 mtry.results.df <- data.frame("fold"=factor(attempt.fold.values),
                               "mtry"=attempt.mtry.used,
                               "balanced.accuracy"=attempt.results)
-View(mtry.results.df)
+head(mtry.results.df)
 
 # plot the results
 ggplot(data=mtry.results.df) + 
   geom_jitter(mapping = aes(x=mtry, y=balanced.accuracy, col=fold),
               width = 0.1) + 
   xlab("mtry") + ylab("Balanced Accuracy")
+# notice some folds are 'easier' than others
 
+# boxplot version
+ggplot(data=mtry.results.df) + 
+  geom_boxplot(mapping = aes(x=factor(mtry), y=balanced.accuracy)) + 
+  xlab("mtry") + ylab("Balanced Accuracy")
 
 # repeat for nodesize
 nodesize.vals <- c(1,2,3,4,5,7,10,15,20,30,50,100,200,300)
-folds <- unique(titanic.data$fold)
+folds <- unique(trainval.data$fold)
 attempt.nodesize.used <- c()
 attempt.results <- c()
 attempt.fold.values <- c()
@@ -116,9 +137,9 @@ attempt.fold.values <- c()
 # select training and validation data for each fold
 for (current.fold in folds) {
   # validation data is the selected fold
-  validation.data <- titanic.data %>% filter(fold == current.fold)
+  validation.data <- trainval.data %>% filter(fold == current.fold)
   # training data is all other folds
-  train.data <- titanic.data %>% filter(fold != current.fold)
+  train.data <- trainval.data %>% filter(fold != current.fold)
   
   # impute missing values for 'Age' and 'Embarked'
   train.data$Age.Imputed <- ifelse(is.na(train.data$Age),
@@ -130,7 +151,7 @@ for (current.fold in folds) {
   
   # now try each parameter value for each fold
   for (nodesize.val in nodesize.vals) {
-    print(paste("fold:",fold))
+    print(paste("fold:",current.fold))
     print(paste("nodesize value:", nodesize.val))
     # train a random forest with nodesize = nodesize.val
     rf.current <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
@@ -156,7 +177,7 @@ for (current.fold in folds) {
 nodesize.results.df <- data.frame("fold"=factor(attempt.fold.values),
                                   "nodesize"=attempt.nodesize.used,
                                   "balanced.accuracy"=attempt.results)
-# View(nodesize.results.df)
+head(nodesize.results.df)
 
 # plot the results
 ggplot(data=nodesize.results.df) + 
@@ -165,16 +186,28 @@ ggplot(data=nodesize.results.df) +
   scale_x_log10() + 
   xlab("nodesize") + ylab("Balanced Accuracy")
 
+# this is getting a bit too noisy, try a boxplot
+ggplot(data=nodesize.results.df) + 
+  geom_boxplot(mapping = aes(x=factor(nodesize), y=balanced.accuracy)) + 
+  xlab("nodesize") + ylab("Balanced Accuracy")
+# have to make nodesize a factor for boxplot to use it for grouping
+
+nodesize.results.df %>% 
+  group_by(nodesize) %>%
+  summarise(
+    avg.balanced.accuracy = mean(balanced.accuracy)
+  )
+
 
 # we can also still use multiple attempts per fold
 # since there are other random factors at play besides the train/validation split
 nodesize.vals <- rep(c(1,2,3,4,5,7,10,15,20,30,50,100,200,300),5)
-folds <- unique(titanic.data$fold)
+folds <- unique(trainval.data$fold)
 attempt.nodesize.used <- c()
 attempt.results <- c()
 attempt.fold.values <- c()
 
-# repeat the for-loops
+# repeat the for-loops above
 
 # now, just take the average for each parameter value
 nodesize.results.df <- data.frame("fold"=factor(attempt.fold.values),
@@ -190,13 +223,90 @@ nodesize.results.agg
 
 # plot the results, useing geom_line now as results should be stable
 ggplot(data=nodesize.results.agg) + 
-  geom_line(mapping = aes(x=nodesize, y=avg.balanced.accuracy, col=fold)) + 
+  geom_line(mapping = aes(x=nodesize, y=avg.balanced.accuracy)) + 
   scale_x_log10() + 
   xlab("nodesize") + ylab("Balanced Accuracy")
 
-# or to see the variation for each nodesize value:
+# check the boxplot version to confirm:
 ggplot(data=nodesize.results.df) + 
   geom_boxplot(mapping = aes(x=factor(nodesize), y=balanced.accuracy)) + 
   xlab("nodesize") + ylab("Balanced Accuracy")
-# have to make nodesize a factor for boxplot to use it for grouping
+
+
+### Test against Kaggle-provided test set ###
+
+# missing value imputation once more
+trainval.data$Age.Imputed <- ifelse(is.na(trainval.data$Age),
+                                    median(trainval.data$Age, na.rm=TRUE),
+                                    trainval.data$Age)
+test.data$Age.Imputed <- ifelse(is.na(test.data$Age),
+                                median(trainval.data$Age, na.rm=TRUE),
+                                test.data$Age)
+
+# a single test datapoint has 'Fare' missing, so impute that with the median as well
+test.data$Fare <- ifelse(is.na(test.data$Fare),
+                         median(trainval.data$Fare, na.rm=TRUE),
+                         test.data$Fare)
+
+# train our 'optimal' model to predict the test set
+# use the whole trainval dataset as that's 'everything but the test data'
+# increase the number of trees here because we are less concerned with processing time
+rf.optimized <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                               Age.Imputed + Embarked.Imputed,
+                             data=trainval.data,
+                             nodesize = 3,
+                             mtry = 3,
+                             ntree=500)
+
+# compare with a 'vanilla' random forest using default parameters
+rf.default <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                             Age.Imputed + Embarked.Imputed,
+                           data=trainval.data,
+                           ntree=500)
+
+# also compare with a single rpart tree
+library(rpart)
+surv.tree.xval <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age,
+                        data=trainval.data,
+                        method="class",
+                        xval=10,
+                        cp=0.0001)
+
+# prune the tree using the best complexity parameter
+best.cp.index <- which.min(surv.tree.xval$cptable[,"xerror"])
+best.cp <- surv.tree.xval$cptable[best.cp.index,"CP"]
+best.cp
+pruned.tree <- prune(surv.tree.xval, cp=best.cp)
+
+# write out test predictions for submission
+test.submission.rf.optimized <- test.data %>% select(PassengerId)
+test.submission.rf.optimized$Survived <- predict(rf.optimized, newdata=test.data)
+head(test.submission.rf.optimized)
+table(test.submission.rf.optimized$Survived)
+write.csv(test.submission.rf.optimized, "./data/titanic/rf_optimized_submission.csv",
+          row.names = FALSE)
+
+test.submission.rf.default <- test.data %>% select(PassengerId)
+test.submission.rf.default$Survived <- predict(rf.default, newdata=test.data)
+head(test.submission.rf.default)
+table(test.submission.rf.default$Survived)
+write.csv(test.submission.rf.default, "./data/titanic/rf_default_submission.csv",
+          row.names = FALSE)
+
+test.submission.rpart.tree <- test.data %>% select(PassengerId)
+test.submission.rpart.tree$Survived <- predict(pruned.tree, newdata=test.data, type="class")
+head(test.submission.rpart.tree)
+table(test.submission.rpart.tree$Survived)
+write.csv(test.submission.rpart.tree, "./data/titanic/rpart_tree_submission.csv",
+          row.names = FALSE)
+
+
+# ...actual kaggle submission results
+# Rpart Tree:
+# 0.76555
+# Default RF:
+# 0.77990
+# Optimized RF: 
+# 0.77990
+
 
