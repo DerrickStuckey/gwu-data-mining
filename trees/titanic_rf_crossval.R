@@ -375,3 +375,32 @@ write.csv(test.submission.rpart.tree, "./data/titanic/rpart_tree_submission.csv"
 # 0.77990
 
 
+
+# cross-validation using caret::trainControl method
+
+# 5-fold cross-validation
+train.control <- trainControl(method = "cv", number = 5)
+
+# randomForest model (only tunes 'mtry' parameter)
+tuned.rf <- train(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                    Age.Imputed + Embarked.Imputed,
+                  data=trainval.data, method = "rf",
+                  trControl = train.control)
+
+tuned.rf
+
+tuned.rf.preds <- predict(tuned.rf, newdata=test.data)
+head(tuned.rf.preds)
+
+# 'caret' boosted trees 
+tuned.adaboost <- train(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+                          Age.Imputed + Embarked.Imputed,
+                        data=trainval.data, method = "adaboost",
+                        trControl = train.control)
+
+tuned.adaboost
+
+# many other validation and tuning options:
+?trainControl
+?train
+
