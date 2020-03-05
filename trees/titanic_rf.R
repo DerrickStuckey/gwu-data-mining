@@ -41,53 +41,7 @@ summary(surv.rf.1)
 # which variables have missing values?
 summary(is.na(train.data))
 summary(is.na(validation.data))
-
-# for now, just drop the variables with missing values
-surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare,
-                          data=train.data)
-summary(surv.rf.1)
-
-# measure performance against a validation set
-validation.data$preds.rf.1 <- predict(surv.rf.1,
-                                        newdata=validation.data,
-                                        type="class")
-summary(validation.data$preds.rf.1)
-
-confusionMatrix(validation.data$preds.rf.1,
-                validation.data$Survived)
-
-# get probabilities instead
-probs.rf.1 <- predict(surv.rf.1,
-                        newdata=validation.data,
-                        type="prob")
-head(probs.rf.1)
-validation.data$survival.probs.1 <- probs.rf.1[,2]
-
-# plot a lift chart with the probabilities
-gain <- gains(as.numeric(validation.data$Survived), 
-              validation.data$survival.probs.1,
-              groups=50)
-gain
-
-# set up lift chart variables
-total.survived <- sum(as.numeric(validation.data$Survived))
-yvals <- c(0,gain$cume.pct.of.total*total.survived)
-xvals <- c(0,gain$cume.obs)
-
-# plot the actual lift chart
-ggplot() + 
-  geom_line(mapping = aes(x=xvals, y=yvals)) +
-  xlab("Predicted Survivors") + ylab("Actual Survivors") + 
-  ggtitle("RF #1 Validation") + 
-  theme(plot.title = element_text(hjust = 0.5)) + 
-  geom_abline(intercept = c(0,0), 
-              slope=total.survived/nrow(validation.data),
-              linetype="dashed")
-
-
-
-# what about the variables we left out?
-# what values should we use in place of missing values?
+table(train.data$Embarked)
 
 # impute 'Age' using median age
 median.age <- median(train.data$Age, na.rm = TRUE)
@@ -105,13 +59,13 @@ train.data$Embarked.Imputed[is.na(train.data$Embarked.Imputed)] <- mode.embarked
 summary(train.data$Embarked.Imputed)
 
 # train a new random forest using the same variables as before, plus the new ones
-surv.rf.2 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
                             Age.Imputed + Embarked.Imputed,
                           data=train.data)
-summary(surv.rf.2)
+summary(surv.rf.1)
 
 # measure performance against a validation set
-validation.data$preds.rf.2 <- predict(surv.rf.2,
+validation.data$preds.rf.1 <- predict(surv.rf.1,
                                       newdata=validation.data,
                                       type="class")
 
@@ -125,40 +79,36 @@ validation.data$Embarked.Imputed[is.na(validation.data$Embarked.Imputed)] <- mod
 # or the mode of validation.data$Embarked ?
 
 # try again with validation data missing values filled in 
-validation.data$preds.rf.2 <- predict(surv.rf.2,
+validation.data$preds.rf.1 <- predict(surv.rf.1,
                                       newdata=validation.data,
                                       type="class")
-summary(validation.data$preds.rf.2)
+summary(validation.data$preds.rf.1)
 
 # check actual accuracy of the new model
-confusionMatrix(validation.data$preds.rf.2,
+confusionMatrix(validation.data$preds.rf.1,
                 validation.data$Survived)
 
 # get probabilities instead, to plot another lift chart
-probs.rf.2 <- predict(surv.rf.2,
+probs.rf.1 <- predict(surv.rf.1,
                       newdata=validation.data,
                       type="prob")
-head(probs.rf.2)
-validation.data$survival.probs.2 <- probs.rf.2[,2]
+head(probs.rf.1)
+validation.data$survival.probs.1 <- probs.rf.1[,2]
 
 # plot a lift chart with the probabilities
-gain.2 <- gains(as.numeric(validation.data$Survived), 
-              validation.data$survival.probs.2,
+gain.1 <- gains(as.numeric(validation.data$Survived), 
+              validation.data$survival.probs.1,
               groups=50)
-gain.2
+gain.1
 
 # combine with values from the first lift chart, to compare the models in one plot
 total.survived <- sum(as.numeric(validation.data$Survived))
-yvals.2 <- c(0,gain.2$cume.pct.of.total*total.survived)
-xvals.2 <- c(0,gain.2$cume.obs)
+yvals <- c(0,gain.1$cume.pct.of.total*total.survived)
+xvals <- c(0,gain.1$cume.obs)
 
-lift.inputs.1 <- data.frame("xvals"=xvals,
+lift.inputs <- data.frame("xvals"=xvals,
                             "yvals"=yvals,
                             "model"="Model 1")
-lift.inputs.2 <- data.frame("xvals"=xvals.2,
-                            "yvals"=yvals.2,
-                            "model"="Model 2")
-lift.inputs <- rbind(lift.inputs.1, lift.inputs.2)
 
 # plot the actual lift chart
 ggplot(data=lift.inputs) + 
@@ -171,9 +121,8 @@ ggplot(data=lift.inputs) +
               linetype="dashed")
 
 
-# How important is each variable in each model?
+# How important is each variable?
 surv.rf.1$importance
-surv.rf.2$importance
 
 
 ### Model parameter tuning ###
