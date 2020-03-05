@@ -56,6 +56,7 @@ summary(train.data$Embarked)
 mode.embarked <- "S"
 train.data$Embarked.Imputed <- train.data$Embarked
 train.data$Embarked.Imputed[is.na(train.data$Embarked.Imputed)] <- mode.embarked
+train.data$Embarked.Imputed[train.data$Embarked.Imputed==""] <- mode.embarked
 summary(train.data$Embarked.Imputed)
 
 # train a new random forest using the same variables as before, plus the new ones
@@ -74,6 +75,7 @@ validation.data$Age.Imputed <- validation.data$Age
 validation.data$Age.Imputed[is.na(validation.data$Age.Imputed)] <- median.age
 validation.data$Embarked.Imputed <- validation.data$Embarked
 validation.data$Embarked.Imputed[is.na(validation.data$Embarked.Imputed)] <- mode.embarked
+validation.data$Embarked.Imputed[validation.data$Embarked.Imputed==""] <- mode.embarked
 
 # why don't we use median(validation.data$Age) 
 # or the mode of validation.data$Embarked ?
@@ -99,7 +101,7 @@ validation.data$survival.probs.1 <- probs.rf.1[,2]
 gain.1 <- gains(as.numeric(validation.data$Survived), 
               validation.data$survival.probs.1,
               groups=50)
-gain.1
+head(gain.1)
 
 # combine with values from the first lift chart, to compare the models in one plot
 total.survived <- sum(as.numeric(validation.data$Survived))
