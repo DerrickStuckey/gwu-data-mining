@@ -23,7 +23,7 @@ l <- seq(-7,7,0.1)
 head(l)
 tail(l)
 
-# plot the logistic response function from -10 to 10
+# plot the logistic response function from -7 to 7
 ggplot() + 
   geom_line(mapping = aes(x=l, y=logistic.response(l))) + 
   xlab("\U2113") + ylab("p")
@@ -65,3 +65,7 @@ ggplot(data=combined.vals) +
   xlab("\U2113") + ylab("p") + 
   xlim(-5,5)
 
+# neural net logistic activation function example
+ggplot() + 
+  geom_line(mapping = aes(x=l, y=logistic.response(l))) + 
+  xlab("weighted input") + ylab("output")
