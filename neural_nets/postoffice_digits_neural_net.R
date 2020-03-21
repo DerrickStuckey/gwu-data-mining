@@ -4,6 +4,7 @@
 library(rhdf5)
 library(neuralnet)
 library(ggplot2)
+library(caret)
 
 # data from https://www.kaggle.com/bistaumanga/usps-dataset#usps.h5
 # help from https://stackoverflow.com/questions/15974643/how-to-deal-with-hdf5-files-in-r
@@ -47,70 +48,13 @@ test.data.df <- as.data.frame(test.data.t)
 test.data.df$label <- as.factor(test.label)
 
 
-# train a neural net
-# nn.1 <- neuralnet(label ~ ., 
-#                   data=train.data.df,
-#                   hidden = 20, linear.output = FALSE,
-#                   stepmax = 10^3)
-# limit steps just to limit runtime
-
-# save the model
-# saveRDS(nn.1, "./neural_nets/digits_nn1.rds")
-
-# load the model
-nn.1 <- readRDS("./neural_nets/digits_nn1.rds")
-
-# obtain test probabilities
-test.probs <- predict(nn.1,
-                      newdata=test.data.df,
-                      type="raw")
-head(test.probs,2)
-dim(test.probs)
-levels(test.data.df$label)
-
-# pick out the digit
-test.preds.factor.index <- apply(test.probs, 1, which.max)
-test.preds <- levels(test.data.df$label)[test.preds.factor.index]
-head(test.preds)
-
-  # aside: which.max and apply()
-  which.max(c(1,2,3))
-  which.max(c(1,3,2))
-  m <- data.frame("a"=c(1,2),"b"=c(3,4),"c"=c(5,6))
-  m
-  apply(m, 1, sum)
-  apply(m, 2, sum)
-  apply(m, 1, max)
-  apply(m, 1, which.max)
-
-# now look at our actual accuracy
-test.preds <- as.factor(test.preds)
-confusionMatrix(test.preds, test.data.df$label)
-
-# look at the first 10 predictions and actual values
-head(test.preds,n=10)
-head(test.data.df$label,n=10)
+# before training any models, let's look at this data visually
 
 # create a directory to hold charts
 chart.dir <- "./neural_nets/digits"
 if(!dir.exists(chart.dir)) {
   dir.create(chart.dir)
 }
-
-# plot ROC for each digit
-# library(plotROC)
-# 
-# for (i in 1:length(levels(test.data.df$label))) {
-#   digit <- levels(test.data.df$label)[i]
-#   print(digit)
-#   p <- ggplot(mapping = aes(m = test.probs[,i], d = ifelse(test.data.df$label==digit,1,0))) + 
-#     geom_roc(n.cuts=20,labels=FALSE) + 
-#     style_roc(theme = theme_grey) + 
-#     ggtitle(paste("Digit",digit))
-#   p
-#   plot.filename <- paste(chart.dir,digit,".png",sep="")
-#   ggsave(filename=plot.filename, plot=p, device=png())
-# }
 
 # plot the first 20 actual images from the dataset
 for (img.index in 1:20) {
@@ -155,6 +99,72 @@ for (img.index in 1:20) {
 
 # check against the labels
 train.label[1:20]
+
+# digital representation of the first image
+train.data.t[1,]
+# first row of pixels for the first image
+train.data.t[1,1:16]
+
+
+# train a neural net
+nn.1 <- neuralnet(label ~ .,
+                  data=train.data.df,
+                  hidden = 20, linear.output = FALSE,
+                  stepmax = 10^3)
+# limit steps (stepmax) just to limit the runtime
+
+# save the model
+saveRDS(nn.1, "./neural_nets/digits_nn1.rds")
+
+# or just load a model trained earlier
+nn.1 <- readRDS("./neural_nets/digits_nn1.rds")
+
+# obtain test probabilities
+test.probs <- predict(nn.1,
+                      newdata=test.data.df,
+                      type="raw")
+head(test.probs,2)
+dim(test.probs)
+levels(test.data.df$label)
+
+# pick out the predicted digit for each test data point
+test.preds.factor.index <- apply(test.probs, 1, which.max)
+test.preds <- levels(test.data.df$label)[test.preds.factor.index]
+head(test.preds)
+
+  # aside: which.max and apply()
+  which.max(c(1,2,3))
+  which.max(c(1,3,2))
+  m <- data.frame("a"=c(1,2),"b"=c(3,4),"c"=c(5,6))
+  m
+  apply(m, 1, sum)
+  apply(m, 2, sum)
+  apply(m, 1, max)
+  apply(m, 1, which.max)
+
+# now look at our actual accuracy
+test.preds <- as.factor(test.preds)
+confusionMatrix(test.preds, test.data.df$label)
+
+# look at the first 10 predictions and actual values
+head(test.preds,n=10)
+head(test.data.df$label,n=10)
+
+# plot ROC for each digit
+# library(plotROC)
+# 
+# for (i in 1:length(levels(test.data.df$label))) {
+#   digit <- levels(test.data.df$label)[i]
+#   print(digit)
+#   p <- ggplot(mapping = aes(m = test.probs[,i], d = ifelse(test.data.df$label==digit,1,0))) + 
+#     geom_roc(n.cuts=20,labels=FALSE) + 
+#     style_roc(theme = theme_grey) + 
+#     ggtitle(paste("Digit",digit))
+#   p
+#   plot.filename <- paste(chart.dir,digit,".png",sep="")
+#   ggsave(filename=plot.filename, plot=p, device=png())
+# }
+
 
 
 
