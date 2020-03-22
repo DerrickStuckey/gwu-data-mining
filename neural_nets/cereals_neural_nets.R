@@ -1,22 +1,23 @@
 # install.packages("neuralnet")
 library(neuralnet)
 library(tidyverse)
-library(forecast) # for accuracy function
+library(forecast) # for accuracy() function
+library(caret) # for preProcess() function
 
 # from https://s3-ap-south-1.amazonaws.com/av-blog-media/wp-content/uploads/2017/09/07122416/cereals.csv
 # via https://www.analyticsvidhya.com/blog/2017/09/creating-visualizing-neural-network-in-r/
 cereals <- read_csv("./data/cereals.csv")
 nrow(cereals)
 
-# training/test split
+# training/validation split
 set.seed(12345)
 train.proportion <- 0.7
-test.proportion <- 0.3
+validation.proportion <- 0.3
 
 # pull out the training data
 train.index <- sample(1:nrow(cereals), nrow(cereals)*train.proportion)
 train.data <- cereals[train.index,]
-test.data <- cereals[-train.index,]
+validation.data <- cereals[-train.index,]
 
 # look at relationships between rating and the predictor variables
 ggplot(data=train.data) +
@@ -38,84 +39,72 @@ ggplot(data=train.data) +
 ### data preparation ###
 
 # normalize all variables to a range [0,1]
+# note: including target variable 'rating'
+normalizer <- preProcess(train.data, method="range")
+train.norm <- predict(normalizer, train.data)
+validation.norm <- predict(normalizer, validation.data)
 
-# get the min and max for each column
-cols.max = apply(train.data, 2, max) # applies max() function to each column
-cols.max
-cols.min = apply(train.data, 2, min) # applies min() function to each column
-cols.min
+### build and validation a basic model ###
 
-# rescale the training and test data using these values
-train.scale <- scale(train.data, center = cols.min, scale = cols.max - cols.min)
-train.normalized = as.data.frame(train.scale)
-summary(train.normalized)
-test.scale <- scale(test.data, center = cols.min, scale = cols.max - cols.min)
-test.normalized = as.data.frame(test.scale)
-# note: test data normalization is still done using cols.min, cols.max from training data
-
-
-### build and test a basic model ###
-
-# train the neural net
-nn.1 <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.normalized, 
+# train a neural net with a single layer of 3 hidden nodes
+nn.1 <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.norm, 
                   hidden = 3, linear.output = TRUE)
 
-# check it out
+# visualize the neural net
 plot(nn.1)
 
-# obtain predictions for the test set
-test.preds.raw.nn.1 <- predict(nn.1, newdata=test.normalized)
+# obtain predictions for the validation set
+validation.preds.raw.nn.1 <- predict(nn.1, newdata=validation.norm)
 
-# check the accuracy in the transformed scale
-cor(test.normalized$rating, test.preds.raw.nn.1) ^ 2
-accuracy(test.normalized$rating, test.preds.raw.nn.1)
+# check the accuracy
+# note: these results are in the transformed scale
+accuracy(validation.norm$rating, validation.preds.raw.nn.1)
 
-# plot predictions vs actuals in the transformed scale
+# plot predictions vs actuals (in the transformed scale)
 ggplot() +
-  geom_point(mapping = aes(x=test.preds.raw.nn.1, y=test.normalized$rating))
+  geom_point(mapping = aes(x=validation.preds.raw.nn.1, y=validation.norm$rating))
 
-# re-scale the raw test predictions back to the original scale
-rating.center <- attr(train.scale, 'scaled:center')['rating']
-rating.scale <- attr(train.scale, 'scaled:scale')['rating']
-test.preds.unscaled.nn.1 <- test.preds.raw.nn.1 * rating.scale + rating.center
 
-# plot predictions vs actuals in the original scale
-ggplot() + 
-  geom_point(mapping = aes(x=test.preds.unscaled.nn.1, y=test.data$rating))
+# train a neural net with two layers of 2 hidden nodes each
+nn.2 <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.norm, 
+                  hidden = c(2,2), linear.output = TRUE)
 
-# check accuracy metrics in the original scale
-cor(test.data$rating, test.preds.unscaled.nn.1) ^ 2
-accuracy(test.data$rating, test.preds.unscaled.nn.1)
+# visualize the neural net
+plot(nn.2)
 
-# are these different than before?
 
 
 ### model tuning ###
 
 # try a range of values for the number of hidden nodes
-hidden.vals <- c(1,2,3,5,10,20,30,50,100,200,500,1000)
-rsq.results <- c()
+hidden.vals <- rep(c(0,1,2,3,5,20,50,100,200),5)
+rmse.results <- c()
 
 set.seed(12345)
 for (hidden.val in hidden.vals) {
   
   # train the model
-  nn.current <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.normalized, 
-                    hidden = hidden.val, linear.output = TRUE, stepmax = 10^5)
+  # limit steps with stepmax, to reduce runtime
+  nn.current <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.norm, 
+                    hidden = hidden.val, linear.output = TRUE, stepmax = 10^4)
   
   # obtain predictions on the validation set
-  test.preds.raw.nn.current <- predict(nn.current, newdata=test.normalized)
+  validation.preds.raw.nn.current <- predict(nn.current, newdata=validation.norm)
   
   # measure the accuracy in terms of r-squared and save it
-  rsq.current <- cor(test.normalized$rating, test.preds.raw.nn.current) ^ 2
-  rsq.results <- c(rsq.results, rsq.current)
+  rmse.current <- RMSE(validation.norm$rating, validation.preds.raw.nn.current)
+  rmse.results <- c(rmse.results, rmse.current)
 }
 
-# plot accuracy vs # of hidden layers
+# plot accuracy vs # of hidden nodes
 ggplot() +
-  geom_line(mapping = aes(x=hidden.vals, y=rsq.results)) +
-  xlab("# of Hidden Layers") + ylab("R-Squared") +
+  geom_point(mapping = aes(x=hidden.vals, y=rmse.results)) +
+  xlab("# of Hidden Nodes") + ylab("RMSE") +
   scale_x_log10()
+
+ggplot() +
+  geom_boxplot(mapping = aes(x=as.factor(hidden.vals), y=rmse.results)) +
+  xlab("# of Hidden Nodes") + ylab("RMSE")
 
 
 # note: other parameters can be tuned too: stepmax, learning rate, momentum
