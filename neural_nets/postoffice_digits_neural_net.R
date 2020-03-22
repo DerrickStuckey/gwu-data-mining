@@ -106,6 +106,14 @@ train.data.t[1,]
 train.data.t[1,1:16]
 
 
+# before training, check the range of our inputs
+apply(train.data.df, 2, min)
+apply(train.data.df, 2, max)
+
+# do we need to normalize?
+# normalizer <- preProcess(select(train.data.df, -label), method="range")
+# train.data.norm <- predict(normalizer, train.data.df)
+
 # train a neural net
 nn.1 <- neuralnet(label ~ .,
                   data=train.data.df,
