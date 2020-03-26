@@ -9,6 +9,9 @@ library(caret)
 # data from https://www.kaggle.com/bistaumanga/usps-dataset#usps.h5
 # help from https://stackoverflow.com/questions/15974643/how-to-deal-with-hdf5-files-in-r
 
+# bitmap image format description:
+# http://paulbourke.net/dataformats/bitmaps/
+
 # list the contents of our h5 file
 h5ls("./data/usps.h5")
 
