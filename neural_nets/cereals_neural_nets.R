@@ -99,12 +99,12 @@ for (hidden.val in hidden.vals) {
 # plot accuracy vs # of hidden nodes
 ggplot() +
   geom_point(mapping = aes(x=hidden.vals, y=rmse.results)) +
-  xlab("# of Hidden Nodes") + ylab("RMSE") +
+  xlab("# of Hidden Nodes") + ylab("Validation RMSE") +
   scale_x_log10()
 
 ggplot() +
   geom_boxplot(mapping = aes(x=as.factor(hidden.vals), y=rmse.results)) +
-  xlab("# of Hidden Nodes") + ylab("RMSE")
+  xlab("# of Hidden Nodes") + ylab("Validation RMSE")
 
 
 # note: other parameters can be tuned too: stepmax, learning rate, momentum
