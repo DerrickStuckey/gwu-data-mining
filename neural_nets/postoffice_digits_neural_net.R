@@ -47,6 +47,13 @@ dim(test.label)
 test.data.df <- as.data.frame(test.data.t)
 test.data.df$label <- as.factor(test.label)
 
+# what is actually in this data?
+# first image:
+train.data.t[1,]
+
+# how many predictors do we have?
+# how many data points?
+dim(test.data.df)
 
 # before training any models, let's look at this data visually
 
@@ -159,19 +166,19 @@ head(test.preds,n=10)
 head(test.data.df$label,n=10)
 
 # plot ROC for each digit
-# library(plotROC)
-# 
-# for (i in 1:length(levels(test.data.df$label))) {
-#   digit <- levels(test.data.df$label)[i]
-#   print(digit)
-#   p <- ggplot(mapping = aes(m = test.probs[,i], d = ifelse(test.data.df$label==digit,1,0))) + 
-#     geom_roc(n.cuts=20,labels=FALSE) + 
-#     style_roc(theme = theme_grey) + 
-#     ggtitle(paste("Digit",digit))
-#   p
-#   plot.filename <- paste(chart.dir,digit,".png",sep="")
-#   ggsave(filename=plot.filename, plot=p, device=png())
-# }
+library(plotROC)
+
+for (i in 1:length(levels(test.data.df$label))) {
+  digit <- levels(test.data.df$label)[i]
+  print(digit)
+  p <- ggplot(mapping = aes(m = test.probs[,i], d = ifelse(test.data.df$label==digit,1,0))) +
+    geom_roc(n.cuts=20,labels=FALSE) +
+    style_roc(theme = theme_grey) +
+    ggtitle(paste("Digit",digit))
+  p
+  plot.filename <- paste(chart.dir,"/",digit,"_ROC.png",sep="")
+  ggsave(filename=plot.filename, plot=p, device=png())
+}
 
 
 
