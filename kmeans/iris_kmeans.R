@@ -10,14 +10,8 @@ iris.tibble <- as_tibble(iris)
 iris.tibble
 
 # what do our data distributions look like for the measurement variables?
-summary(iris.tibble$Sepal.Length)
-summary(iris.tibble$Sepal.Width)
-summary(iris.tibble$Petal.Length)
-summary(iris.tibble$Petal.Width)
-sd(iris.tibble$Sepal.Length)
-sd(iris.tibble$Sepal.Width)
-sd(iris.tibble$Petal.Length)
-sd(iris.tibble$Petal.Width)
+apply(iris.tibble %>% select(-Species), 2, mean)
+apply(iris.tibble %>% select(-Species), 2, sd)
 
 # pull out just the numeric variables to run our k-means algo against
 iris.numeric <- iris.tibble %>%
@@ -29,6 +23,10 @@ normalizer <- preProcess(iris.numeric,
                          method = c("center", "scale"))
 
 iris.normalized <- predict(normalizer, iris.numeric)
+
+# what did this normalization accomplish?
+apply(iris.normalized, 2, mean)
+apply(iris.normalized, 2, sd)
 
 # try running k-means on the normalized numeric data
 # (should be OK as our numeric variables are all of similar scale)
