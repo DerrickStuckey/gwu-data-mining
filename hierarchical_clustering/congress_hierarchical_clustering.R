@@ -4,13 +4,13 @@ library(stats) # for hclust
 
 # data from https://archive.ics.uci.edu/ml/datasets/Congressional+Voting+Records
 # (header added manually based on data description)
-housevotes <- read_csv("~/Downloads/house-votes-84.csv")
+housevotes <- read_csv("./data/house-votes-84.csv")
 housevotes
 
 # drop the 'Class Name' variable before clustering
 votes.only <- 
   housevotes %>%
-  select(-`Class Name`)
+  select(-party)
 votes.only
 
 # set 'y' votes to 1, 'n' votes to 0, '?' votes to 0.5
@@ -28,7 +28,8 @@ head(votes.only.numeric)
 View(votes.only.numeric)
 
 # add back the class name as row names
-row.names(votes.only.numeric) <- housevotes$`Class Name`
+# this lets us keep the name as a label but not as a variable
+row.names(votes.only.numeric) <- housevotes$party
 
 # compute Euclidean distance on the numeric votes data
 dist.votes <- dist(votes.only.numeric, method="euclidean")
@@ -59,7 +60,7 @@ View(round(single.split.avgs,1))
 four.clusters <- cutree(hc1, k=4)
 head(four.clusters,n=10)
 
-# how well do the two groups line up with our class labels?
+# how well do the four groups line up with our class labels?
 table(four.clusters, names(four.clusters))
 
 four.clusters.avgs <- aggregate(votes.only.numeric,
