@@ -107,5 +107,3 @@ zipcode.demos.sel.sample$zip[zipcode.demos.sel.sample$cluster==4]
 # 74078
 # 98447
 # 29225
-
-
