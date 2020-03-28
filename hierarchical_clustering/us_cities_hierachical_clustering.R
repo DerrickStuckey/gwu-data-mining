@@ -57,7 +57,7 @@ top.50.avg.clusters <- top.50.coords
 top.50.avg.clusters$cluster <- as.factor(hc.avg.clusters.5)
 
 ggplot(data=top.50.avg.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster), size=3) + 
   ggtitle("Method: Average")
 ggsave(paste(chart.dir,"/average_clustering.png",sep=""))
 
@@ -74,7 +74,7 @@ top.50.single.clusters$cluster <- as.factor(hc.single.clusters.5)
 
 # plot the 5 clusters using the 'Single' distance method
 ggplot(data=top.50.single.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster), size=3) + 
   ggtitle("Method: Single")
 ggsave(paste(chart.dir,"/single_clustering.png",sep=""))
 
@@ -92,7 +92,7 @@ top.50.complete.clusters <- top.50.coords
 top.50.complete.clusters$cluster <- as.factor(hc.complete.clusters.5)
 
 ggplot(data=top.50.complete.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster), size=3) + 
   ggtitle("Method: Complete")
 ggsave(paste(chart.dir,"/complete_clustering.png",sep=""))
 
@@ -108,7 +108,7 @@ top.50.centroid.clusters <- top.50.coords
 top.50.centroid.clusters$cluster <- as.factor(hc.centroid.clusters.5)
 
 ggplot(data=top.50.centroid.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster), size=3) + 
   ggtitle("Method: Centroid")
 ggsave(paste(chart.dir,"/centroid_clustering.png",sep=""))
 
@@ -124,7 +124,7 @@ top.50.ward.clusters <- top.50.coords
 top.50.ward.clusters$cluster <- as.factor(hc.ward.clusters.5)
 
 ggplot(data=top.50.ward.clusters) + 
-  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster)) + 
+  geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster), size=3) + 
   ggtitle("Method: Ward")
 ggsave(paste(chart.dir,"/ward_clustering.png",sep=""))
 
