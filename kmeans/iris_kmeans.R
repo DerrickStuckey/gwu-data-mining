@@ -92,6 +92,16 @@ ggplot(data=iris.numeric) +
 table(km.3$cluster, iris.tibble$Species)
 
 
+# compare Sum of Squares for k=2, k=3
+km.2$betweenss
+km.2$tot.withinss
+km.3$betweenss
+km.3$tot.withinss
+
+km.2$betweenss + km.2$tot.withinss
+km.3$betweenss + km.3$tot.withinss
+
+
 # try a few different values of k
 # measure the 'goodness of fit' for each
 k.vals <- c(1,2,3,4,5)
