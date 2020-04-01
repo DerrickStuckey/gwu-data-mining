@@ -58,8 +58,6 @@ ggplot(data=iris.numeric) +
 ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster))
 
-
-
 # try again, with 3 clusters
 set.seed(12345)
 km.3 <- kmeans(iris.normalized, 3)
@@ -94,6 +92,18 @@ ggplot(data=iris.numeric) +
 table(km.3$cluster, iris.tibble$Species)
 
 
-# TODO try k-means with different numbers of iterations, visualizing the intermediate results after each iteration
+# try a few different values of k
+# measure the 'goodness of fit' for each
+k.vals <- c(1,2,3,4,5)
+k.tot.withinss <- c()
+for (k.val in k.vals) {
+  km.k <- kmeans(iris.normalized, k.val)
+  current.tot.withinss <- km.k$tot.withinss
+  k.tot.withinss <- c(k.tot.withinss, current.tot.withinss)
+}
 
-# TODO try other algo versions
+# plot SS within clusters vs k
+ggplot() +
+  geom_line(mapping = aes(x=k.vals, y=k.tot.withinss)) + 
+  xlab("k") + ylab("Total Sum of Squares within Clusters")
+
