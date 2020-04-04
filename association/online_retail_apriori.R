@@ -1,6 +1,6 @@
 library(tidyverse)
-library(readxl)
-library(arules)
+library(readxl) # for read_excel() function
+library(arules) # for apriori() function
 
 # from http://archive.ics.uci.edu/ml/datasets/Online+Retail
 online.retail <- read_excel("./data/Online Retail.xlsx")
@@ -27,6 +27,7 @@ StockCode.Description.Frequency <-
   ) %>%
   arrange(desc(row.count))
 
+# check number of rows and number of unique Stock Codes now:
 StockCode.Description.Frequency
 dim(StockCode.Description.Frequency)
 length(unique(StockCode.Description.Frequency$StockCode))
@@ -36,6 +37,11 @@ StockCode.Description.Frequency <-
   StockCode.Description.Frequency %>%
   filter(!is.na(Description))
 
+# keep only the most frequent description
+StockCode.Description.Frequency <- StockCode.Description.Frequency[
+  !duplicated(StockCode.Description.Frequency$StockCode),]
+
+# check number of rows and number of unique Stock Codes again
 dim(StockCode.Description.Frequency)
 length(unique(StockCode.Description.Frequency$StockCode))
 # looks like they are all unique now
@@ -51,20 +57,12 @@ StockCode.Description.Frequency %>%
 ### set up our data as a transactions database ###
 
 # only use InvoiceNo and StockCode columns
+# (forget about 'Description' for now)
 online.retail.staging <- 
   online.retail %>%
   select(InvoiceNo, StockCode) %>%
   mutate(Incidence = 1)
 online.retail.staging
-
-# make both of these columns factors
-# online.retail.staging <- 
-#   online.retail.staging %>%
-#   mutate(
-#     InvoiceNo = as.factor(InvoiceNo),
-#     StockCode = as.factor(StockCode)
-#   )
-# online.retail.staging
 
 # convert to a "wide-format" dataframe
 # with InvoiceNo for rows, StockCode for columns, and a 1 or 0 for incidence
@@ -73,12 +71,12 @@ online.retail.wide <-
   spread(StockCode, Incidence, fill=0)
 
 # try again after de-duping
-online.retail.staging <- 
+online.retail.deduped <- 
   online.retail.staging %>%
   unique()
 
 online.retail.wide <- 
-  online.retail.staging %>%
+  online.retail.deduped %>%
   spread(StockCode, Incidence, fill=0)
 
 online.retail.wide
@@ -111,9 +109,11 @@ top.10.rules <- sort(rules, by = "lift")[1:10]
 inspect(top.10.rules)
 
 # what do these actually mean?
+# items from rule 1:
 StockCode.Description.Frequency %>%
-  filter(StockCode %in% c(23171,23172))
+  filter(StockCode %in% c(23172,23171))
 
+# items from rule 5:
 StockCode.Description.Frequency %>%
   filter(StockCode %in% c(22746,22745))
 
@@ -131,6 +131,7 @@ rules.df
 # clean up the formatting so we can match lhs and rhs with the description lookup
 # rules.df$lhs <- str_remove_all(rules.df$lhs, "[{}]")
 # rules.df$rhs <- str_remove_all(rules.df$rhs, "[{}]")
+# make both changes at once with mutate()
 rules.df <-
   rules.df %>%
   mutate(
@@ -171,5 +172,12 @@ rules.df %>%
   arrange(desc(confidence))
 
 # note: the description lookup we used only works when 
-# lhs and rhs are 1 item each
+# LHS is a single item
+# 3-item itemset rules just have Stock Codes for LHS:
+rules.df.no.lhs.desc <- 
+  rules.df %>%
+  filter(
+    is.na(LHS.Description)
+  )
+View(rules.df.no.lhs.desc)
 
