@@ -52,10 +52,12 @@ plot(hc.avg)
 
 # split into 5 clusters
 hc.avg.clusters.5 <- cutree(hc.avg, k=5)
+head(hc.avg.clusters.5)
 
 # create a new dataframe to plot this particular clustering
 top.50.avg.clusters <- top.50.coords
 top.50.avg.clusters$cluster <- as.factor(hc.avg.clusters.5)
+head(top.50.avg.clusters)
 
 ggplot(data=top.50.avg.clusters) + 
   geom_point(mapping = aes(x=longitude, y=latitude, col=cluster, shape=cluster), size=3) + 
