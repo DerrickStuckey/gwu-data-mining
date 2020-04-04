@@ -3,9 +3,11 @@ library(recommenderlab)
 
 # data from https://grouplens.org/datasets/movielens/latest/
 
+# user/movie ratings
 ratings <- read_csv("data/ml-latest-small/ratings.csv")
 ratings
 
+# movie metadata
 movies <- read_csv("data/ml-latest-small/movies.csv")
 movies
 
@@ -39,7 +41,7 @@ top.movies <-
 top.movies
 ggplot() + geom_histogram(mapping = aes(x = top.movies$review.count))
 
-# merge with reviews per movie, select only the top N movies
+# ratings for only the top N most-reviewed movies
 ratings.top <- 
   ratings %>%
   inner_join(top.movies, by=c("movieId"))
@@ -52,7 +54,6 @@ ratings.top %>%
     unique_users = n_distinct(userId),
     unique_movies = n_distinct(movieId)
   )
-# TODO why are there 101 unique movies instead of 100?
 
 # check distribution of ratings within our selected set
 ggplot() + 
@@ -81,6 +82,8 @@ ratings.wide <-
 
 dim(ratings.wide)
 ratings.wide[1:5,1:5]
+# now every row represents a user, every column represents a movie,
+# every cell represents that user's rating for that movie
 
 # convert our wide training dataframe to a matrix
 ratings.matrix <-
@@ -100,11 +103,9 @@ View(as(pred,"matrix"))
 
 
 # look at the details for the historical ratings for an individual user
-# for top 100 movies
-# good: 4, 13, 14
-# OK: 9, 10 
-# good test candidates: 20 (kids movies), 
-selected.user.id <- 599
+# (for top N movies)
+# good user id examples: 4, 13, 14
+selected.user.id <- 1
 selected.user.ratings <-
   ratings.top %>% 
   filter(userId == selected.user.id) %>%
@@ -115,9 +116,10 @@ selected.user.ratings %>%
   select(rating, title)
 
 # obtain top 5 recommended movies for the selected user
-# recommended.items.sel.user.raw <- predict(movies.rec, ratingmatrix.train["26075",], n=5)
 recommended.items.sel.user.raw <- predict(movies.rec, ratingmatrix.train[selected.user.id,], n=5)
 recommended.items.sel.user.raw
+
+# cast to a list and then to a vector
 recommended.items.sel.user <- 
   as(recommended.items.sel.user.raw, "list")
 recommended.items.sel.user
