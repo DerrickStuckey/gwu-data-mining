@@ -95,6 +95,7 @@ table(km.3$cluster, iris.tibble$Species)
 # compare Sum of Squares for k=2, k=3
 km.2$betweenss
 km.2$tot.withinss
+
 km.3$betweenss
 km.3$tot.withinss
 

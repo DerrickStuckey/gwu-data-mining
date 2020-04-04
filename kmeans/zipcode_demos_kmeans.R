@@ -63,6 +63,9 @@ zipcode.demos.sel.sample$population.norm <-
   (zipcode.demos.sel.sample$population.log - min.val) / (max.val - min.val)
 summary(zipcode.demos.sel.sample$population.norm)
 
+ggplot(data = zipcode.demos.sel.sample) + 
+  geom_histogram(mapping = aes(x=population.norm))
+
 # now create the dataframe we want to actually use for clustering
 zipcode.demos.train <- 
   zipcode.demos.sel.sample %>%
@@ -107,3 +110,7 @@ zipcode.demos.sel.sample$zip[zipcode.demos.sel.sample$cluster==4]
 # 74078
 # 98447
 # 29225
+
+table(zipcode.demos.sel.sample$cluster)
+
+

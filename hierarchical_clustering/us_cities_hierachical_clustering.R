@@ -1,4 +1,5 @@
 # cities hierarchical clustering
+library(tidyverse)
 
 # data from https://public.opendatasoft.com/explore/dataset/1000-largest-us-cities-by-population-with-geographic-coordinates/table/?sort=-rank
 us.cities <- read_delim("./data/1000-largest-us-cities-by-population-with-geographic-coordinates.csv",
