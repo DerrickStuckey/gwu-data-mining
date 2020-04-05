@@ -146,6 +146,9 @@ StockCode.Description.Lookup <-
   select(StockCode,Description)
 
 # add the LHS description and rename it
+# using a "left join" - only include an item from RHS if it matches an entry in LHS
+names(rules.df)
+names(StockCode.Description.Lookup)
 rules.df <- 
   rules.df %>% 
   left_join(StockCode.Description.Lookup, by=c("lhs"="StockCode")) %>%
