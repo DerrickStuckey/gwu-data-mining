@@ -42,6 +42,7 @@ top.movies
 ggplot() + geom_histogram(mapping = aes(x = top.movies$review.count))
 
 # ratings for only the top N most-reviewed movies
+# "inner join" - only include entries if LHS and RHS match on the specified key
 ratings.top <- 
   ratings %>%
   inner_join(top.movies, by=c("movieId"))
@@ -95,7 +96,17 @@ ratingmatrix.train <- as(ratings.matrix, "realRatingMatrix")
 ratingmatrix.train
 
 # item-based collaborative filtering recommendations
-movies.rec <- Recommender(ratingmatrix.train, "IBCF")
+movies.rec <- Recommender(ratingmatrix.train, "UBCF") # user-based recommendations
+# movies.rec <- Recommender(ratingmatrix.train, "IBCF") # item-based recommendations
+
+# method 'Correlation' rather than the default 'Cosine':
+# movies.rec <- Recommender(ratingmatrix.train, "UBCF",
+#                           parameter=list("method"="Correlation"))
+
+# show the model settings:
+getModel(movies.rec)
+
+# obtain actual predictions
 pred <- predict(movies.rec, ratingmatrix.train, type="ratings")
 View(as(pred,"matrix"))
 
@@ -105,7 +116,7 @@ View(as(pred,"matrix"))
 # look at the details for the historical ratings for an individual user
 # (for top N movies)
 # good user id examples: 4, 13, 14
-selected.user.id <- 1
+selected.user.id <- 4
 selected.user.ratings <-
   ratings.top %>% 
   filter(userId == selected.user.id) %>%
@@ -138,4 +149,5 @@ selected.user.ratings %>%
   select(rating,title,genres)
 selected.user.recommendations %>%
   select(title,genres)
+
 
