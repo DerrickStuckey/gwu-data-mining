@@ -42,7 +42,7 @@ top.movies
 ggplot() + geom_histogram(mapping = aes(x = top.movies$review.count))
 
 # ratings for only the top N most-reviewed movies
-# "inner join" - only include entries if LHS and RHS match on the specified key
+# "inner join" - only include entries if both tables match on the specified key
 ratings.top <- 
   ratings %>%
   inner_join(top.movies, by=c("movieId"))

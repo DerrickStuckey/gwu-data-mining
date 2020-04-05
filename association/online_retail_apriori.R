@@ -146,7 +146,8 @@ StockCode.Description.Lookup <-
   select(StockCode,Description)
 
 # add the LHS description and rename it
-# using a "left join" - only include an item from RHS if it matches an entry in LHS
+# using a "left join" - only include an item from the joined table if it matches an entry in the original table
+# left_join() is from the dplyr package included in tidyverse
 names(rules.df)
 names(StockCode.Description.Lookup)
 rules.df <- 
@@ -154,7 +155,7 @@ rules.df <-
   left_join(StockCode.Description.Lookup, by=c("lhs"="StockCode")) %>%
   rename( LHS.Description = Description )
 
-# add the RHS description and rename it
+# now add the RHS description and rename it
 rules.df <- 
   rules.df %>% 
   left_join(StockCode.Description.Lookup, by=c("rhs"="StockCode")) %>%
