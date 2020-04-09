@@ -100,6 +100,9 @@ transaction.data
 head(itemFrequency(transaction.data))
 
 # run apriori algorithm to find frequent itemsets
+# support >= 1%
+# confidence >= 50%
+# itemsets of size <= 3
 rules <- apriori(transaction.data,
                  parameter = list(supp=0.01, conf = 0.5, maxlen = 3, target = "rules"))
 rules
