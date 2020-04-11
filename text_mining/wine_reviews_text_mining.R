@@ -2,8 +2,9 @@
 # install.packages("lsa")
 
 library(tidyverse)
-library(tm)
-library(lsa)
+library(forecast) # for accuracy() function
+library(tm) # general text mining tools
+library(lsa) # concept extraction
 
 # from https://www.kaggle.com/zynicide/wine-reviews
 wine.reviews <- read_csv("./data/wine-reviews/winemag-data_first150k.csv")
@@ -11,7 +12,7 @@ wine.reviews <- read_csv("./data/wine-reviews/winemag-data_first150k.csv")
 dim(wine.reviews)
 wine.reviews
 
-# right now we only care about the review text
+# right now we only care about the review text: the 'description' column
 head(wine.reviews$description)
 
 # work with just a sample of data, as some steps can take a while on large data
@@ -62,7 +63,8 @@ findAssocs(tdm.tok, "spice", 0.1)$spice[1:10]
 
 
 # try removing 'stopwords' aka very common words
-stopwords("english")
+# using stopwords() function from 'tm' package
+stopwords("english") %>% head()
 corp.nostopwords <- tm_map(corp.tok, removeWords, stopwords("english"))
 tdm.nostopwords <- TermDocumentMatrix(corp.nostopwords)
 inspect(tdm.nostopwords)
@@ -131,7 +133,7 @@ head(document.concepts)
 
 
 # set up the data to train and test on
-# attempt to predict the rating
+# attempt to predict the rating, using our 10 concepts as predictors
 document.concepts$points <- reviews.sample$points
 head(document.concepts)
 
@@ -150,10 +152,16 @@ test.data <- document.concepts[-train.idx,]
 points.lm <- lm(points ~ .,data=train.data)
 summary(points.lm)
 
+# which concepts are most associated with a high rating?
+View(concepts.top.terms[,c('Concept 3','Concept 4','Concept 6')])
+# with a low rating?
+View(concepts.top.terms[,c('Concept 1','Concept 9','Concept 10')])
+
 # how does the model perform on the holdout set?
 points.preds <- predict(points.lm, newdata=test.data)
-cor(points.preds, test.data$points)^2
+accuracy(points.preds, test.data$points)
 
+# plot actual vs. predicted points
 ggplot() +
   geom_point(mapping = aes(x=points.preds, y=test.data$points))
 
