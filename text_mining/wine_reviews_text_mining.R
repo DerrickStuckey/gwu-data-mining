@@ -5,6 +5,7 @@ library(tidyverse)
 library(forecast) # for accuracy() function
 library(tm) # general text mining tools
 library(lsa) # concept extraction
+library(caret) # for confusionMatrix()
 
 # from https://www.kaggle.com/zynicide/wine-reviews
 wine.reviews <- read_csv("./data/wine-reviews/winemag-data_first150k.csv")
@@ -73,7 +74,6 @@ inspect(tdm.nostopwords)
 # before and after removing stopwords
 findFreqTerms(tdm.tok, nrow(reviews.sample) * 0.20)
 findFreqTerms(tdm.nostopwords, nrow(reviews.sample) * 0.20)
-# TODO why is 'the' still in here?
 
 # stemming (e.g. "running" -> "run")
 corp.stemmed <- tm_map(corp.nostopwords, stemDocument)
@@ -84,19 +84,18 @@ tdm.stemmed <- TermDocumentMatrix(corp.stemmed)
 findFreqTerms(tdm.nostopwords, nrow(reviews.sample) * 0.20)
 findFreqTerms(tdm.stemmed, nrow(reviews.sample) * 0.20)
 
-
-# TODO try also dropping infrequent terms
+# we can also drop infrequent terms if we want to
+# (in this case, let's keep them)
 # tdm.unsparse <- removeSparseTerms(tdm.stemmed,0.999)
 # tdm.stemmed
 # tdm.unsparse
 
-
 # TF-IDF weighting
 tfidf <- weightTfIdf(tdm.nostopwords)
-# tfidf <- weightTfIdf(tdm.unsparse)
 tfidf
 inspect(tfidf)
 # how is this different from a basic TDM?
+inspect(tdm.stemmed)
 
 findAssocs(tdm.nostopwords, "spice", 0.1)$spice[1:10]
 findAssocs(tfidf, "spice", 0.1)$spice[1:10]
@@ -111,8 +110,7 @@ lsa.tfidf <- lsa(tfidf, dim=10)
 # look at the words associated with each concept
 View(lsa.tfidf$tk)
 
-# top 10 terms for each concept
-# TODO is there a more elegant way to do this?
+# look at the top 10 terms for each concept
 concepts.top.terms <- data.frame("rank"=1:10)
 for (j in 1:ncol(lsa.tfidf$tk)) {
   top.terms <- row.names(lsa.tfidf$tk)[
@@ -184,8 +182,12 @@ italy.logistic <- glm(Italian ~ ., data=train.data, family='binomial')
 summary(italy.logistic)
 
 # obtain test predictions
-test.probs <- predict(italy.logistic, newdata=test.data)
+test.probs <- predict(italy.logistic, newdata=test.data, type="response")
 summary(test.probs)
+
+# confusion matrix
+test.preds <- test.probs > 0.5
+confusionMatrix(as.factor(test.preds), as.factor(test.data$Italian))
 
 # ROC curve
 library(plotROC)
