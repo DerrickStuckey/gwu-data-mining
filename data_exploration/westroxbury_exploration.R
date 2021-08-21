@@ -311,6 +311,12 @@ ggplot() +
 ggplot(data=roxbury.sample) + 
   geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) +
   geom_smooth(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE),
-              method=lm)
+              method=lm,
+              formula=y ~ x)
 
-
+# polynomial curve fit
+ggplot(data=roxbury.sample) + 
+  geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) +
+  geom_smooth(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE),
+              method=lm,
+              formula=y ~ poly(x,2))
