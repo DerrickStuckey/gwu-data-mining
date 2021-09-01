@@ -1,3 +1,4 @@
+# install.packages("tidyverse")
 library(tidyverse)
 
 # "diamonds" dataset included in the tidyverse package

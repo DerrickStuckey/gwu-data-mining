@@ -1,3 +1,11 @@
+# install.packages("ggplot2")
+library(ggplot2)
+# install.packages("GGally")
+library(GGally)
+# install.packages("ggthemes")
+library(ggthemes)
+
+
 # from "Data Mining for Business Analytics"
 # https://www.dataminingbook.com/book/r-edition
 westroxbury <- read.csv("./data/WestRoxbury.csv")
@@ -27,11 +35,12 @@ avector + 1
 anothervector <- c(avector,99)
 anothervector
 avector
+westroxbury[avector,]
 westroxbury[anothervector,]
 
 # create a vector of a specified range of integers
-onethroughten <- 1:10
-onethroughten
+one.through.ten <- 1:10
+one.through.ten
 
 # select individual columns (and rows 1-10)
 westroxbury[1:10,1]
@@ -46,6 +55,7 @@ head(westroxbury[-c(1,3,5),])
 head(westroxbury[,1:3])
 head(westroxbury[,-(1:3)])
 head(westroxbury[,-c(1,2,3)])
+head(westroxbury[c(1,2,3),c(1,2,3)])
 head(westroxbury[c(1,2,3),-c(1,2,3)])
 
 # some summary stats
@@ -64,9 +74,7 @@ cor(westroxbury$TOTAL.VALUE, westroxbury$LOT.SQFT)
 
 ### data visualization ###
 
-# ggplot library
-# install.packages("ggplot2")
-library(ggplot2)
+# using ggplot library
 
 # ggplot histogram of total value
 ggplot(data=westroxbury) + 
@@ -132,7 +140,25 @@ ggplot(data=westroxbury) +
 ggplot(data=westroxbury) + 
   geom_violin(mapping=aes(x=as.factor(FLOORS), y=TOTAL.VALUE))
 
+# (version without factorizing FLOORS )
+# ggplot(data=westroxbury) + 
+#   geom_violin(mapping=aes(x=FLOORS, y=TOTAL.VALUE))
 
+# compare data types
+summary(westroxbury$FLOORS)
+summary(as.factor(westroxbury$FLOORS))
+is.numeric(westroxbury$FLOORS)
+is.numeric(as.factor(westroxbury$FLOORS))
+typeof(as.factor(westroxbury$FLOORS))
+
+# try with "REMODEL" variable instead
+ggplot(data=westroxbury) + 
+  geom_violin(mapping=aes(x=REMODEL, y=TOTAL.VALUE))
+
+# why is this different?
+is.factor(westroxbury$REMODEL)
+typeof(westroxbury$REMODEL)
+is.numeric(westroxbury$REMODEL)
 
 # remove outliers
 ggplot(data=westroxbury) + 
@@ -146,6 +172,7 @@ ggplot(data=westroxbury) +
   ylim(0,15000)
 
 # or just use a base R boxplot
+# (as opposed to ggplot2)
 boxplot(westroxbury$LOT.SQFT ~ westroxbury$REMODEL,
         outline = FALSE)
 
@@ -167,7 +194,10 @@ is.numeric(westroxbury$BEDROOMS)
 
 # make BEDROOMS variable a factor, and try again
 westroxbury$BEDROOMS <- as.factor(westroxbury$BEDROOMS)
+is.factor(westroxbury$BEDROOMS)
+is.numeric(westroxbury$BEDROOMS)
 summary(westroxbury$BEDROOMS)
+
 ggplot(data=westroxbury) + 
   geom_bar(mapping=aes(x=REMODEL, fill=BEDROOMS))
 
@@ -185,8 +215,8 @@ heatmap(
   )
 
 # plot combinations of variables (choose just 3 variables to keep it reasonable)
-library(GGally)
-ggpairs(roxbury.sample[,c("TOTAL.VALUE", "BEDROOMS", "LOT.SQFT")])
+# ggpairs is from 'GGally' library
+ggpairs(roxbury.sample[,c("TOTAL.VALUE", "LIVING.AREA", "LOT.SQFT")])
 
 # jitter example
 ggplot(data=roxbury.sample) + 
@@ -264,6 +294,7 @@ p <- ggplot(data=roxbury.sample) +
   xlab("Living Area") + ylab("Home Value") + 
   ggtitle("Home Value vs Bedrooms") + 
   theme(plot.title = element_text(hjust = 0.5))
+p
 
 p + scale_color_gradient(low="blue", high="red")
 p + scale_color_gradient(low = "#d69ce1", high = "#bd5915")
@@ -279,8 +310,7 @@ ggplot(data=roxbury.sample) +
 
 
 # even more themes
-# install.packages("ggthemes")
-library(ggthemes)
+# (from library 'ggthemes')
 
 ggplot(data=roxbury.sample) + 
   geom_point(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE)) + 
