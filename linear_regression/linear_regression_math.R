@@ -1,5 +1,8 @@
 library(ggplot2)
 
+# for 'accuracy' function
+library(forecast)
+
 ### generate some data
 
 # generate a vector of random values between 0 and 1
@@ -42,11 +45,9 @@ ggplot() +
   geom_abline(mapping = aes(intercept = b0.guess, slope = b1.guess))
 
 # actually use a linear model to estimate b0 and b1
+# (function 'lm' is built-in to R)
 linear.model <- lm(y ~ x)
 summary(linear.model)
-cor(preds.lm,y) ^ 2
-cor(x,y) ^ 2
-cor(x, y + 1000) ^ 2
 
 linear.model$coefficients
 linear.model$coefficients[1]
@@ -86,7 +87,7 @@ errors.lm <- y - preds.lm
 sum.squared.errors.lm <- sum(errors.lm^2)
 sum.squared.errors.lm
 
-# which one is lower?
+# which one is better?
 
 
 # calculate RMSE, ME, MPE, MAPE, MAE
@@ -115,18 +116,26 @@ mpe.lm
 mape.lm <- mean(abs.errors.lm / y) * 100
 mape.lm
 
-mape2.lm <- mean(abs.errors.lm / preds.lm) * 100
-mape2.lm
-
-# or we can get these values much more easily from the accuracy() function
-# in the "forecast" package 
-library(forecast)
+# or we can just use the accuracy() function from the "forecast" package 
 accuracy(preds.lm, y)
 
 # compare with the "guess" values
 accuracy(preds.guess, y)
 # are the model predictions best on every measure?
 
+
+# compare performance metrics with correlation
+cor(preds.lm,y)
+cor(x,y)
+cor(preds.lm,y) ^ 2
+summary(linear.model)
+
+cor(preds.lm, y)
+cor(preds.lm+1, y)
+cor(preds.lm+1000, y)
+
+accuracy(preds.lm, y)
+accuracy(preds.lm+1, y)
 
 
 ### add an outlier
@@ -152,6 +161,11 @@ ggplot() +
                             slope = b1.lm),
               col = "red") + 
   xlim(0,10) + ylim(0,10)
+
+# without prediction lines
+ggplot() + 
+  geom_point(mapping = aes(x=x, y=y))
+
 
 preds.lm.out <- b0.lm.out + b1.lm.out * x
 
