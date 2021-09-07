@@ -138,6 +138,15 @@ accuracy(preds.lm, y)
 accuracy(preds.lm+1, y)
 
 
+# plot actuals vs predicted values
+ggplot() + 
+  geom_point(mapping = aes(x=preds.lm, y=y)) + 
+  xlab("predicted y")
+# look familiar?
+ggplot() + 
+  geom_point(mapping = aes(x=x, y=y))
+
+
 ### add an outlier
 outlier.x <- 0
 outlier.y <- 10
