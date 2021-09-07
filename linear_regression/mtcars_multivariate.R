@@ -10,7 +10,7 @@ head(mtcars)
 dim(mtcars)
 
 set.seed(12345)
-train.proportion <- 0.75
+train.proportion <- 0.67
 
 train.idx <- sample(1:nrow(mtcars), nrow(mtcars)*train.proportion)
 train.idx
@@ -64,5 +64,18 @@ ggplot() +
 # distribution of residuals for test data
 ggplot() +
   geom_histogram(mapping = aes(test.data$mpg - preds.test), bins=8)
+
+
+
+# plot actual vs predicted values for the train and test data
+train.data$split = "train"
+train.data$prediction = preds.train
+test.data$split = "test"
+test.data$prediction <- preds.test
+combined.data <- rbind(train.data, test.data)
+ggplot(combined.data) +
+  geom_point(mapping = aes(x=prediction, y=mpg, col=split)) + 
+  geom_abline(mapping = aes(intercept = 0, slope = 1), col="black")
+
 
 
