@@ -56,13 +56,27 @@ accuracy(preds.step.lm, test.data$mpg)
 
 ## Interaction terms and polynomial terms
 
-# add an interaction term for cylinders * weight
+# add a polynomial term for hp^2
+# why might this be useful?
+ggplot(train.data) +
+  geom_point(mapping = aes(x=hp, y=mpg))
+hp.poly.lm <- lm(mpg ~ poly(hp,2), data = train.data)
+summary(hp.poly.lm)
+
+# plot the relationship between mpg and hp with polynomial model
+ggplot(train.data, mapping = aes(x=hp, y=mpg)) +
+  geom_point() + 
+  stat_smooth(method="lm", se=TRUE, fill=NA,
+              formula=y ~ poly(x, 2, raw=TRUE), colour="blue")
+# any problems you can envision with this approach?
+
+# add the polynomial term to the full model
+full.hp.poly.lm <- lm(mpg ~ . - hp + poly(hp,2), data = train.data)
+summary(full.hp.poly.lm)
+
+# add an interaction term for cylinders * weight to the full model
 inter.lm.1 <- lm(mpg ~ . + cyl*wt, data = train.data)
 summary(inter.lm.1)
-
-# add a polynomial term for cylinders^2
-poly.lm.1 <- lm(mpg ~ . - cyl + poly(cyl,2), data = train.data)
-summary(poly.lm.1)
 
 # add interaction terms for cyl with every other variable
 inter.lm.2 <- lm(mpg ~ . + cyl*., data = train.data)
@@ -81,8 +95,8 @@ summary(inter.lm.step)
 preds.inter.lm.1 <- predict(inter.lm.1, newdata = test.data)
 accuracy(preds.inter.lm.1, test.data$mpg)
 
-preds.poly.lm.1 <- predict(poly.lm.1, newdata = test.data)
-accuracy(preds.poly.lm.1, test.data$mpg)
+preds.full.hp.poly.lm <- predict(full.hp.poly.lm, newdata = test.data)
+accuracy(preds.full.hp.poly.lm, test.data$mpg)
 
 preds.inter.lm.2 <- predict(inter.lm.2, newdata = test.data)
 accuracy(preds.inter.lm.2, test.data$mpg)
