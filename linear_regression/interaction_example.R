@@ -20,6 +20,8 @@ ggplot(example.df) +
 ggplot(example.df) +
   geom_point(mapping = aes(x=x, y=z, col=y), size=3) + 
   scale_color_gradient(low="blue", high="green")
+# now what's going on?
+# why didn't this show up in the first two plots?
 
 # linear regression model for y with x as a predictor
 lm(y ~ x, data=example.df) %>% 
