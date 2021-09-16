@@ -1,44 +1,41 @@
 library(ggplot2)
 
-# for 'accuracy' function
-library(forecast)
+# load our example data
+example.df <- read.csv("./data/interaction_example_df.csv")
 
-# generate some contrived random data
-set.seed(12345)
-x <- rnorm(100, mean=0, sd=10)
-z <- rnorm(100, mean=0, sd=10)
-
-errs <- rnorm(100, mean=0, sd=10)
-
-y <- x*z + errs
 
 # plot y vs x
-ggplot() +
+ggplot(example.df) +
   geom_point(mapping = aes(x=x, y=y))
+# are these correlated?
+# is there any relationship?
 
 # plot y vs z
-ggplot() +
+ggplot(example.df) +
   geom_point(mapping = aes(x=z, y=y))
+# are these correlated?
+# is there any relationship?
 
 # plot x, y and z together
-ggplot() +
-  geom_point(mapping = aes(x=x, y=z, col=y)) + 
-  scale_color_gradient(low="blue", high="red")
+ggplot(example.df) +
+  geom_point(mapping = aes(x=x, y=z, col=y), size=3) + 
+  scale_color_gradient(low="blue", high="green")
 
 # linear regression model for y with x as a predictor
-lm(y ~ x) %>% 
+lm(y ~ x, data=example.df) %>% 
   summary()
 # equivalent to:
-summary(lm(y ~ x))
+summary(lm(y ~ x, data=example.df))
 
 # with z as a predictor
-lm(y ~ z) %>% 
+lm(y ~ z, data=example.df) %>% 
   summary()
 
 # with x, z and interaction terms
-lm(y ~ x*z) %>%
+lm(y ~ x*z, data=example.df) %>%
   summary()
 
 # x*z interaction term only
-lm(y ~ x*z - x - z) %>%
+lm(y ~ x*z - x - z, data=example.df) %>%
   summary()
+
