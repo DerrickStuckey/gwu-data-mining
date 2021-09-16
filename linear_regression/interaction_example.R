@@ -1,8 +1,11 @@
 library(ggplot2)
+library(tidyverse)
 
 # load our example data
 example.df <- read.csv("./data/interaction_example_df.csv")
 
+head(example.df)
+dim(example.df)
 
 # plot y vs x
 ggplot(example.df) +
