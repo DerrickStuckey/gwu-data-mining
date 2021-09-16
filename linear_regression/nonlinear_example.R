@@ -43,7 +43,7 @@ summary(z.lm.1)
 ggplot(xyz.df, mapping = aes(x=x, y=z)) + 
   geom_point() + 
   stat_smooth(method="lm", se=TRUE, fill=NA,
-              formula=z ~ x, color="blue") + 
+              formula=y ~ x, color="blue") + 
   ggtitle("Simple Linear Model")
 
 
@@ -54,7 +54,7 @@ summary(z.lm.poly.2)
 ggplot(xyz.df, mapping = aes(x=x, y=z)) + 
   geom_point() + 
   stat_smooth(method="lm", se=TRUE, fill=NA,
-              formula=z ~ x + I(x^2) ,color="blue") + 
+              formula=y ~ x + I(x^2) ,color="blue") + 
   ggtitle("2nd-order polynomial")
 
 
@@ -65,7 +65,7 @@ summary(z.lm.poly.3)
 ggplot(xyz.df, mapping = aes(x=x, y=z)) + 
   geom_point() + 
   stat_smooth(method="lm", se=TRUE, fill=NA,
-              formula=z ~ x + I(x^2) + I(x^3) ,color="blue") + 
+              formula=y ~ x + I(x^2) + I(x^3) ,color="blue") + 
   ggtitle("3rd-order polynomial")
 
 
@@ -73,7 +73,7 @@ ggplot(xyz.df, mapping = aes(x=x, y=z)) +
 ggplot(xyz.df, mapping = aes(x=x, y=z)) + 
   geom_point() + 
   stat_smooth(method="lm", se=TRUE, fill=NA,
-              formula=z ~ poly(x,10),color="blue") + 
+              formula=y ~ poly(x,10),color="blue") + 
   ggtitle("10th-order polynomial")
 # is this a better model?
 
