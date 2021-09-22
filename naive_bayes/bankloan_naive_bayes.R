@@ -11,6 +11,9 @@ library(gains)
 # for confusionMatrix
 library(caret)
 
+# for geom_roc() option in ggplot
+library(plotROC)
+
 library(tidyverse)
 
 # from "Data Mining for Business Analytics"
@@ -230,7 +233,22 @@ confusionMatrix(val.preds.nb.2.b, validation.data$Loan.Status)
 # Pos Pred Value : 0.4219      
 # how do Sensitivity, Specificity change?
 
-# plot a lift curve (using 'gains' library)
+
+# plot an ROC chart with geom_roc() from 'plotRoc' library
+# library(plotROC)
+ggplot(mapping = aes(m = val.probs.nb.2[,1], 
+                     d = validation.data$Loan.Status=="Accepts")) + 
+  geom_roc(n.cuts=6,labels=FALSE) + 
+  style_roc(theme = theme_grey) + 
+  ggtitle("Model #2 Validation ROC") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+table(val.probs.nb.2[,1])
+# n.cuts = 5 because we have 4 distinct values for probability, 
+# giving us 5 places to choose a cutoff:
+# less than prob #1, between prob #1 and #2, ..., greater than prob #4
+
+## plot a lift curve using 'gains' library
 gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
               val.probs.nb.2[,1],
               groups=4)
@@ -251,16 +269,6 @@ ggplot() +
   geom_abline(intercept = c(0,0), 
               slope=total.accepted/nrow(validation.data),
               linetype="dashed")
-
-# use plotROC instead of gains library for a simple ROC plot
-library(plotROC)
-ggplot(mapping = aes(m = val.probs.nb.2[,1], 
-                     d = validation.data$Loan.Status=="Accepts")) + 
-  geom_roc(n.cuts=4,labels=FALSE) + 
-  style_roc(theme = theme_grey) + 
-  ggtitle("Model #2 Validation ROC") + 
-  theme(plot.title = element_text(hjust = 0.5))
-# n.cuts is analagous to 'groups' in the lift chart
 
 
 
