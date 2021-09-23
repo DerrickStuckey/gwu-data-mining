@@ -96,15 +96,14 @@ bd.nb.1
 # prob(Accepts | CD Account ) = prob(Accepts) * prob(CD Account | Accepts) / prob(CD Account)
 p.accepts <- mean(train.data$Loan.Status=="Accepts")
 p.rejects <- 1 - p.accepts
-p.cd.if.accepts <- mean(train.data$`CD Account`[train.data$Loan.Status=="Accepts"])
-p.cd.if.rejects <- mean(train.data$`CD Account`[train.data$Loan.Status=="Rejects"])
+p.cd.if.accepts <- train.data$`CD Account`[train.data$Loan.Status=="Accepts"] %>% mean()
+p.cd.if.rejects <- train.data$`CD Account`[train.data$Loan.Status=="Rejects"] %>% mean()
 p.accepts.if.cd <- p.accepts * p.cd.if.accepts / 
   (p.accepts * p.cd.if.accepts + p.rejects * p.cd.if.rejects)
 
 # equivalently in the 1-predictor case:
   p.cd <- mean(train.data$`CD Account`)
-  p.accepts.if.cd <- p.accepts * p.cd.if.accepts / 
-    p.cd
+  p.accepts.if.cd <- p.accepts * p.cd.if.accepts / p.cd
 
 p.accepts.if.cd
 
@@ -143,8 +142,10 @@ train.data %>%
   )
 
 # manually compute predictions some example cases
-p.securities.if.accepts <- mean(train.data$`Securities Account`[train.data$Loan.Status=="Accepts"])
-p.securities.if.rejects <- mean(train.data$`Securities Account`[train.data$Loan.Status=="Rejects"])
+p.securities.if.accepts <- 
+  train.data$`Securities Account`[train.data$Loan.Status=="Accepts"] %>% mean()
+p.securities.if.rejects <- 
+  train.data$`Securities Account`[train.data$Loan.Status=="Rejects"] %>% mean()
 p.securities <- p.accepts * p.securities.if.accepts + (1-p.accepts) * p.securities.if.rejects
 
 # probability of "Accepts" if CD Account AND Securities Account
@@ -179,7 +180,7 @@ p.accepts.if.no.cd.securities
 val.probs.nb.2 <- predict(bd.nb.2, newdata = validation.data, type = "raw")
 head(val.probs.nb.2)
 summary(val.probs.nb.2)
-round(val.probs.nb.2,3)[,1] %>% table()
+val.probs.nb.2[,1] %>% round(3) %>% table()
 # only 4 possible values since we have only 2 binary predictors
 
 # force the model to actually choose a class
@@ -238,7 +239,7 @@ confusionMatrix(val.preds.nb.2.b, validation.data$Loan.Status)
 # library(plotROC)
 ggplot(mapping = aes(m = val.probs.nb.2[,1], 
                      d = validation.data$Loan.Status=="Accepts")) + 
-  geom_roc(n.cuts=6,labels=FALSE) + 
+  geom_roc(n.cuts=5,labels=FALSE) + 
   style_roc(theme = theme_grey) + 
   ggtitle("Model #2 Validation ROC") + 
   theme(plot.title = element_text(hjust = 0.5))
@@ -257,12 +258,12 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
 
 # set up lift chart variables
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
-yvals <- c(0,gain$cume.pct.of.total*total.accepted)
-xvals <- c(0,gain$cume.obs)
+yvals.2 <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals.2 <- c(0,gain$cume.obs)
 
 # plot the lift chart
 ggplot() + 
-  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  geom_line(mapping = aes(x=xvals.2, y=yvals.2)) +
   xlab("Offers Made") + ylab("Number Accepted") + 
   ggtitle("Model #2 Validation Lift") + 
   theme(plot.title = element_text(hjust = 0.5)) + 
@@ -298,7 +299,7 @@ table(train.data$Income.Level)
 is.factor(train.data$Income.Level)
 table(validation.data$Income.Level)
 
-# add 'Income'
+# add 'Income Level' as a predictor
 bd.nb.3 <- naiveBayes(Loan.Status ~ `Securities Account` + `CD Account` + Income.Level,
                     data=train.data)
 bd.nb.3
@@ -323,10 +324,10 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
               groups=16)
 
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
-yvals <- c(0,gain$cume.pct.of.total*total.accepted)
-xvals <- c(0,gain$cume.obs)
+yvals.3 <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals.3 <- c(0,gain$cume.obs)
 ggplot() + 
-  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  geom_line(mapping = aes(x=xvals.3, y=yvals.3)) +
   xlab("Offers Made") + ylab("Number Accepted") + 
   ggtitle("Model #3 Validation") + 
   theme(plot.title = element_text(hjust = 0.5)) + 
@@ -356,10 +357,10 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
               groups=100)
 
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
-yvals <- c(0,gain$cume.pct.of.total*total.accepted)
-xvals <- c(0,gain$cume.obs)
+yvals.4 <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals.4 <- c(0,gain$cume.obs)
 ggplot() + 
-  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  geom_line(mapping = aes(x=xvals.4, y=yvals.4)) +
   xlab("Offers Made") + ylab("Number Accepted") + 
   ggtitle("Model #4 Validation") + 
   theme(plot.title = element_text(hjust = 0.5)) + 
@@ -391,17 +392,17 @@ gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0),
               groups=100)
 
 total.accepted <- sum(validation.data$Loan.Status=="Accepts")
-yvals <- c(0,gain$cume.pct.of.total*total.accepted)
-xvals <- c(0,gain$cume.obs)
+yvals.5 <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals.5 <- c(0,gain$cume.obs)
 ggplot() + 
-  geom_line(mapping = aes(x=xvals, y=yvals)) +
+  geom_line(mapping = aes(x=xvals.5, y=yvals.5)) +
   xlab("Offers Made") + ylab("Number Accepted") + 
   ggtitle("Model #5 Validation") + 
   theme(plot.title = element_text(hjust = 0.5)) + 
   geom_abline(intercept = c(0,0), 
               slope=total.accepted/nrow(validation.data),
               linetype="dashed")
-
+# how does model #5 look compared to Model #4?
 
 
 ### Evaluate Against the Final Test Set ###
