@@ -146,20 +146,20 @@ p.securities.if.accepts <-
   train.data$`Securities Account`[train.data$Loan.Status=="Accepts"] %>% mean()
 p.securities.if.rejects <- 
   train.data$`Securities Account`[train.data$Loan.Status=="Rejects"] %>% mean()
-p.securities <- p.accepts * p.securities.if.accepts + (1-p.accepts) * p.securities.if.rejects
+# p.securities <- p.accepts * p.securities.if.accepts + (1-p.accepts) * p.securities.if.rejects
 
 # probability of "Accepts" if CD Account AND Securities Account
-p.accepts.if.cd.securities <- (p.accepts * p.securities.if.accepts * p.cd.if.accepts) /
+p.accepts.if.cd.and.securities <- (p.accepts * p.securities.if.accepts * p.cd.if.accepts) /
   (p.accepts * p.securities.if.accepts * p.cd.if.accepts + 
      p.rejects * p.securities.if.rejects * p.cd.if.rejects)
-p.accepts.if.cd.securities
+p.accepts.if.cd.and.securities
 
 # probability of "Accepts" if No CD Account and Securities Account
 p.no.cd.if.rejects <- 1 - p.cd.if.rejects
-p.accepts.if.no.cd.securities <- (p.accepts * p.securities.if.accepts * p.no.cd.if.accepts) /
+p.accepts.if.nocd.and.securities <- (p.accepts * p.securities.if.accepts * p.no.cd.if.accepts) /
   (p.accepts * p.securities.if.accepts * p.no.cd.if.accepts + 
      p.rejects * p.securities.if.rejects * p.no.cd.if.rejects)
-p.accepts.if.no.cd.securities
+p.accepts.if.nocd.and.securities
 
 # look at predictions this model makes for a few examples
 example.data <- data.frame('CD Account'=c(TRUE,TRUE,FALSE,FALSE),
@@ -169,8 +169,8 @@ example.data$probs.bd.nb.2 <- predict(bd.nb.2, newdata = example.data, type = "r
 head(example.data)
 
 # compare with manually computed probabilities
-p.accepts.if.cd.securities
-p.accepts.if.no.cd.securities
+p.accepts.if.cd.and.securities
+p.accepts.if.nocd.and.securities
 # etc...
 
 
