@@ -12,6 +12,7 @@ table(riding.mowers$Ownership)
 
 # create a binary version of the target variable
 riding.mowers$Owner <- riding.mowers$Ownership=="Owner"
+table(riding.mowers$Owner)
 
 # predictor variables
 summary(riding.mowers$Income)
@@ -71,6 +72,7 @@ ggplot(data=train.data) +
 lotsize.glm <- glm(Owner ~ Lot_Size,
                   data=train.data,
                   family="binomial")
+summary(income.glm)
 summary(lotsize.glm)
 
 # obtain and plot predictions for the training data points
@@ -133,9 +135,10 @@ test.data$Owner <- as.factor(test.data$Owner)
 confusionMatrix(test.data$owner.pred.full.glm, test.data$Owner)
 
 # ROC curve
+table(test.data$owner.prob.full.glm) # how many cuts?
 library(plotROC)
 ggplot(data=test.data,
        mapping = aes(m = owner.prob.full.glm, d = Owner)) +
-  geom_roc(n.cuts=20,labels=FALSE) + 
+  geom_roc(n.cuts=9,labels=FALSE) + 
   style_roc(theme = theme_grey)
 
