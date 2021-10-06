@@ -1,4 +1,6 @@
 # install.packages("caret")
+# install.packages("FNN")
+
 library(caret)
 library(tidyverse)
 library(FNN) # for knn function
@@ -7,7 +9,7 @@ library(FNN) # for knn function
 # https://www.dataminingbook.com/book/r-edition
 bankdata <- read_csv("./data/UniversalBank.csv")
 bankdata
-View(bankdata)
+head(bankdata)
 
 # clean up some column types
 bankdata <- read_csv("./data/UniversalBank.csv",
@@ -27,9 +29,10 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        Online = col_logical(),
                        CreditCard = col_logical()
                      ))
-View(bankdata)
+head(bankdata)
 
 # construct a factor variable to use as output for our knn model
+table(bankdata$`Personal Loan`)
 bankdata$Loan.Status <- "Rejects"
 bankdata$Loan.Status[bankdata$`Personal Loan`] <- "Accepts"
 bankdata$Loan.Status <- factor(bankdata$Loan.Status,levels=c("Accepts","Rejects"))
@@ -63,12 +66,15 @@ test.data.norm <- test.data
 
 # select a subset of numeric variables
 head(train.data)
+names(train.data)
+table(train.data$Education)
 selected.vars <- c("Age","Experience","Income","Education")
 
 # normalize numeric variables
 # using preProcess() from caret package
 normalizer <- preProcess(train.data[,selected.vars],
                          method = c("center", "scale"))
+                         # method = "range")
 train.data.norm[,selected.vars] <- 
   predict(normalizer, train.data[,selected.vars])
 validation.data.norm[,selected.vars] <- 
@@ -87,11 +93,18 @@ sd(train.data.norm$Age)
 mean(train.data.norm$Income)
 sd(train.data.norm$Income)
 
+mean(validation.data.norm$Income)
+sd(validation.data.norm$Income)
+
 # but we haven't lost any information
 head(train.data$Age)
 head(train.data.norm$Age)
+
 cor(train.data$Age, train.data.norm$Age)
 cor(train.data$Income, train.data.norm$Income)
+
+cor(train.data$Age, train.data$Income)
+cor(train.data.norm$Age, train.data.norm$Income)
 
 # predict Loan Status with a k-nearest neighbors model with k=3
 # note how this model setup is different - we jump straight to predictions
@@ -104,14 +117,16 @@ loan.knn.3.preds <- FNN::knn(train = train.data.norm[,selected.vars],
 
 # look at our predictions
 head(loan.knn.3.preds)
+length(loan.knn.3.preds)
 summary(loan.knn.3.preds)
 summary(validation.data.norm$Loan.Status)
 
 # other attributes available from our predictions
 names(attributes(loan.knn.3.preds))
-head(attr(loan.knn.3.preds, "nn.index"))
+head( attr(loan.knn.3.preds, "nn.index") )
 
 # find the neighbors for the first data point in the validation data
+dim( attr(loan.knn.3.preds, "nn.index") )
 first.point.neighbor.indexes <- attr(loan.knn.3.preds, "nn.index")[1,]
 first.point.neighbor.indexes
 first.point.neighbors <- train.data.norm[first.point.neighbor.indexes,selected.vars]
@@ -125,7 +140,7 @@ validation.data[1,selected.vars]
 train.data[first.point.neighbor.indexes,selected.vars]
 
 # check the distance calculation
-head(attr(loan.knn.3.preds, "nn.dist"))
+head( attr(loan.knn.3.preds, "nn.dist") )
 first.point.first.neighbor.distance <- attr(loan.knn.3.preds, "nn.dist")[1,1]
 first.point.first.neighbor.distance
 
@@ -137,6 +152,11 @@ variable.distances <- validation.data.norm[1,selected.vars] - first.point.neighb
 variable.distances
 sqrt( sum(variable.distances^2) )
 first.point.first.neighbor.distance
+
+# check the actual prediction for the first validation data point
+train.data.norm[first.point.neighbor.indexes,"Loan.Status"]
+loan.knn.3.preds[1]
+
 
 # confusion matrix for the whole set of predictions
 confusionMatrix(loan.knn.3.preds, validation.data.norm$Loan.Status,
@@ -164,6 +184,7 @@ loan.knn.5.preds <- FNN::knn(train = train.data.norm[,selected.vars],
                              prob=TRUE)
 
 # 'prob' = proportion of votes for the "winning" class
+names( attributes(loan.knn.5.preds) )
 loan.knn.5.probabilities <- attr(loan.knn.5.preds,'prob')
 head(loan.knn.5.probabilities)
 table(loan.knn.5.probabilities)
@@ -207,12 +228,14 @@ for (k.val in k.vals) {
 
 # construct a dataframe to check out the results
 sensitivity.df <- data.frame("k"=k.vals,
-                             "metric"="Sensitivity",
+                             "metric"="Sensitivity (TPR)",
                              "value"=sensitivity.vals)
 specificity.df <- data.frame("k"=k.vals,
-                             "metric"="Specificity",
+                             "metric"="Specificity (TNR)",
                              "value"=specificity.vals)
 results.df <- rbind(sensitivity.df, specificity.df)
+head(results.df)
+tail(results.df)
 
 # plot sensitivity and specificity vs k
 ggplot(results.df) + 
@@ -245,4 +268,5 @@ confusionMatrix(loan.knn.preds.test, test.data.norm$Loan.Status,
 
 # would 'Zip Code' be a good predictor to add?
 
+View(train.data)
 
