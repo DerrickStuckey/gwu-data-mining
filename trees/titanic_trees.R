@@ -28,21 +28,7 @@ validation.data <- titanic.data[-train.index,]
 
 # data exploration
 View(train.data)
-
-# verify which variables are ready to use directly
-table(train.data$Survived)
-table(train.data$Pclass)
-length(unique(train.data$Name))
-table(train.data$Sex)
-summary(train.data$Age)
-table(train.data$SibSp)
-table(train.data$Parch)
-length(unique(train.data$Ticket))
-summary(train.data$Fare)
-length(unique(train.data$Cabin))
-summary(is.na(train.data$Cabin))
-length(unique(train.data$Embarked))
-summary(is.na(train.data$Embarked))
+train.data %>% summary()
 
 # 'Age' is probably useful but has many missing values
 # come back to this later
@@ -111,6 +97,7 @@ prp(surv.tree.5, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 # compare with original
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default (CP = 0.01)")
+# what does "complexity parameter" appear to be doing?
 
 # Split type
 surv.tree.6 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
@@ -148,7 +135,8 @@ validation.data$preds.tree.1 <- predict(surv.tree.1,
 summary(validation.data$preds.tree.1)
 
 confusionMatrix(validation.data$preds.tree.1,
-                validation.data$Survived)
+                validation.data$Survived,
+                positive="Y")
 
 # get probabilities instead
 val.probs.1 <- predict(surv.tree.1,
@@ -256,7 +244,8 @@ ggplot(data=full.accuracy) +
 # which complexity parameter actually performs best?
 best.cp.index <- which.max(val.accuracy$accuracy)
 best.cp.index
-cps[best.cp.index]
+best.cp.manual <- cps[best.cp.index]
+best.cp.manual
 
 
 
@@ -294,6 +283,10 @@ ggplot(data=cp.df) +
 best.cp.index <- which.min(surv.tree.xval$cptable[,"xerror"])
 best.cp <- surv.tree.xval$cptable[best.cp.index,"CP"]
 best.cp
+# compare with our manual findings
+best.cp.manual
+
+# prune the tree
 pruned <- prune(surv.tree.xval, cp=best.cp)
 
 # what has changed?
