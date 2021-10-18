@@ -20,7 +20,7 @@ table(titanic.data$Survived)
 titanic.data$Sex <- as.factor(titanic.data$Sex)
 titanic.data$Embarked <- as.factor(titanic.data$Embarked)
 
-# partition into training and test sets
+# partition into training and validation sets
 set.seed(12345)
 train.proportion <- 0.75
 val.proportion <- 0.25
@@ -41,29 +41,41 @@ summary(surv.rf.1)
 # which variables have missing values?
 summary(is.na(train.data))
 summary(is.na(validation.data))
+# 'Embarked' also has missing values though they show up as an empty text string
 table(train.data$Embarked)
 
 # impute 'Age' using median age
 median.age <- median(train.data$Age, na.rm = TRUE)
 median.age
-train.data$Age.Imputed <- train.data$Age
-train.data$Age.Imputed[is.na(train.data$Age.Imputed)] <- median.age
+train.data$Age.Imputed <- ifelse(is.na(train.data$Age),
+                                 median.age,
+                                 train.data$Age)
+# how does the imputed variable look compared to the original?
 summary(train.data$Age)
 summary(train.data$Age.Imputed)
 
 # impute 'Embarked' using the mode (most common value)
-summary(train.data$Embarked)
+table(train.data$Embarked)
 mode.embarked <- "S"
-train.data$Embarked.Imputed <- train.data$Embarked
-train.data$Embarked.Imputed[is.na(train.data$Embarked.Imputed)] <- mode.embarked
-train.data$Embarked.Imputed[train.data$Embarked.Imputed==""] <- mode.embarked
-summary(train.data$Embarked.Imputed)
+# since we are changing the number of possible values in the factor variable
+# 'Embarked' we have to translate to a character variable and back again
+train.data$Embarked.Imputed <- ifelse(train.data$Embarked=="",
+                                      mode.embarked,
+                                      as.character(train.data$Embarked))
+train.data$Embarked.Imputed <- factor(train.data$Embarked.Imputed)
+# how does the imputed variable look compared to the original?
+table(train.data$Embarked)
+table(train.data$Embarked.Imputed)
 
 # train a new random forest using the same variables as before, plus the new ones
 surv.rf.1 <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
                             Age.Imputed + Embarked.Imputed,
                           data=train.data)
-summary(surv.rf.1)
+# variable importance
+surv.rf.1$importance
+
+surv.rf.1$ntree
+# we can't plot the random forest because it's 500 individual trees
 
 # measure performance against a validation set
 validation.data$preds.rf.1 <- predict(surv.rf.1,
@@ -71,11 +83,14 @@ validation.data$preds.rf.1 <- predict(surv.rf.1,
                                       type="class")
 
 # we have to also fill in the missing values for the validation set
-validation.data$Age.Imputed <- validation.data$Age
-validation.data$Age.Imputed[is.na(validation.data$Age.Imputed)] <- median.age
-validation.data$Embarked.Imputed <- validation.data$Embarked
-validation.data$Embarked.Imputed[is.na(validation.data$Embarked.Imputed)] <- mode.embarked
-validation.data$Embarked.Imputed[validation.data$Embarked.Imputed==""] <- mode.embarked
+validation.data$Age.Imputed <- ifelse(is.na(validation.data$Age),
+                                      median.age,
+                                      validation.data$Age)
+
+validation.data$Embarked.Imputed <- ifelse(validation.data$Embarked=="",
+                                      mode.embarked,
+                                      as.character(validation.data$Embarked))
+validation.data$Embarked.Imputed <- factor(validation.data$Embarked.Imputed)
 
 # why don't we use median(validation.data$Age) 
 # or the mode of validation.data$Embarked ?
@@ -88,7 +103,8 @@ summary(validation.data$preds.rf.1)
 
 # check actual accuracy of the new model
 confusionMatrix(validation.data$preds.rf.1,
-                validation.data$Survived)
+                validation.data$Survived,
+                positive="Y")
 
 # get probabilities instead, to plot another lift chart
 probs.rf.1 <- predict(surv.rf.1,
@@ -96,6 +112,7 @@ probs.rf.1 <- predict(surv.rf.1,
                       type="prob")
 head(probs.rf.1)
 validation.data$survival.probs.1 <- probs.rf.1[,2]
+head(validation.data$survival.probs.1)
 
 # plot a lift chart with the probabilities
 gain.1 <- gains(as.numeric(validation.data$Survived), 
@@ -121,10 +138,6 @@ ggplot(data=lift.inputs) +
   geom_abline(intercept = c(0,0), 
               slope=total.survived/nrow(validation.data),
               linetype="dashed")
-
-
-# How important is each variable?
-surv.rf.1$importance
 
 
 ### Model parameter tuning ###
