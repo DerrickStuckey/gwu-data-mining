@@ -296,9 +296,32 @@ surv.tree.xval$variable.importance
 pruned$variable.importance
 
 # Visualize the pruned tree
-prp(pruned, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
-    main="Pruned")
-prp(pruned)
+# prp(pruned, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+#     main="Pruned")
+prp(pruned, main="Pruned", fallen.leaves = FALSE, tweak=1.1)
+
+# compare with original tree
+prp(surv.tree.xval, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
+    main="Un-Pruned")
 
 
+## Constrain tree size further to make plot reasonable
+set.seed(12345)
+surv.tree.xval.2 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age,
+                        data=train.data,
+                        method="class",
+                        minsplit=10,
+                        minbucket=3,
+                        maxdepth=30,
+                        xval=10,
+                        cp=0.001)
 
+# find best cp and prune with it
+best.cp.index.2 <- which.min(surv.tree.xval.2$cptable[,"xerror"])
+best.cp.2 <- surv.tree.xval.2$cptable[best.cp.index.2,"CP"]
+pruned.2 <- prune(surv.tree.xval.2, cp=best.cp.2)
+
+
+prp(surv.tree.xval.2, main="Un-pruned\n(minsplit=10, minbucket=3)", tweak=0.9)
+
+prp(pruned.2, main="Pruned\n(minsplit=10, minbucket=3)", tweak=0.9)
