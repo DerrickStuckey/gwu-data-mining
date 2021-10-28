@@ -5,11 +5,15 @@ library(caret) # for normalizer
 # load the data
 iris
 
+# what is a sepal?
+# https://www.pngkey.com/png/full/82-826789_iris-iris-sepal-and-petal.png
+
 # convert to a tibble
 iris.tibble <- as_tibble(iris)
 iris.tibble
 
 # what do our data distributions look like for the measurement variables?
+summary(iris.tibble)
 apply(iris.tibble %>% select(-Species), 2, mean)
 apply(iris.tibble %>% select(-Species), 2, sd)
 
@@ -30,8 +34,10 @@ apply(iris.normalized, 2, sd)
 
 # try running k-means on the normalized numeric data
 # (should be OK as our numeric variables are all of similar scale)
+# with k = 2
 set.seed(12345)
-km.2 <- kmeans(iris.normalized, 2)
+km.2 <- kmeans(iris.normalized, 
+               centers=2)
 
 # look at a summary of the results
 km.2
@@ -46,11 +52,11 @@ head(km.2$cluster)
 # (as a factor so ggplot will know what to do with it)
 iris.numeric$cluster <- as.factor(km.2$cluster)
 
-# visualize the clusters against Petal Size
+# visualize the clusters against Petal Size (Length vs Width)
 ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Petal.Width, y=Petal.Length, col=cluster))
 
-# visualize the clusters against Sepal Size
+# visualize the clusters against Sepal Size (Length vs Width)
 ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=cluster))
 
@@ -60,7 +66,7 @@ ggplot(data=iris.numeric) +
 
 # try again, with 3 clusters
 set.seed(12345)
-km.3 <- kmeans(iris.normalized, 3)
+km.3 <- kmeans(iris.normalized, centers = 3)
 
 # look at a summary of the results
 km.3
