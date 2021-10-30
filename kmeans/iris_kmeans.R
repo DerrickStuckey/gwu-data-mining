@@ -5,7 +5,7 @@ library(caret) # for normalizer
 # load the data
 iris
 
-# what is a sepal?
+# what is a sepal anyway?
 # https://www.pngkey.com/png/full/82-826789_iris-iris-sepal-and-petal.png
 
 # convert to a tibble
@@ -54,15 +54,18 @@ iris.numeric$cluster <- as.factor(km.2$cluster)
 
 # visualize the clusters against Petal Size (Length vs Width)
 ggplot(data=iris.numeric) +
-  geom_point(mapping = aes(x=Petal.Width, y=Petal.Length, col=cluster))
+  geom_point(mapping = aes(x=Petal.Width, y=Petal.Length, col=cluster,
+                           shape=cluster))
 
 # visualize the clusters against Sepal Size (Length vs Width)
 ggplot(data=iris.numeric) +
-  geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=cluster))
+  geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=cluster,
+                           shape=cluster))
 
 # Sepal Length vs Petal Length visualization
 ggplot(data=iris.numeric) +
-  geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster))
+  geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster,
+                           shape=cluster))
 
 # try again, with 3 clusters
 set.seed(12345)
@@ -83,15 +86,18 @@ iris.numeric$cluster <- as.factor(km.3$cluster)
 
 # visualize the clusters against Petal Size
 ggplot(data=iris.numeric) +
-  geom_point(mapping = aes(x=Petal.Width, y=Petal.Length, col=cluster))
+  geom_point(mapping = aes(x=Petal.Width, y=Petal.Length, col=cluster,
+                           shape=cluster))
 
 # visualize the clusters against Sepal Size
 ggplot(data=iris.numeric) +
-  geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=cluster))
+  geom_point(mapping = aes(x=Sepal.Width, y=Sepal.Length, col=cluster,
+                           shape=cluster))
 
 # Sepal Length vs Petal Length visualization
 ggplot(data=iris.numeric) +
-  geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster))
+  geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster,
+                           shape=cluster))
 
 # how well do the clusters it has found line up with the actual Species labels?
 # (this wasn't explicitly our goal though, as we didn't use the Species labels for clustering)
@@ -123,4 +129,22 @@ for (k.val in k.vals) {
 ggplot() +
   geom_line(mapping = aes(x=k.vals, y=k.tot.withinss)) + 
   xlab("k") + ylab("Total Sum of Squares within Clusters")
+
+
+# how stable are these clusters?
+
+# try different random seeds for initialization
+seed.vals <- c(12345, 42, 8675309, 202)
+for (seed.val in seed.vals) {
+  set.seed(seed.val)
+  km.current <- kmeans(iris.normalized, centers=3)
+  iris.numeric$cluster <- as.factor(km.current$cluster)
+  p <- ggplot(data=iris.numeric) +
+    geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster,
+                             shape=cluster)) +
+    ggtitle(paste("Seed:",seed.val))
+  ggsave(filename = paste("./kmeans/iris_plots/",seed.val,".png",sep=""))
+}
+
+
 
