@@ -8,6 +8,11 @@ example.data <- read.csv("./kmeans/K-means clustering example - data.csv")
 
 # don't normalize in this case
 
+# visualize the raw data prior to clustering
+ggplot(data=example.data) +
+  geom_point(mapping = aes(x=x, y=y))
+# what do you think the 3 clusters will turn out to be?
+
 # seed.val <- 12345
 seed.val <- 67890
 
