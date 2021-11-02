@@ -53,6 +53,13 @@ head(km.2$cluster)
 iris.numeric$cluster <- as.factor(km.2$cluster)
 
 # visualize the clusters against Petal Size (Length vs Width)
+
+# first, without cluster labels
+ggplot(data=iris.numeric) +
+  geom_point(mapping = aes(x=Petal.Width, y=Petal.Length))
+# what do you think the clustering will do?
+
+# with cluster labels:
 ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Petal.Width, y=Petal.Length, col=cluster,
                            shape=cluster))
@@ -85,9 +92,17 @@ head(km.3$cluster)
 iris.numeric$cluster <- as.factor(km.3$cluster)
 
 # visualize the clusters against Petal Size
+
+# first, without cluster labels
+ggplot(data=iris.numeric) +
+  geom_point(mapping = aes(x=Petal.Width, y=Petal.Length))
+# what do you think the clustering will do?
+
+# with cluster labels:
 ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Petal.Width, y=Petal.Length, col=cluster,
                            shape=cluster))
+# why is there some "mixing" of the clusters, rather than clean separation?
 
 # visualize the clusters against Sepal Size
 ggplot(data=iris.numeric) +
