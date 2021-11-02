@@ -22,7 +22,7 @@ iris.numeric <- iris.tibble %>%
   select(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width)
 
 # normalize the numeric data
-# (we could probably skip this as the variables are of similar scale)
+# question: is this actually necessary/appropriate for this particular problem?
 normalizer <- preProcess(iris.numeric,
                          method = c("center", "scale"))
 
@@ -74,7 +74,10 @@ ggplot(data=iris.numeric) +
   geom_point(mapping = aes(x=Petal.Length, y=Sepal.Length, col=cluster,
                            shape=cluster))
 
-# try again, with 3 clusters
+# how do the cluster labels line up with actual species?
+table(iris.numeric$cluster, iris$Species)
+
+## try again, with 3 clusters
 set.seed(12345)
 km.3 <- kmeans(iris.normalized, centers = 3)
 
