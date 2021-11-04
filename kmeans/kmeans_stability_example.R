@@ -50,3 +50,5 @@ ggplot(data=example.data) +
 
 km.3b$tot.withinss
 
+# which solution is better?
+
