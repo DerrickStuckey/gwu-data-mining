@@ -91,11 +91,15 @@ dim(online.retail.wide)
 online.retail.wide[1:5,1:5]
 
 # convert our wide training dataframe to a matrix
+# 'InvoiceNo' aka Transaction ID as rows, 'StockCode' aka Procuct ID as columns
 online.retail.matrix <- as.matrix(online.retail.wide)
-  
+online.retail.matrix[1:5,1:5]
+
 transaction.data <- as(online.retail.matrix, "transactions")
 transaction.data
 # does this have the right number of transactions and items?
+online.retail.staging %>% summarise(num.transactions = n_distinct(InvoiceNo))
+online.retail.staging %>% summarise(num.transactions = n_distinct(StockCode))
 
 head(itemFrequency(transaction.data))
 
@@ -109,6 +113,7 @@ rules
 
 # see what rules were generated
 top.10.rules <- sort(rules, by = "lift")[1:10]
+top.10.rules
 inspect(top.10.rules)
 
 # what do these actually mean?
@@ -135,6 +140,8 @@ rules.df
 # rules.df$lhs <- str_remove_all(rules.df$lhs, "[{}]")
 # rules.df$rhs <- str_remove_all(rules.df$rhs, "[{}]")
 # make both changes at once with mutate()
+head(StockCode.Description.Frequency)
+head(rules.df)
 rules.df <-
   rules.df %>%
   mutate(
@@ -147,6 +154,7 @@ rules.df
 StockCode.Description.Lookup <- 
   StockCode.Description.Frequency %>%
   select(StockCode,Description)
+head(StockCode.Description.Lookup)
 
 # add the LHS description and rename it
 # using a "left join" - only include an item from the joined table if it matches an entry in the original table
@@ -157,6 +165,7 @@ rules.df <-
   rules.df %>% 
   left_join(StockCode.Description.Lookup, by=c("lhs"="StockCode")) %>%
   rename( LHS.Description = Description )
+head(rules.df)
 
 # now add the RHS description and rename it
 rules.df <- 
@@ -168,15 +177,18 @@ rules.df
 
 # look at the top rules again
 rules.df %>% 
-  arrange(desc(lift))
+  arrange(desc(lift)) %>%
+  View()
 
 # how about top support rules?
 rules.df %>% 
-  arrange(desc(support))
+  arrange(desc(support)) %>%
+  View()
 
 # top confidence
 rules.df %>% 
-  arrange(desc(confidence))
+  arrange(desc(confidence)) %>%
+  View()
 
 # note: the description lookup we used only works when 
 # LHS is a single item
