@@ -3,7 +3,7 @@ library(stats) # for kmeans
 library(caret) # for normalizer
 
 # load the data
-iris
+head(iris)
 
 # what is a sepal anyway?
 # https://www.pngkey.com/png/full/82-826789_iris-iris-sepal-and-petal.png
