@@ -62,7 +62,9 @@ online.retail.staging <-
   online.retail %>%
   select(InvoiceNo, StockCode) %>%
   mutate(Incidence = 1)
+
 online.retail.staging
+dim(online.retail.staging)
 
 # convert to a "wide-format" dataframe
 # with InvoiceNo for rows, StockCode for columns, and a 1 or 0 for incidence
@@ -79,7 +81,8 @@ online.retail.wide <-
   online.retail.deduped %>%
   spread(StockCode, Incidence, fill=0)
 
-online.retail.wide
+dim(online.retail.wide)
+online.retail.wide[1:10,1:10]
 
 # make 'InvoiceNo' the row names rather than an actual column
 online.retail.wide <- 
@@ -88,12 +91,12 @@ online.retail.wide <-
   column_to_rownames(var = "InvoiceNo")
 
 dim(online.retail.wide)
-online.retail.wide[1:5,1:5]
+online.retail.wide[1:10,1:10]
 
 # convert our wide training dataframe to a matrix
 # 'InvoiceNo' aka Transaction ID as rows, 'StockCode' aka Procuct ID as columns
 online.retail.matrix <- as.matrix(online.retail.wide)
-online.retail.matrix[1:5,1:5]
+online.retail.matrix[1:10,1:10]
 
 transaction.data <- as(online.retail.matrix, "transactions")
 transaction.data
@@ -106,7 +109,7 @@ head(itemFrequency(transaction.data))
 # run apriori algorithm to find frequent itemsets
 # support >= 1%
 # confidence >= 50%
-# itemsets of size <= 3
+# itemsets of size <= 3 ('maxlen' param)
 rules <- apriori(transaction.data,
                  parameter = list(supp=0.01, conf = 0.5, maxlen = 3, target = "rules"))
 rules
