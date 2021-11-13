@@ -98,12 +98,15 @@ for (img.index in 1:20) {
   # plot the bitmap with no title or legend
   p <- ggplot() + 
     geom_point(mapping = aes(x=filled.pixels.x, y=filled.pixels.y, alpha=filled.pixels.shade),
+               col="black",
                shape=15, size=10) + 
-    theme_void() + 
+    theme_void() +
     theme(legend.position = "none") + coord_fixed()
   p
   
-  ggsave(filename = paste(chart.dir,"/train_image_",img.index,".png",sep=""), plot=p, width=5, height=5)
+  # ggsave(filename = paste(chart.dir,"/train_image_",img.index,".png",sep=""), plot=p, width=5, height=5)
+  ggsave(filename = paste(chart.dir,"/train_image_",img.index,".jpeg",sep=""), 
+         device="jpeg", plot=p, width=5, height=5)
   
 }
 
@@ -119,6 +122,8 @@ train.data.t[1,1:16]
 # before training, check the range of our inputs
 apply(train.data.df, 2, min)
 apply(train.data.df, 2, max)
+
+head(train.data.df$label)
 
 # do we need to normalize?
 # normalizer <- preProcess(select(train.data.df, -label), method="range")
@@ -136,6 +141,9 @@ saveRDS(nn.1, "./neural_nets/digits_nn1.rds")
 
 # or just load a model trained earlier
 nn.1 <- readRDS("./neural_nets/digits_nn1.rds")
+
+# test data:
+head(test.data.df)
 
 # obtain test probabilities
 test.probs <- predict(nn.1,
@@ -165,8 +173,8 @@ test.preds <- as.factor(test.preds)
 confusionMatrix(test.preds, test.data.df$label)
 
 # look at the first 10 predictions and actual values
-head(test.preds,n=10)
-head(test.data.df$label,n=10)
+head(test.preds,n=20)
+head(test.data.df$label,n=20)
 
 # plot ROC for each digit
 library(plotROC)
