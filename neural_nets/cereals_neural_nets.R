@@ -46,7 +46,7 @@ normalizer <- preProcess(train.data[,-rating], method="range")
 train.norm <- predict(normalizer, train.data)
 validation.norm <- predict(normalizer, validation.data)
 
-### build and validation a basic model ###
+### build and validate a basic model ###
 
 # train a neural net with a single layer of 3 hidden nodes
 nn.1 <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.norm, 
@@ -88,7 +88,8 @@ plot(nn.2)
 
 # try a range of values for the number of hidden nodes
 hidden.vals <- rep(c(0,1,2,3,5,10,20,50,100),5)
-rmse.results <- c()
+val.rmse.results <- c()
+train.rmse.results <- c()
 
 set.seed(12345)
 for (hidden.val in hidden.vals) {
@@ -99,16 +100,27 @@ for (hidden.val in hidden.vals) {
                     hidden = hidden.val, linear.output = TRUE, stepmax = 10^4)
   
   # obtain predictions on the validation set
-  validation.preds.raw.nn.current <- predict(nn.current, newdata=validation.norm)
+  validation.preds.norm.nn.current <- predict(nn.current, newdata=validation.norm)
+  train.preds.norm.nn.current <- predict(nn.current, newdata=train.norm)
   
-  # measure the accuracy in terms of r-squared and save it
-  rmse.current <- RMSE(validation.norm$rating, validation.preds.raw.nn.current)
-  rmse.results <- c(rmse.results, rmse.current)
+  # measure the accuracy in terms of RMSE and save it
+  val.rmse.current <- RMSE(validation.norm$rating, validation.preds.norm.nn.current)
+  val.rmse.results <- c(val.rmse.results, val.rmse.current)
+  
+  train.rmse.current <- RMSE(train.norm$rating, train.preds.norm.nn.current)
+  train.rmse.results <- c(train.rmse.results, train.rmse.current)
 }
 
 # plot accuracy vs # of hidden nodes
+# for training data
 ggplot() +
-  geom_point(mapping = aes(x=hidden.vals, y=rmse.results)) +
+  geom_point(mapping = aes(x=hidden.vals, y=train.rmse.results)) +
+  xlab("# of Hidden Nodes") + ylab("Training RMSE") +
+  scale_x_log10()
+
+# for validation data
+ggplot() +
+  geom_point(mapping = aes(x=hidden.vals, y=val.rmse.results)) +
   xlab("# of Hidden Nodes") + ylab("Validation RMSE") +
   scale_x_log10()
 
@@ -120,3 +132,15 @@ ggplot() +
 # note: other parameters can be tuned too: stepmax, learning rate, momentum
 
 
+# spreadsheet example
+set.seed(12345)
+
+nn.3 <- neuralnet(rating ~ protein + fat, train.norm, 
+                  hidden = 2, linear.output = TRUE)
+
+plot(nn.3)
+
+nn.3.val.preds <- predict(nn.3, newdata=validation.norm)
+
+validation.norm[11,]
+nn.3.val.preds[11]
