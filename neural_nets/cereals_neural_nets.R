@@ -7,7 +7,7 @@ library(caret) # for preProcess() function
 # from https://s3-ap-south-1.amazonaws.com/av-blog-media/wp-content/uploads/2017/09/07122416/cereals.csv
 # via https://www.analyticsvidhya.com/blog/2017/09/creating-visualizing-neural-network-in-r/
 cereals <- read_csv("./data/cereals.csv")
-nrow(cereals)
+cereals
 
 # training/validation split
 set.seed(12345)
@@ -18,6 +18,8 @@ validation.proportion <- 0.3
 train.index <- sample(1:nrow(cereals), nrow(cereals)*train.proportion)
 train.data <- cereals[train.index,]
 validation.data <- cereals[-train.index,]
+
+head(train.data)
 
 # look at relationships between rating and the predictor variables
 ggplot(data=train.data) +
@@ -40,7 +42,7 @@ ggplot(data=train.data) +
 
 # normalize all variables to a range [0,1]
 # note: including target variable 'rating'
-normalizer <- preProcess(train.data, method="range")
+normalizer <- preProcess(train.data[,-rating], method="range")
 train.norm <- predict(normalizer, train.data)
 validation.norm <- predict(normalizer, validation.data)
 
@@ -54,16 +56,24 @@ nn.1 <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.norm
 plot(nn.1)
 
 # obtain predictions for the validation set
-validation.preds.raw.nn.1 <- predict(nn.1, newdata=validation.norm)
+validation.preds.norm.nn.1 <- predict(nn.1, newdata=validation.norm)
 
 # check the accuracy
 # note: these results are in the transformed scale
-accuracy(validation.norm$rating, validation.preds.raw.nn.1)
+accuracy(validation.norm$rating, validation.preds.norm.nn.1)
 
 # plot predictions vs actuals (in the transformed scale)
 ggplot() +
-  geom_point(mapping = aes(x=validation.preds.raw.nn.1, y=validation.norm$rating))
+  geom_point(mapping = aes(x=validation.preds.norm.nn.1, y=validation.norm$rating))
 
+# plot predictions vs actuals (in original scale)
+rating.scale <- normalizer$ranges[,"rating"][2] - normalizer$ranges[,"rating"][1]
+rating.offset <- normalizer$ranges[,"rating"][1]
+validation.preds.raw.nn.1 <- rating.offset + 
+  validation.preds.norm.nn.1 * rating.scale
+
+ggplot() +
+  geom_point(mapping = aes(x=validation.preds.raw.nn.1, y=validation.data$rating))
 
 # train a neural net with two layers of 2 hidden nodes each
 nn.2 <- neuralnet(rating ~ calories + protein + fat + sodium + fiber, train.norm, 
@@ -77,7 +87,7 @@ plot(nn.2)
 ### model tuning ###
 
 # try a range of values for the number of hidden nodes
-hidden.vals <- rep(c(0,1,2,3,5,20,50,100,200),5)
+hidden.vals <- rep(c(0,1,2,3,5,10,20,50,100),5)
 rmse.results <- c()
 
 set.seed(12345)
