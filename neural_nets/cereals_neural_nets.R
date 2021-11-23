@@ -42,7 +42,7 @@ ggplot(data=train.data) +
 
 # normalize all variables to a range [0,1]
 # note: including target variable 'rating'
-normalizer <- preProcess(train.data[,-rating], method="range")
+normalizer <- preProcess(train.data, method="range")
 train.norm <- predict(normalizer, train.data)
 validation.norm <- predict(normalizer, validation.data)
 
@@ -125,7 +125,7 @@ ggplot() +
   scale_x_log10()
 
 ggplot() +
-  geom_boxplot(mapping = aes(x=as.factor(hidden.vals), y=rmse.results)) +
+  geom_boxplot(mapping = aes(x=as.factor(hidden.vals), y=val.rmse.results)) +
   xlab("# of Hidden Nodes") + ylab("Validation RMSE")
 
 
