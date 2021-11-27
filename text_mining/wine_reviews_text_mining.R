@@ -18,21 +18,27 @@ head(wine.reviews$description)
 
 # work with just a sample of data, as some steps can take a while on large data
 sample.size <- 1000
+# sample.size <- 10
 set.seed(12345)
+# sample.idx <- seq(1,1000,1)
 sample.idx <- sample(1:nrow(wine.reviews),sample.size)
 reviews.sample <- wine.reviews[sample.idx,]
+# reviews.sample <- wine.reviews[1:1000,]
 
+head(reviews.sample$description)
 
 ### Basic text mining data transformations ###
 
 # construct a corpus
-corp <- Corpus(VectorSource(reviews.sample$description))
+corp <- VCorpus(VectorSource(reviews.sample$description))
+corp
 
 # construct a Term-Document Matrix
 tdm <- TermDocumentMatrix(corp)
 inspect(tdm)
 
 # terms that occur at least 20% of the time
+nrow(reviews.sample) * 0.20
 findFreqTerms(tdm, nrow(reviews.sample) * 0.20)
 
 # terms that occur at least 10% of the time
@@ -49,13 +55,14 @@ findAssocs(tdm, "oak", 0.2)
 # generally attempt to split into discrete 'tokens' aka words
 corp.tok <- tm_map(corp, stripWhitespace)
 corp.tok <- tm_map(corp.tok, removePunctuation)
+corp.tok <- tm_map(corp.tok, content_transformer(tolower))
 
 # create a Term-Document Matrix from the tokenized corpus
 tdm.tok <- TermDocumentMatrix(corp.tok)
 
 # compare the new TDM with the previous one
-tdm
-tdm.tok
+inspect(tdm)
+inspect(tdm.tok)
 # what is different?
 
 # compare highly associated terms for the original and tokenized versions
@@ -65,9 +72,11 @@ findAssocs(tdm.tok, "spice", 0.1)$spice[1:10]
 
 # try removing 'stopwords' aka very common words
 # using stopwords() function from 'tm' package
-stopwords("english") %>% head()
-corp.nostopwords <- tm_map(corp.tok, removeWords, stopwords("english"))
+stopwords(kind="en") %>% head()
+corp.nostopwords <- tm_map(corp.tok, removeWords, stopwords(kind="en"))
 tdm.nostopwords <- TermDocumentMatrix(corp.nostopwords)
+
+inspect(tdm.tok)
 inspect(tdm.nostopwords)
 
 # compare terms that appear at least 20% of the time
@@ -78,6 +87,7 @@ findFreqTerms(tdm.nostopwords, nrow(reviews.sample) * 0.20)
 # stemming (e.g. "running" -> "run")
 corp.stemmed <- tm_map(corp.nostopwords, stemDocument)
 tdm.stemmed <- TermDocumentMatrix(corp.stemmed)
+inspect(tdm.stemmed)
 
 # compare terms that appear at least 10% of the time
 # before and after stemming
@@ -86,12 +96,13 @@ findFreqTerms(tdm.stemmed, nrow(reviews.sample) * 0.20)
 
 # we can also drop infrequent terms if we want to
 # (in this case, let's keep them)
-# tdm.unsparse <- removeSparseTerms(tdm.stemmed,0.999)
-# tdm.stemmed
-# tdm.unsparse
+tdm.unsparse <- removeSparseTerms(tdm.stemmed,0.999)
+tdm.stemmed
+tdm.unsparse
 
 # TF-IDF weighting
-tfidf <- weightTfIdf(tdm.nostopwords)
+# tfidf <- weightTfIdf(tdm.nostopwords)
+tfidf <- weightTfIdf(tdm.stemmed)
 tfidf
 inspect(tfidf)
 # how is this different from a basic TDM?
@@ -99,7 +110,7 @@ inspect(tdm.stemmed)
 
 findAssocs(tdm.nostopwords, "spice", 0.1)$spice[1:10]
 findAssocs(tfidf, "spice", 0.1)$spice[1:10]
-
+dim(tfidf)
 
 
 ### Concept extraction ###
@@ -151,7 +162,7 @@ points.lm <- lm(points ~ .,data=train.data)
 summary(points.lm)
 
 # which concepts are most associated with a high rating?
-View(concepts.top.terms[,c('Concept 3','Concept 4','Concept 6')])
+View(concepts.top.terms[,c('Concept 1','Concept 6','Concept 9')])
 # with a low rating?
 View(concepts.top.terms[,c('Concept 1','Concept 9','Concept 10')])
 
@@ -171,7 +182,9 @@ ggplot() +
 document.concepts <-
   document.concepts %>%
   select(-points)
+head(document.concepts)
 document.concepts$Italian <- reviews.sample$country=="Italy"
+table(document.concepts$Italian)
 
 # re-create the training and test data (same indexes)
 train.data <- document.concepts[train.idx,]
@@ -197,6 +210,7 @@ ggplot(mapping = aes(m = test.probs, d = test.data$Italian)) +
 
 # what did the model actually find?
 summary(italy.logistic)
-View(concepts.top.terms[,c('Concept 3','Concept 6','Concept 8')])
+View(concepts.top.terms[,c('Concept 2','Concept 4')])
+
 
 
