@@ -131,9 +131,14 @@ ggplot(data=roxbury.sample) +
   facet_wrap(~ REMODEL, nrow=2)
 
 
-# make a box plot of Lot Sq. Ft. vs Remodel type
+# make a box plot of Total Value vs Remodel type
 ggplot(data=westroxbury) + 
-  geom_boxplot(mapping=aes(x=REMODEL, y=LOT.SQFT))
+  geom_boxplot(mapping=aes(x=REMODEL, y=TOTAL.VALUE))
+
+# compute average value for each Remodel type
+aggregate(westroxbury.top50$TOTAL.VALUE, 
+          by=list(westroxbury.top50$REMODEL), 
+          FUN=mean)
 
 # violin plot of value vs number of floors
 # (need to make FLOORS a factor for geom_violin to recognize it as categorical)
