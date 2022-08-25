@@ -48,6 +48,9 @@ ggplot(data=example.data) +
                            shape=cluster.b)) +
   ggtitle(paste("Seed:",seed.val))
 
+
+km.3a$tot.withinss
+
 km.3b$tot.withinss
 
 # which solution is better?

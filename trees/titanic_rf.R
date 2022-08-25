@@ -187,8 +187,8 @@ mtry.results <- c()
 # re-run the for loop
 
 # plot the results with geom_jitter
-ggplot() + 
-  geom_jitter(mapping = aes(x=mtry.vals, y=mtry.results), width=0.1) + 
+ggplot() +
+  geom_jitter(mapping = aes(x=mtry.vals, y=mtry.results), width=0.1) +
   xlab("mtry") + ylab("Balanced Accuracy")
 
 # this is an improvement, but can we do even better?
@@ -196,7 +196,7 @@ ggplot() +
 
 # try several different values for nodesize
 set.seed(12345)
-nodesize.vals <- rep(c(1,2,3,4,5,7,10,15,20,30,50,100,200,300),10)
+nodesize.vals <- c(1,2,3,4,5,7,10,15,20,30,50,100,200,300)
 nodesize.results <- c()
 
 for (nodesize.val in nodesize.vals) {
@@ -231,7 +231,7 @@ ggplot() +
 
 # try several different values for sampsize
 set.seed(12345)
-sampsize.vals <- rep(c(10,20,50,100,200,300,400,500,668),10)
+sampsize.vals <- c(10,20,50,100,200,300,400,500,668)
 sampsize.results <- c()
 
 for (sampsize.val in sampsize.vals) {
@@ -261,7 +261,7 @@ ggplot() +
 
 
 # try several different values for ntree
-ntree.vals <- rep(c(1,2,5,10,20,50,100,200,500,1000,2000),5)
+ntree.vals <- rep(c(1,2,5,10,20,50,100,200,500,1000,2000,3000,5000,10000),5)
 ntree.results <- c()
 
 for (ntree.val in ntree.vals) {
@@ -288,7 +288,6 @@ ggplot() +
   xlab("ntree") + ylab("Balanced Accuracy") + 
   scale_x_log10()
 
-# why are we getting different results for a single value of ntree?
 
 
 

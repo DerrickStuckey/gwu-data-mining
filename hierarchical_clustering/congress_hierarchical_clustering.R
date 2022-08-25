@@ -30,19 +30,27 @@ View(votes.only.numeric)
 # add back the class name as row names
 # this lets us keep the name as a label but not as a variable
 row.names(votes.only.numeric) <- housevotes$party
+head(votes.only.numeric)
 
 # compute Euclidean distance on the numeric votes data
-dist.votes <- dist(votes.only.numeric, method="euclidean")
+# dist.votes <- dist(votes.only.numeric, method="euclidean")
+dist.votes <- dist(votes.only.numeric, method="manhattan")
 
 # perform clustering using average cluster distance
 hc1 <- hclust(dist.votes, method="average")
+
+# perform clustering using ___ cluster distance
+# hc1 <- hclust(dist.votes, method="centroid")
+# hc1 <- hclust(dist.votes, method="ward.D")
+# hc1 <- hclust(dist.votes, method="single")
+# hc1 <- hclust(dist.votes, method="complete")
 
 # view the cluster (without labels as they are not useful)
 plot(hc1, labels=FALSE)
 
 # cut the tree after the first split
 single.split <- cutree(hc1, k=2)
-head(single.split,n=10)
+head(single.split,n=20)
 
 # how well do the two groups line up with our class labels?
 table(single.split, names(single.split))

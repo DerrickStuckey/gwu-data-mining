@@ -9,6 +9,7 @@ library(tidyverse)
 trainval.data <- read.csv("./data/titanic/train.csv")
 test.data <- read.csv("./data/titanic/test.csv")
 dim(trainval.data)
+dim(test.data)
 lapply(trainval.data, class)
 
 # make 'Survived' a factor so randomForest() will treat it as a classification problem
@@ -57,15 +58,19 @@ head(random.index,10)
 fold.labels <- fold.labels.base[random.index]
 head(fold.labels,10)
 
+table(fold.labels.base)
+table(fold.labels)
+
 # apply the fold labels to the data
 trainval.data$fold <- fold.labels
 table(trainval.data$fold)
 head(trainval.data$fold,10)
 
 ## try different values of mtry between 1 and 7 (the total number of variables)
-mtry.vals <- c(1:7)
-# mtry.vals <- rep(c(1:7),5)
+# mtry.vals <- c(1:7)
+mtry.vals <- rep(c(1:7),5)
 folds <- unique(trainval.data$fold)
+folds
 attempt.mtry.used <- c()
 attempt.results <- c()
 attempt.fold.values <- c()
@@ -77,7 +82,7 @@ for (current.fold in folds) {
   # training data is all other folds
   train.data <- trainval.data %>% filter(fold != current.fold)
   
-  # impute missing values for 'Age' and 'Embarked'
+  # impute missing values for 'Age'
   train.data$Age.Imputed <- ifelse(is.na(train.data$Age),
                                    median(train.data$Age, na.rm=TRUE),
                                    train.data$Age)
@@ -193,6 +198,8 @@ ggplot(data=nodesize.results.df) +
   xlab("nodesize") + ylab("Balanced Accuracy")
 # have to make nodesize a factor for boxplot to use it for grouping
 
+# how is nodesize = 1 performing well? Shouldn't this be highly overfitting?
+
 nodesize.results.df %>% 
   group_by(nodesize) %>%
   summarise(
@@ -200,41 +207,9 @@ nodesize.results.df %>%
   )
 
 
-# we can also still use multiple attempts per fold
-# since there are other random factors at play besides the train/validation split
-nodesize.vals <- rep(c(1,2,3,4,5,7,10,15,20,30,50,100,200,300),5)
-folds <- unique(trainval.data$fold)
-attempt.nodesize.used <- c()
-attempt.results <- c()
-attempt.fold.values <- c()
-
-# repeat the for-loops above
-
-# now, just take the average for each parameter value
-nodesize.results.df <- data.frame("fold"=factor(attempt.fold.values),
-                                  "nodesize"=attempt.nodesize.used,
-                                  "balanced.accuracy"=attempt.results)
-nodesize.results.agg <- 
-  nodesize.results.df %>%
-  group_by(nodesize) %>%
-  summarise(
-    avg.balanced.accuracy = mean(balanced.accuracy)
-  )
-nodesize.results.agg
-
-# plot the results, useing geom_line now as results should be stable
-ggplot(data=nodesize.results.agg) + 
-  geom_line(mapping = aes(x=nodesize, y=avg.balanced.accuracy)) + 
-  scale_x_log10() + 
-  xlab("nodesize") + ylab("Balanced Accuracy")
-
-# check the boxplot version to confirm:
-ggplot(data=nodesize.results.df) + 
-  geom_boxplot(mapping = aes(x=factor(nodesize), y=balanced.accuracy)) + 
-  xlab("nodesize") + ylab("Balanced Accuracy")
-
 ## 'sampsize' param
-sampsize.vals <- rep(c(10,20,50,100,200,300,400,500),5)
+# 570 is max since each training set will only have 713 * 4/5 data points
+sampsize.vals <- c(10,20,50,100,200,300,400,500,570)
 folds <- unique(trainval.data$fold)
 attempt.sampsize.used <- c()
 attempt.results <- c()
@@ -307,6 +282,7 @@ test.data$Age.Imputed <- ifelse(is.na(test.data$Age),
                                 median(trainval.data$Age, na.rm=TRUE),
                                 test.data$Age)
 
+summary(test.data$Fare)
 # a single test datapoint has 'Fare' missing, so impute that with the median as well
 test.data$Fare <- ifelse(is.na(test.data$Fare),
                          median(trainval.data$Fare, na.rm=TRUE),
@@ -318,7 +294,7 @@ test.data$Fare <- ifelse(is.na(test.data$Fare),
 rf.optimized <- randomForest(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
                                Age.Imputed + Embarked.Imputed,
                              data=trainval.data,
-                             nodesize = 3,
+                             nodesize = 1,
                              mtry = 3,
                              sampsize = 500,
                              ntree=500)
@@ -378,15 +354,24 @@ write.csv(test.submission.rpart.tree, "./data/titanic/rpart_tree_submission.csv"
 
 # cross-validation using caret::trainControl method
 
-# 5-fold cross-validation
+# impute age for trainval data
+median.age <- median(trainval.data$Age, na.rm = TRUE)
+median.age
+trainval.data$Age.Imputed <- trainval.data$Age
+trainval.data$Age.Imputed[is.na(trainval.data$Age.Imputed)] <- median.age
+summary(trainval.data$Age)
+summary(trainval.data$Age.Imputed)
+
+# 5-fold cross-validation, tuning 'mtry' parameter
+tunegrid <- expand.grid(mtry=1:15)
 train.control <- trainControl(method = "cv", number = 5)
 
 # randomForest model (only tunes 'mtry' parameter)
-tuned.rf <- train(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
+tuned.rf <- caret::train(Survived ~ Pclass + Sex + SibSp + Parch + Fare + 
                     Age.Imputed + Embarked.Imputed,
                   data=trainval.data, method = "rf",
-                  trControl = train.control)
-
+                  trControl = train.control,
+                  tuneGrid = tunegrid)
 tuned.rf
 
 tuned.rf.preds <- predict(tuned.rf, newdata=test.data)
@@ -403,4 +388,5 @@ tuned.adaboost
 # many other validation and tuning options:
 ?trainControl
 ?train
+?e1071::tune
 

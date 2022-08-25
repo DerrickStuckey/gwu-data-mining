@@ -88,19 +88,23 @@ summary(species.lm)
 # Throw everything in together
 full.lm <- lm(data=train.data, Sepal.Length ~ .)
 summary(full.lm)
+# Multiple R-squared:  0.8737,	Adjusted R-squared:  0.8661
 
 # backward stepwise regression
 step.lm.backward <- step(full.lm, direction = "backward")
 summary(step.lm.backward)
+# Multiple R-squared:  0.8726,	Adjusted R-squared:  0.8666
 
 # what gets dropped?
 # is this what you would expect?
 
 # forward stepwise regression
 dummy.lm <- lm(data=train.data, Sepal.Length ~ 1)
+summary(dummy.lm)
 step.lm.forward <- step(dummy.lm, direction = "forward",
                         scope=list(lower=dummy.lm, upper=full.lm))
 summary(step.lm.forward)
+summary(step.lm.backward)
 
 # any difference in predictors used?
 # any difference in coefficients?
@@ -116,6 +120,7 @@ summary(step.lm.forward.2)
 # add an interaction term
 inter.lm.1 <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species)
 summary(inter.lm.1)
+# Multiple R-squared:  0.8812,	Adjusted R-squared:  0.8711 
 # why isn't there a Sepal.Width:Speciessetosa term?
 
 # add a bunch of interaction terms
@@ -124,10 +129,14 @@ inter.lm <- lm(data=train.data, Sepal.Length ~ . + Sepal.Width*Species +
                  Petal.Width * Sepal.Width + Sepal.Width * Petal.Length + 
                  Petal.Length * Petal.Width)
 summary(inter.lm)
+# Multiple R-squared:  0.8953,	Adjusted R-squared:  0.8757 
+# full.lm version:
+# Multiple R-squared:  0.8737,	Adjusted R-squared:  0.8661
 
 # run stepwise regression again
 step.lm.backward.inter <- step(inter.lm, direction="backward")
 summary(step.lm.backward.inter)
+# Multiple R-squared:  0.8899,	Adjusted R-squared:  0.879 
 
 # what looks like the best model, according to R-squared? Adjusted R-squared?
 
@@ -165,6 +174,7 @@ ggplot(data=validation.data) +
   geom_point(mapping = aes(x=preds.inter.lm, y=Sepal.Length)) + 
   geom_abline(intercept = 0, slope = 1, color = "red") + 
   ggtitle("Full Interaction Terms")
++ xlim(0,25) + ylim(0,25)
 
 ggplot(data=validation.data) + 
   geom_point(mapping = aes(x=preds.step.inter.lm, y=Sepal.Length)) + 

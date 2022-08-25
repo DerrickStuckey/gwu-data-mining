@@ -43,6 +43,8 @@ ggplot() + geom_histogram(mapping = aes(x = top.movies$review.count))
 
 # ratings for only the top N most-reviewed movies
 # "inner join" - only include entries if both tables match on the specified key
+head(ratings)
+head(top.movies)
 ratings.top <- 
   ratings %>%
   inner_join(top.movies, by=c("movieId"))
@@ -96,6 +98,7 @@ ratingmatrix.train <- as(ratings.matrix, "realRatingMatrix")
 ratingmatrix.train
 
 # item-based collaborative filtering recommendations
+# from 'recommenderlab' library
 movies.rec <- Recommender(ratingmatrix.train, "UBCF") # user-based recommendations
 # movies.rec <- Recommender(ratingmatrix.train, "IBCF") # item-based recommendations
 

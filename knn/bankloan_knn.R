@@ -9,7 +9,7 @@ library(FNN) # for knn function
 # https://www.dataminingbook.com/book/r-edition
 bankdata <- read_csv("./data/UniversalBank.csv")
 bankdata
-head(bankdata)
+View(bankdata)
 
 # clean up some column types
 bankdata <- read_csv("./data/UniversalBank.csv",
@@ -64,7 +64,7 @@ validation.data.norm <- validation.data
 test.data.norm <- test.data
 # why do we have to normalize?
 
-# select a subset of numeric variables
+# select a subset of numeric variables to use as KNN predictors
 head(train.data)
 names(train.data)
 table(train.data$Education)
@@ -205,6 +205,8 @@ ggplot(mapping = aes(m = loan.knn.5.prob.accepts,
 
 ### try several different values of k to see how they perform ###
 
+# this is how we would try to choose the "best" k
+
 # arrays to hold our sensitivity and specificity for each model
 sensitivity.vals <- c()
 specificity.vals <- c()
@@ -242,6 +244,8 @@ ggplot(results.df) +
   geom_point(mapping = aes(x=k, y=value, col=metric)) + 
   ylim(c(0,1)) + 
   scale_x_log10()
+# why does Sensitivity (aka True Positive Rat aka Recall) drop off 
+# while Specificity (True Negative Rate) remains high?
 
 balanced.accuracy <- (sensitivity.vals + specificity.vals) / 2
 

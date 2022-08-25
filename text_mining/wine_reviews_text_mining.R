@@ -24,6 +24,7 @@ set.seed(12345)
 sample.idx <- sample(1:nrow(wine.reviews),sample.size)
 reviews.sample <- wine.reviews[sample.idx,]
 # reviews.sample <- wine.reviews[1:1000,]
+dim(reviews.sample)
 
 head(reviews.sample$description)
 
@@ -162,9 +163,9 @@ points.lm <- lm(points ~ .,data=train.data)
 summary(points.lm)
 
 # which concepts are most associated with a high rating?
-View(concepts.top.terms[,c('Concept 1','Concept 6','Concept 9')])
+View(concepts.top.terms[,c('Concept 1','Concept 2','Concept 3')])
 # with a low rating?
-View(concepts.top.terms[,c('Concept 1','Concept 9','Concept 10')])
+View(concepts.top.terms[,c('Concept 6','Concept 7','Concept 10')])
 
 # how does the model perform on the holdout set?
 points.preds <- predict(points.lm, newdata=test.data)
@@ -210,7 +211,7 @@ ggplot(mapping = aes(m = test.probs, d = test.data$Italian)) +
 
 # what did the model actually find?
 summary(italy.logistic)
-View(concepts.top.terms[,c('Concept 2','Concept 4')])
+View(concepts.top.terms[,c('Concept 1','Concept 4','Concept 9')])
 
 
 

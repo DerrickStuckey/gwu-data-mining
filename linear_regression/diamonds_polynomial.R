@@ -9,6 +9,8 @@ train.proportion <- 0.6
 test.proportion <- 0.2
 validation.proportion <- 0.2
 
+nrow(diamonds)
+
 # pull out the training data
 train.index <- sample(1:nrow(diamonds), nrow(diamonds)*train.proportion)
 train.data <- diamonds[train.index,]
@@ -91,7 +93,8 @@ ggplot(data=train.data[train.plot.sample.idx,]) +
 # try adding a higher-order term
 # aka fitting price to a 2nd-order polynomial of carat
 carat.lm.poly.2 <- lm(data = train.data, price ~ carat + I(carat^2))
-summary(carat.lm.poly.2)
+summary(carat.lm) 0.8468 0.8468
+summary(carat.lm.poly.2) 0.8479
 
 # plot price vs predicted price for the polynomial model
 train.data$price.pred.carat.poly.2 <- predict(carat.lm.poly.2, newdata=train.data)
@@ -205,16 +208,20 @@ ggplot(data=train.data.tiny) +
 # train several polynomial models on the tiny dataset
 tiny.poly.1 <- lm(data=train.data.tiny, price ~ carat)
 summary(tiny.poly.1)
+# Multiple R-squared:  0.9642,	Adjusted R-squared:  0.9597 
 
 tiny.poly.2 <- lm(data=train.data.tiny, price ~ carat + I(carat^2))
 summary(tiny.poly.2)
+# Multiple R-squared:  0.9833,	Adjusted R-squared:  0.9785
 
 tiny.poly.3 <- lm(data=train.data.tiny, price ~ carat + I(carat^2) + I(carat^3))
 summary(tiny.poly.3)
+# Multiple R-squared:  0.9834,	Adjusted R-squared:  0.975 
 
 tiny.poly.5 <- lm(data=train.data.tiny, price ~ carat + I(carat^2) + I(carat^3)
                   + I(carat^4) + I(carat^5))
 summary(tiny.poly.5)
+# Multiple R-squared:  0.9996,	Adjusted R-squared:  0.9991
 
 tiny.poly.8 <- lm(data=train.data.tiny, price ~ carat + I(carat^2) + I(carat^3)
                   + I(carat^4) + I(carat^5) + I(carat^6) + I(carat^7)+ I(carat^8))
@@ -284,7 +291,7 @@ ggplot(data=train.data.tiny) +
                   tiny.poly.5$coefficients[4]*x^3 + 
                   tiny.poly.5$coefficients[5]*x^4 + 
                   tiny.poly.5$coefficients[6]*x^5
-  ) + xlim(0,2) + 
+  ) + xlim(0,3) + 
   ggtitle("Polynomial Order 5")
 
 # 8th-order polynomial

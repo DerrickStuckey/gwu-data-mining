@@ -1,6 +1,7 @@
 # install.packages("caret")
 # install.packages("gains")
 # install.packages("e1071")
+# install.packages("plotROC")
 
 # for naiveBayes() function
 library(e1071)
@@ -45,6 +46,8 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        CreditCard = col_logical()
                      ))
 # View(bankdata)
+table(bankdata$`Securities Account`)
+is.logical(bankdata$`Securities Account`)
 
 # construct a factor version of the target variable
 # the e1071 version of Naive Bayes requires the target variable to be a factor
@@ -224,7 +227,19 @@ val.preds.nb.2.b <- ifelse(val.probs.nb.2[,1] > 0.25,
 val.preds.nb.2.b <- factor(val.preds.nb.2.b)
 summary(val.preds.nb.2.b)
 
-confusionMatrix(val.preds.nb.2, validation.data$Loan.Status)
+# original
+          Reference
+Prediction Accepts Rejects
+Accepts      11      25
+Rejects      80     884
+
+# new cutoff
+            Reference
+Prediction Accepts Rejects
+Accepts      27      37
+Rejects      64     872
+
+confusionMatrix(val.preds.nb.2.b, validation.data$Loan.Status)
 # Sensitivity : 0.1209          
 # Specificity : 0.9725     
 # Pos Pred Value : 0.3056 

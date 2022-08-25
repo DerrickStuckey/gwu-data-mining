@@ -65,6 +65,17 @@ ggplot() +
 +
   geom_line(aes(x=x.ticks, y=dnorm(x.ticks, mean=1, sd=0.3)), colour="blue")
 
+# left-skewed
+x.lognorm.2 <- rlnorm(400, meanlog=1, sdlog=0.3)
+x.leftskewed <- 10 - x.lognorm.2
+x.ticks <- seq(1,10,by=0.01)
+
+ggplot() + 
+  geom_histogram(mapping = aes(x=x.leftskewed, y=..density..), bins=20) + 
+  ggtitle("Left-Skewed Distribution") +
+  xlab("x") +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_line(aes(x=x.ticks, y=dlnorm(10-x.ticks, meanlog=1, sdlog=0.3)), colour="blue")
 
 
 library(MASS)

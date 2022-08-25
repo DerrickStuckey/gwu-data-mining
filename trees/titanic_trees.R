@@ -265,22 +265,24 @@ surv.tree.xval$cptable
 
 # make it a dataframe
 cp.df <- data.frame(surv.tree.xval$cptable)
+cp.df
 
-# drop the first row as it's a big outlier
-cp.df <- cp.df[-1,]
-head(cp.df)
-
+# drop the first row for plotting as it's a big outlier
+cp.df.plot <- cp.df[-1,]
 # View validation performance vs CP for the rpart cptable
-ggplot(data=cp.df) + 
+ggplot(data=cp.df.plot) + 
   geom_line(mapping = aes(x=CP, y=xerror)) + 
-  scale_x_reverse() + 
-  scale_y_reverse() + 
+  xlab("Complexity Parameter") + 
+  ylab("Cross-Validation Performance")
+  # scale_x_reverse() + 
+  # scale_y_reverse() + 
   xlab("Complexity Parameter (reverse)") + 
   ylab("Cross-Validation Performance (1 - Error)")
 
 
 # prune the tree using the best complexity parameter
 best.cp.index <- which.min(surv.tree.xval$cptable[,"xerror"])
+best.cp.index
 best.cp <- surv.tree.xval$cptable[best.cp.index,"CP"]
 best.cp
 # compare with our manual findings
@@ -319,6 +321,8 @@ surv.tree.xval.2 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embar
 # find best cp and prune with it
 best.cp.index.2 <- which.min(surv.tree.xval.2$cptable[,"xerror"])
 best.cp.2 <- surv.tree.xval.2$cptable[best.cp.index.2,"CP"]
+
+
 pruned.2 <- prune(surv.tree.xval.2, cp=best.cp.2)
 
 
