@@ -136,8 +136,8 @@ ggplot(data=westroxbury) +
   geom_boxplot(mapping=aes(x=REMODEL, y=TOTAL.VALUE))
 
 # compute average value for each Remodel type
-aggregate(westroxbury.top50$TOTAL.VALUE, 
-          by=list(westroxbury.top50$REMODEL), 
+aggregate(westroxbury$TOTAL.VALUE, 
+          by=list(westroxbury$REMODEL), 
           FUN=mean)
 
 # violin plot of value vs number of floors
