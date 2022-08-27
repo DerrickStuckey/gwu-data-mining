@@ -1,9 +1,11 @@
 # install.packages("caret")
 # install.packages("FNN")
+# install.packages("gains")
 
 library(caret)
 library(tidyverse)
 library(FNN) # for knn function
+library(gains) # for lift chart
 
 # from "Data Mining for Business Analytics"
 # https://www.dataminingbook.com/book/r-edition
@@ -201,6 +203,29 @@ ggplot(mapping = aes(m = loan.knn.5.prob.accepts,
                      d = validation.data$Loan.Status=="Accepts")) +
   geom_roc(n.cuts=100,labels=FALSE) + 
   style_roc(theme = theme_grey)
+
+
+## plot a lift curve using 'gains' library
+gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
+              loan.knn.5.prob.accepts,
+              groups=6)
+# groups=4 because we have 6 possible predicted values
+table(loan.knn.5.prob.accepts)
+
+# set up lift chart variables
+total.accepted <- sum(validation.data$Loan.Status=="Accepts")
+yvals.2 <- c(0,gain$cume.pct.of.total*total.accepted)
+xvals.2 <- c(0,gain$cume.obs)
+
+# plot the lift chart
+ggplot() + 
+  geom_line(mapping = aes(x=xvals.2, y=yvals.2)) +
+  xlab("Offers Made") + ylab("Number Accepted") + 
+  ggtitle("Lift (Validation Data)") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_abline(intercept = c(0,0), 
+              slope=total.accepted/nrow(validation.data),
+              linetype="dashed")
 
 
 ### try several different values of k to see how they perform ###
