@@ -209,7 +209,7 @@ ggplot(mapping = aes(m = loan.knn.5.prob.accepts,
 gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
               loan.knn.5.prob.accepts,
               groups=6)
-# groups=4 because we have 6 possible predicted values
+# groups=6 because we have 6 possible predicted values
 table(loan.knn.5.prob.accepts)
 
 # set up lift chart variables
