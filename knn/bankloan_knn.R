@@ -204,6 +204,11 @@ ggplot(mapping = aes(m = loan.knn.5.prob.accepts,
   geom_roc(n.cuts=100,labels=FALSE) + 
   style_roc(theme = theme_grey)
 
+# area under the curve for the ROC curve
+library(pROC)
+roc.obj <- roc(response = validation.data$Loan.Status=="Accepts",
+               predictor = loan.knn.5.prob.accepts)
+auc(roc.obj)
 
 ## plot a lift curve using 'gains' library
 gain <- gains(ifelse(validation.data$Loan.Status=="Accepts",1,0), 
