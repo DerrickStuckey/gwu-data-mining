@@ -50,11 +50,11 @@ westroxbury$TAX[1:10]
 
 # other row/column selection tricks
 head(westroxbury)
-head(westroxbury[-1,])
-head(westroxbury[-c(1,3,5),])
-head(westroxbury[,1:3])
-head(westroxbury[,-(1:3)])
-head(westroxbury[,-c(1,2,3)])
+head(westroxbury[-1,]) # leave out first row
+head(westroxbury[-c(1,3,5),]) # leave out rows 1,3,5
+head(westroxbury[,1:3]) # only columns 1-3
+head(westroxbury[,-(1:3)]) # all but columns 1-3
+head(westroxbury[,-c(1,2,3)]) # same thing
 head(westroxbury[c(1,2,3),c(1,2,3)])
 head(westroxbury[c(1,2,3),-c(1,2,3)])
 
@@ -99,7 +99,7 @@ ggplot(data=westroxbury) +
 # too crowded in some areas; take a random sample
 nrow(westroxbury)
 set.seed(12345) # ensures we will get the same sample each time
-sample.index <- sample(1:nrow(westroxbury), 500)
+sample.index <- sample(1:nrow(westroxbury), 200)
 head(sample.index)
 length(sample.index)
 roxbury.sample <- westroxbury[sample.index,]
@@ -164,6 +164,7 @@ ggplot(data=westroxbury) +
 is.factor(westroxbury$REMODEL)
 typeof(westroxbury$REMODEL)
 is.numeric(westroxbury$REMODEL)
+is.numeric(westroxbury$FLOORS)
 
 # remove outliers
 ggplot(data=westroxbury) + 
@@ -355,3 +356,4 @@ ggplot(data=roxbury.sample) +
   geom_smooth(mapping=aes(x=LIVING.AREA, y=TOTAL.VALUE),
               method=lm,
               formula=y ~ poly(x,2))
+
