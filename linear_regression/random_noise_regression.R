@@ -196,3 +196,40 @@ p <- ggplot() +
 p + xlim(-3,3) + ylim(-3,3) + 
   geom_abline(mapping = aes(intercept = 0, slope = 1), col="blue")
 
+
+# plot training, test performance for each model
+num.predictors <- c(0, 1, 5, 8, 9)
+preds.lm.0.train <- predict(lm.0, newdata=train.data)
+preds.lm.1.train <- predict(lm.1, newdata=train.data)
+preds.lm.5.train <- predict(lm.5, newdata=train.data)
+preds.lm.8.train <- predict(lm.8, newdata=train.data)
+preds.lm.9.train <- predict(lm.9, newdata=train.data)
+training.rmse <- c(accuracy(preds.lm.0.train, train.data$Y)[2],
+                   accuracy(preds.lm.1.train, train.data$Y)[2],
+                   accuracy(preds.lm.5.train, train.data$Y)[2],
+                   accuracy(preds.lm.8.train, train.data$Y)[2],
+                   accuracy(preds.lm.9.train, train.data$Y)[2])
+
+preds.lm.0.test <- predict(lm.0, newdata=test.data)
+preds.lm.1.test <- predict(lm.1, newdata=test.data)
+preds.lm.5.test <- predict(lm.5, newdata=test.data)
+preds.lm.8.test <- predict(lm.8, newdata=test.data)
+preds.lm.9.test <- predict(lm.9, newdata=test.data)
+testing.rmse <- c(accuracy(preds.lm.0.test, test.data$Y)[2],
+                  accuracy(preds.lm.1.test, test.data$Y)[2],
+                  accuracy(preds.lm.5.test, test.data$Y)[2],
+                  accuracy(preds.lm.8.test, test.data$Y)[2])
+
+train.results <- data.frame("num.predictors"=num.predictors,
+                            "rmse"=training.rmse,
+                            "dataset"="train")
+
+test.results <- data.frame("num.predictors"=num.predictors,
+                            "rmse"=testing.rmse,
+                            "dataset"="test")
+results.df <- rbind(test.results,
+                    train.results)
+ggplot(data=results.df) + 
+  geom_line(mapping = aes(x=num.predictors,y=rmse,col=dataset))
+
+
