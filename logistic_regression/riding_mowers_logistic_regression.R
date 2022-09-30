@@ -48,10 +48,13 @@ summary(income.glm)
 
 # what would this model predict for different ranges of incomes?
 income.range <- 0:150
+income.range
 # income.range <- 50:80
 income.range.df <- data.frame("Income"=income.range)
 income.range.df$owner.prob.income.glm <- predict(income.glm, newdata = income.range.df,
                                                  type="response")
+head(income.range.df)
+
 
 ggplot(data=income.range.df) + 
   geom_line(mapping = aes(x=Income, y=owner.prob.income.glm))
