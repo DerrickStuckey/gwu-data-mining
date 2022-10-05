@@ -6,7 +6,7 @@ library(caret) # for confusionMatrix
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
-titanic.data <- read_csv("./data/titanic/train.csv")
+titanic.data <- read_csv("./data/titanic/titanic_train.csv")
 titanic.data
 dim(titanic.data)
 
@@ -17,7 +17,7 @@ titanic.data$Survived <- ifelse(titanic.data$Survived,"Y","N")
 titanic.data$Survived <- as.factor(titanic.data$Survived)
 table(titanic.data$Survived)
 
-# partition into training and test sets
+# partition into training and validation sets
 set.seed(12345)
 train.proportion <- 0.75
 val.proportion <- 0.25
@@ -199,7 +199,7 @@ for (cp in cps) {
   train.preds <- predict(surv.tree.cp, newdata=train.data, type="class")
   val.preds <- predict(surv.tree.cp, newdata=validation.data, type="class")
   
-  # confusion matrix for train and test sets
+  # confusion matrix for train and validation sets
   cm.train <- confusionMatrix(train.preds, train.data$Survived)
   cm.val <- confusionMatrix(val.preds, validation.data$Survived)
   
