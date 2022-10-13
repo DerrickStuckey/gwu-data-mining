@@ -25,6 +25,8 @@ val.proportion <- 0.25
 train.index <- sample(1:nrow(titanic.data), nrow(titanic.data)*train.proportion)
 train.data <- titanic.data[train.index,]
 validation.data <- titanic.data[-train.index,]
+dim(train.data)
+dim(validation.data)
 
 # data exploration
 View(train.data)
@@ -74,7 +76,7 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default")
 
 
-# Complexity Parameter
+# Complexity Parameter 0.1
 surv.tree.4 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class",
@@ -86,7 +88,7 @@ prp(surv.tree.4, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default (CP = 0.01)")
 
-# Complexity Parameter
+# Complexity Parameter 0.002
 surv.tree.5 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                      data=train.data,
                      method="class",
@@ -112,6 +114,7 @@ prp(surv.tree.6, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
     main="Default (Gini Splitting)")
 
+
 # Add 'Age', a variable with missing values
 surv.tree.7 <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age,
                      data=train.data,
@@ -127,6 +130,7 @@ prp(surv.tree.1, type=1, extra=1, under=TRUE, split.font=2, varlen=-10,
 
 # variable importance
 surv.tree.1$variable.importance
+surv.tree.7$variable.importance
 
 ## measure performance against a validation set
 validation.data$preds.tree.1 <- predict(surv.tree.1,
@@ -161,7 +165,8 @@ ggplot(mapping = aes(m = validation.data$survival.probs.1,
 
 
 ## Train using unique factors e.g. Cabin, Name
-surv.tree.name <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age + Name,
+surv.tree.name <- rpart(Survived ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Age + 
+                          Name,
                      data=train.data,
                      method="class"
 )
@@ -272,12 +277,13 @@ cp.df.plot <- cp.df[-1,]
 # View validation performance vs CP for the rpart cptable
 ggplot(data=cp.df.plot) + 
   geom_line(mapping = aes(x=CP, y=xerror)) + 
-  xlab("Complexity Parameter") + 
+  xlab("Complexity Parameter") +
   ylab("Cross-Validation Performance")
-  # scale_x_reverse() + 
-  # scale_y_reverse() + 
-  xlab("Complexity Parameter (reverse)") + 
-  ylab("Cross-Validation Performance (1 - Error)")
+  # scale_y_reverse()
+  # scale_x_reverse()
+    
+  # xlab("Complexity Parameter (reverse)") + 
+  # ylab("Cross-Validation Performance (1 - Error)")
 
 
 # prune the tree using the best complexity parameter
