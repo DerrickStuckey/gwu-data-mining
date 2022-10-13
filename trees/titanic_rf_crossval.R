@@ -6,8 +6,8 @@ library(tidyverse)
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
-trainval.data <- read.csv("./data/titanic/train.csv")
-test.data <- read.csv("./data/titanic/test.csv")
+trainval.data <- read.csv("./data/titanic/titanic_train.csv")
+test.data <- read.csv("./data/titanic/titanic_test.csv")
 dim(trainval.data)
 dim(test.data)
 lapply(trainval.data, class)

@@ -5,7 +5,7 @@ library(gains)
 
 # from https://www.kaggle.com/c/titanic/data
 # see link for data dictionary
-titanic.data <- read.csv("./data/titanic/train.csv")
+titanic.data <- read.csv("./data/titanic/titanic_train.csv")
 dim(titanic.data)
 lapply(titanic.data, class)
 
@@ -184,7 +184,7 @@ ggplot() +
 mtry.vals <- rep(c(1:7),5)
 mtry.results <- c()
 
-# re-run the for loop
+# ^^ re-run the for loop ^^
 
 # plot the results with geom_jitter
 ggplot() +
@@ -196,7 +196,7 @@ ggplot() +
 
 # try several different values for nodesize
 set.seed(12345)
-nodesize.vals <- c(1,2,3,4,5,7,10,15,20,30,50,100,200,300)
+nodesize.vals <- rep(c(1,2,3,4,5,7,10,15,20,30,50,100,200,300),5)
 nodesize.results <- c()
 
 for (nodesize.val in nodesize.vals) {
@@ -231,7 +231,7 @@ ggplot() +
 
 # try several different values for sampsize
 set.seed(12345)
-sampsize.vals <- c(10,20,50,100,200,300,400,500,668)
+sampsize.vals <- rep(c(10,20,50,100,200,300,400,500,668),5)
 sampsize.results <- c()
 
 for (sampsize.val in sampsize.vals) {
