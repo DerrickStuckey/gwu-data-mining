@@ -22,6 +22,7 @@ summary(reviews.per.user)
 # look at the distribution
 ggplot() + geom_histogram(mapping = aes(x = reviews.per.user$user.review.count))
 
+median(reviews.per.user$user.review.count)
 
 # reviews per movie
 reviews.per.movie <- ratings %>% 
@@ -85,6 +86,7 @@ ratings.wide <-
 
 dim(ratings.wide)
 ratings.wide[1:5,1:5]
+ratings.wide[1:10,1:10]
 # now every row represents a user, every column represents a movie,
 # every cell represents that user's rating for that movie
 
@@ -118,8 +120,8 @@ View(as(pred,"matrix"))
 
 # look at the details for the historical ratings for an individual user
 # (for top N movies)
-# good user id examples: 4, 13, 14
-selected.user.id <- 4
+# good user id examples: 2, 5, 13, 14
+selected.user.id <- 5
 selected.user.ratings <-
   ratings.top %>% 
   filter(userId == selected.user.id) %>%
@@ -149,7 +151,8 @@ selected.user.recommendations
 
 # compare the user's ratings and their generated recommendations
 selected.user.ratings %>%
-  select(rating,title,genres)
+  select(rating,title,genres) %>% 
+  arrange(desc(rating))
 selected.user.recommendations %>%
   select(title,genres)
 
