@@ -1,9 +1,8 @@
 # install.packages("caret")
-# install.packages("gains")
 
 library(caret)
 library(tidyverse)
-library(gains) # for lift chart
+library(pROC)
 
 # from "Data Mining for Business Analytics"
 # https://www.dataminingbook.com/book/r-edition
@@ -71,7 +70,6 @@ confusionMatrix(
 )
 # Balanced Accuracy : 0.8135
 
-library(pROC)
 roc.obj <- roc(validation.data$`Personal Loan`,
                predictor = validation.probs.base)
 auc(roc.obj)
@@ -90,19 +88,16 @@ validation.probs.zip <- predict(lm.zip, newdata = validation.data,
                                  type = "response")
 
 # impute new levels as mode from training data
-c <- function(v) {
+getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
 validation.data.imputed <- validation.data
 mode.zip <- getmode(train.data$`ZIP Code`)
 mode.zip
-# validation.data.imputed$`ZIP Code`[validation.data.imputed$`ZIP Code` %in% c(94509, 95678, 92116, 94087, 90639, 94302)] <- mode.zip
-validation.data.imputed %>% filter(
-  `ZIP Code` %in% c(94509, 95678, 92116, 94087, 90639, 94302)
-) %>% mutate(
-  `ZIP Code` = mode.zip
-)
+validation.data.imputed$`ZIP Code`[
+  validation.data.imputed$`ZIP Code` %in% 
+    c(94509, 95678, 92116, 94087, 90639, 94302)] <- mode.zip
 
 # try obtaining predictions against validation data again
 validation.probs.zip <- predict(lm.zip, newdata = validation.data.imputed,
