@@ -31,12 +31,6 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                      ))
 head(bankdata)
 
-# construct a factor variable to use as output for our knn model
-table(bankdata$`Personal Loan`)
-bankdata$Loan.Status <- "Rejects"
-bankdata$Loan.Status[bankdata$`Personal Loan`] <- "Accepts"
-bankdata$Loan.Status <- factor(bankdata$Loan.Status,levels=c("Accepts","Rejects"))
-table(bankdata$Loan.Status)
 
 # training/test/validation split
 set.seed(123456)
