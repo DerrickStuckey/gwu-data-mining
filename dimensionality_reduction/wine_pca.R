@@ -267,7 +267,7 @@ ggplot() +
   xlab("component") + ylab("% of variance explained") + 
   ggtitle("Principal Component Importance (All Vars)")
 
-# cumulative performance for first N components
+# cumulative importance for first N components
 importance.variance[1:2] %>% sum()
 importance.variance[1:5] %>% sum()
 importance.variance[1:8] %>% sum()
