@@ -223,6 +223,7 @@ confusion.matrix
 
 # accuracy
 (confusion.matrix[1,1] + confusion.matrix[2,2]) / sum(confusion.matrix)
+# 0.8518519
 
 # predict Cultivar.A using only PC1
 wine.train$pc1 <- pc1[train.idx]
@@ -240,6 +241,7 @@ confusion.matrix
 
 # accuracy
 (confusion.matrix[1,1] + confusion.matrix[2,2]) / sum(confusion.matrix)
+# 0.8518519
 
 
 ## PCA on all numeric variables
@@ -264,6 +266,12 @@ ggplot() +
            stat="identity") + 
   xlab("component") + ylab("% of variance explained") + 
   ggtitle("Principal Component Importance (All Vars)")
+
+# cumulative performance for first N components
+importance.variance[1:2] %>% sum()
+importance.variance[1:5] %>% sum()
+importance.variance[1:8] %>% sum()
+importance.variance[1:13] %>% sum()
 
 # matrix of variable loadings
 wine.pca$rotation
