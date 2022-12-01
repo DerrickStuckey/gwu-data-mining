@@ -75,7 +75,7 @@ confusionMatrix(
 ggplot(mapping = aes(m = validation.probs.base, 
                      d = validation.data$`Personal Loan`)) +
   geom_roc(n.cuts=0,labels=FALSE) + 
-  style_roc(theme = theme_grey)
+  style_roc(theme = theme_grey) + ggtitle("Base Model")
 
 # Measure area under the ROC curve
 roc.obj <- roc(validation.data$`Personal Loan`,
@@ -118,6 +118,13 @@ confusionMatrix(
 )
 # Balanced Accuracy : 0.7155 
 
+# plot ROC curve
+ggplot(mapping = aes(m = validation.probs.zip, 
+                     d = validation.data$`Personal Loan`)) +
+  geom_roc(n.cuts=0,labels=FALSE) + 
+  style_roc(theme = theme_grey) + ggtitle("With Zip Code")
+
+# area under the curve
 roc.obj <- roc(validation.data.imputed$`Personal Loan`,
                predictor = validation.probs.zip)
 auc(roc.obj)
@@ -157,6 +164,11 @@ roc.obj <- roc(validation.data.imputed$`Personal Loan`,
 auc(roc.obj)
 # Area under the curve: 0.8646
 
+# plot ROC curve
+ggplot(mapping = aes(m = validation.probs.zip3, 
+                     d = validation.data$`Personal Loan`)) +
+  geom_roc(n.cuts=0,labels=FALSE) + 
+  style_roc(theme = theme_grey) + ggtitle("Zip-3 Model")
 
 ## try zip-2 instead
 ## transform zip code to zip 2
@@ -185,6 +197,11 @@ roc.obj <- roc(validation.data$`Personal Loan`,
 auc(roc.obj)
 # Area under the curve: 0.942
 
+# plot ROC curve
+ggplot(mapping = aes(m = validation.probs.zip2, 
+                     d = validation.data$`Personal Loan`)) +
+  geom_roc(n.cuts=0,labels=FALSE) + 
+  style_roc(theme = theme_grey) + ggtitle("Zip-2 Model")
 
 
 ## try mapping zip code to state instead
