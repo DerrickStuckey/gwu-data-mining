@@ -23,7 +23,7 @@ dim(riding.mowers)
 train.proportion <- 2/3
 train.size <- nrow(riding.mowers) * train.proportion
 train.size
-set.seed(123456)
+set.seed(12345)
 train.idx <- sample(1:nrow(riding.mowers),
                     train.size)
 train.data <- riding.mowers[train.idx,]
@@ -47,6 +47,7 @@ income.glm <- glm(Owner ~ Income,
 summary(income.glm)
 
 # what would this model predict for different ranges of incomes?
+summary(train.data$Income)
 income.range <- 0:150
 income.range
 # income.range <- 50:80
@@ -54,7 +55,7 @@ income.range.df <- data.frame("Income"=income.range)
 income.range.df$owner.prob.income.glm <- predict(income.glm, newdata = income.range.df,
                                                  type="response")
 head(income.range.df)
-
+tail(income.range.df)
 
 ggplot(data=income.range.df) + 
   geom_line(mapping = aes(x=Income, y=owner.prob.income.glm))
@@ -145,3 +146,10 @@ ggplot(data=test.data,
   geom_roc(n.cuts=9,labels=FALSE) + 
   style_roc(theme = theme_grey)
 
+# AUC (area under the curve) for ROC curve
+library(pROC)
+roc.obj <- roc(response = test.data$Owner,
+               predictor = test.data$owner.prob.full.glm)
+auc(roc.obj)
+
+View(test.data)
