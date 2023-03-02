@@ -106,7 +106,7 @@ confusionMatrix(validation.data$preds.rf.1,
                 validation.data$Survived,
                 positive="Y")
 
-# get probabilities instead, to plot another lift chart
+# get probabilities instead
 probs.rf.1 <- predict(surv.rf.1,
                       newdata=validation.data,
                       type="prob")
@@ -114,30 +114,13 @@ head(probs.rf.1)
 validation.data$survival.probs.1 <- probs.rf.1[,2]
 head(validation.data$survival.probs.1)
 
-# plot a lift chart with the probabilities
-gain.1 <- gains(as.numeric(validation.data$Survived), 
-              validation.data$survival.probs.1,
-              groups=50)
-head(gain.1)
-
-# combine with values from the first lift chart, to compare the models in one plot
-total.survived <- sum(as.numeric(validation.data$Survived))
-yvals <- c(0,gain.1$cume.pct.of.total*total.survived)
-xvals <- c(0,gain.1$cume.obs)
-
-lift.inputs <- data.frame("xvals"=xvals,
-                            "yvals"=yvals,
-                            "model"="Model 1")
-
-# plot the actual lift chart
-ggplot(data=lift.inputs) + 
-  geom_line(mapping = aes(x=xvals, y=yvals, col=model)) +
-  xlab("Predicted Survivors") + ylab("Actual Survivors") + 
-  ggtitle("Model Comparison") + 
-  theme(plot.title = element_text(hjust = 0.5)) + 
-  geom_abline(intercept = c(0,0), 
-              slope=total.survived/nrow(validation.data),
-              linetype="dashed")
+## Plot an ROC curve
+library(plotROC)
+ggplot(mapping = aes(m = validation.data$survival.probs.1, 
+                     d = validation.data$Survived=="Y")) +
+  geom_roc(n.cuts=100,labels=FALSE) + 
+  style_roc(theme = theme_grey) + 
+  ggtitle("Tree 1 Validation")
 
 
 ### Model parameter tuning ###
