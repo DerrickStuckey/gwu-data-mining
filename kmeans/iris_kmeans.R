@@ -20,6 +20,7 @@ apply(iris.tibble %>% select(-Species), 2, sd)
 # pull out just the numeric variables to run our k-means algo against
 iris.numeric <- iris.tibble %>%
   select(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width)
+iris.numeric
 
 # normalize the numeric data
 # question: is this actually necessary/appropriate for this particular problem?
@@ -31,6 +32,8 @@ iris.normalized <- predict(normalizer, iris.numeric)
 # what did this normalization accomplish?
 apply(iris.normalized, 2, mean)
 apply(iris.normalized, 2, sd)
+
+# note: no training/test split
 
 # try running k-means on the normalized numeric data
 # (should be OK as our numeric variables are all of similar scale)
@@ -47,6 +50,9 @@ km.2$centers
 
 # what cluster does it put the first few data points in?
 head(km.2$cluster)
+km.2$cluster[1]
+km.2$cluster[2]
+km.2$cluster[150]
 
 # add the cluster info to our dataframe
 # (as a factor so ggplot will know what to do with it)
@@ -120,7 +126,7 @@ ggplot(data=iris.numeric) +
 # how well do the clusters it has found line up with the actual Species labels?
 # (this wasn't explicitly our goal though, as we didn't use the Species labels for clustering)
 table(km.3$cluster, iris.tibble$Species)
-
+# but it does tell us that the clustering has grouped the data in a meaningful way
 
 # compare Sum of Squares for k=2, k=3
 km.2$betweenss
