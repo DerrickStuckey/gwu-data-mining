@@ -32,26 +32,20 @@ bankdata <- read_csv("./data/UniversalBank.csv",
 head(bankdata)
 
 
-# training/test/validation split
-set.seed(123456)
-train.proportion <- 0.6
-test.proportion <- 0.2
-validation.proportion <- 0.2
+# training/validation split
+set.seed(12345)
+train.proportion <- 0.7
+validation.proportion <- 0.3
 
 # pull out the training data
 train.index <- sample(1:nrow(bankdata), nrow(bankdata)*train.proportion)
 train.data <- bankdata[train.index,]
 
-# select test and validation from what's left over
-holdout.data <- bankdata[-train.index,]
-test.index <- sample(1:nrow(holdout.data), nrow(bankdata)*test.proportion)
-test.data <- holdout.data[test.index,]
-validation.data <- holdout.data[-test.index,]
+validation.data <- bankdata[-train.index,]
 
 # check sizes
 dim(train.data)
 dim(validation.data)
-dim(test.data)
 
 ## base model (a few numerical predictors only)
 
@@ -61,6 +55,22 @@ lm.base <- glm(`Personal Loan` ~ Age + Income + Experience + Education,
                family=binomial)
 summary(lm.base)
 
+# evaluate against train data
+train.probs.base <- predict(lm.base, newdata = train.data,
+                            type = "response")
+train.preds.base <- train.probs.base>0.5
+confusionMatrix(
+  factor(train.preds.base), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy : 0.7671
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.base)
+base.auc.train <- auc(roc.obj)
+base.auc.train
+# Area under the curve: 0.9301
+
 # evaluate against validation data
 validation.probs.base <- predict(lm.base, newdata = validation.data,
                                  type = "response")
@@ -69,7 +79,7 @@ confusionMatrix(
   factor(validation.preds.base), 
   factor(validation.data$`Personal Loan`)
 )
-# Balanced Accuracy : 0.8135
+# Balanced Accuracy : 0.7456
 
 # plot ROC curve
 ggplot(mapping = aes(m = validation.probs.base, 
@@ -81,6 +91,8 @@ ggplot(mapping = aes(m = validation.probs.base,
 roc.obj <- roc(validation.data$`Personal Loan`,
                predictor = validation.probs.base)
 auc(roc.obj)
+base.auc.validation <- auc(roc.obj)
+base.auc.validation
 # Area under the curve: 0.9425
 
 ## include raw zip code (as a factor)
@@ -91,7 +103,23 @@ lm.zip <- glm(`Personal Loan` ~ Age + Income + Experience + Education + `ZIP Cod
                family=binomial)
 summary(lm.zip)
 
-# evaluate against validation data
+# evaluate full zip model against train data
+train.probs.zip <- predict(lm.zip, newdata = train.data,
+                           type = "response")
+train.preds.zip <- train.probs.zip>0.5
+confusionMatrix(
+  factor(train.preds.zip), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy: 0.8381
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.zip)
+full.zip.auc.train <- auc(roc.obj)
+full.zip.auc.train
+# Area under the curve: 0.972
+
+# evaluate full zip model against validation data
 validation.probs.zip <- predict(lm.zip, newdata = validation.data,
                                  type = "response")
 
@@ -105,7 +133,8 @@ mode.zip <- getmode(train.data$`ZIP Code`)
 mode.zip
 validation.data.imputed$`ZIP Code`[
   validation.data.imputed$`ZIP Code` %in% 
-    c(94509, 95678, 92116, 94087, 90639, 94302)] <- mode.zip
+    c(90505, 90011, 90044, 94019, 95037, 94526, 94965, 90280, 94970, 
+      90813, 94404, 94087)] <- mode.zip
 # can you think of a better way to replace these values?
 
 # try obtaining predictions against validation data again
@@ -116,7 +145,7 @@ confusionMatrix(
   factor(validation.preds.zip), 
   factor(validation.data.imputed$`Personal Loan`)
 )
-# Balanced Accuracy : 0.7155 
+# Balanced Accuracy : 0.6541 
 
 # plot ROC curve
 ggplot(mapping = aes(m = validation.probs.zip, 
@@ -127,8 +156,9 @@ ggplot(mapping = aes(m = validation.probs.zip,
 # area under the curve
 roc.obj <- roc(validation.data.imputed$`Personal Loan`,
                predictor = validation.probs.zip)
-auc(roc.obj)
-# Area under the curve: 0.7451
+full.zip.auc.validation <- auc(roc.obj)
+full.zip.auc.validation
+# Area under the curve: 0.7128
 
 
 ## transform zip code to zip 3
@@ -140,15 +170,30 @@ table(train.data$zip3)
 train.data$`ZIP Code` %>% unique() %>% length()
 train.data$zip3 %>% unique() %>% length()
 
-# repeat for validation and test data
+# repeat for validation data
 validation.data$zip3 <- validation.data$`ZIP Code` %>% as.character() %>% substr(1,3)
-test.data$zip3 <- test.data$`ZIP Code` %>% as.character() %>% substr(1,3)
 
 # train logistic regression model with zip3
 lm.zip3 <- glm(`Personal Loan` ~ Age + Income + Experience + Education + zip3, 
               data=train.data,
               family=binomial)
 summary(lm.zip3)
+
+## Zip-3 model vs Train
+train.probs.zip3 <- predict(lm.zip3, newdata = train.data,
+                            type = "response")
+train.preds.zip3 <- train.probs.zip3>0.5
+confusionMatrix(
+  factor(train.preds.zip3), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy: 0.7790
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.zip3)
+zip3.auc.train <- auc(roc.obj)
+zip3.auc.train
+# Area under the curve: 0.9391
 
 # evaluate against validation data
 validation.probs.zip3 <- predict(lm.zip3, newdata = validation.data,
@@ -158,12 +203,13 @@ confusionMatrix(
   factor(validation.preds.zip3), 
   factor(validation.data.imputed$`Personal Loan`)
 )
-# Balanced Accuracy : 0.7926
+# Balanced Accuracy : 0.7390
 
 roc.obj <- roc(validation.data.imputed$`Personal Loan`,
                predictor = validation.probs.zip3)
-auc(roc.obj)
-# Area under the curve: 0.8646
+zip3.auc.validation <- auc(roc.obj)
+zip3.auc.validation
+# Area under the curve: 0.9053
 
 # plot ROC curve
 ggplot(mapping = aes(m = validation.probs.zip3, 
@@ -175,7 +221,6 @@ ggplot(mapping = aes(m = validation.probs.zip3,
 ## transform zip code to zip 2
 train.data$zip2 <- train.data$`ZIP Code` %>% as.character() %>% substr(1,2)
 validation.data$zip2 <- validation.data$`ZIP Code` %>% as.character() %>% substr(1,2)
-test.data$zip2 <- test.data$`ZIP Code` %>% as.character() %>% substr(1,2)
 
 train.data$`ZIP Code` %>% unique() %>% length()
 train.data$zip2 %>% unique() %>% length()
@@ -186,7 +231,23 @@ lm.zip2 <- glm(`Personal Loan` ~ Age + Income + Experience + Education + zip2,
                family=binomial)
 summary(lm.zip2)
 
-# evaluate against validation data
+# evaluate zip-2 model against train data
+train.probs.zip2 <- predict(lm.zip2, newdata = train.data,
+                            type = "response")
+train.preds.zip2 <- train.probs.zip2>0.5
+confusionMatrix(
+  factor(train.preds.zip2), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy: 0.7669
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.zip2)
+zip2.auc.train <- auc(roc.obj)
+zip2.auc.train
+# Area under the curve: 0.9307
+
+# evaluate zip-2 model against validation data
 validation.probs.zip2 <- predict(lm.zip2, newdata = validation.data,
                                  type = "response")
 validation.preds.zip2 <- validation.probs.zip2>0.5
@@ -194,12 +255,14 @@ confusionMatrix(
   factor(validation.preds.zip2), 
   factor(validation.data$`Personal Loan`)
 )
-# Balanced Accuracy : 0.8199
+# Balanced Accuracy : 0.7477
 
 roc.obj <- roc(validation.data$`Personal Loan`,
                predictor = validation.probs.zip2)
-auc(roc.obj)
-# Area under the curve: 0.942
+
+zip2.auc.validation <- auc(roc.obj)
+zip2.auc.validation
+# Area under the curve: 0.9398
 
 # plot ROC curve
 ggplot(mapping = aes(m = validation.probs.zip2, 
@@ -211,144 +274,18 @@ ggplot(mapping = aes(m = validation.probs.zip2,
 ## try mapping zip code to state instead
 
 
+# write out full results to a .csv
+auc.df <- data.frame("Model"=c("Base Model","Zip-2","Zip-3","Full Zip"),
+                     "Train AUC"=c(base.auc.train, zip2.auc.train,
+                                   zip3.auc.train, full.zip.auc.train),
+                     "Validation AUC"=c(base.auc.validation, zip2.auc.validation,
+                                        zip3.auc.validation, full.zip.auc.validation))
+
+write.csv(auc.df,"./dimensionality_reduction/bankloan_results.csv",
+          row.names=FALSE)
 
 
 
 
 
-## Performance against Test
 
-## Base model vs Test
-# evaluate against test data
-test.probs.base <- predict(lm.base, newdata = test.data,
-                           type = "response")
-test.preds.base <- test.probs.base>0.5
-confusionMatrix(
-  factor(test.preds.base), 
-  factor(test.data$`Personal Loan`)
-)
-# Balanced Accuracy : 0.7695
-
-roc.obj <- roc(test.data$`Personal Loan`,
-               predictor = test.probs.base)
-auc(roc.obj)
-# Area under the curve: 0.9391
-
-## Zip-2 model vs Test
-test.probs.zip2 <- predict(lm.zip2, newdata = test.data,
-                           type = "response")
-test.preds.zip2 <- test.probs.zip2>0.5
-confusionMatrix(
-  factor(test.preds.zip2), 
-  factor(test.data$`Personal Loan`)
-)
-# Balanced Accuracy : 0.7640
-
-roc.obj <- roc(test.data$`Personal Loan`,
-               predictor = test.probs.zip2)
-auc(roc.obj)
-# Area under the curve: 0.9378
-
-## Zip-3 model vs Test
-test.probs.zip3 <- predict(lm.zip3, newdata = test.data,
-                           type = "response")
-test.preds.zip3 <- test.probs.zip3>0.5
-confusionMatrix(
-  factor(test.preds.zip3), 
-  factor(test.data$`Personal Loan`)
-)
-# Balanced Accuracy : 0.7575
-
-roc.obj <- roc(test.data$`Personal Loan`,
-               predictor = test.probs.zip3)
-auc(roc.obj)
-# Area under the curve: 0.9186
-
-## Full zip code model vs test
-# impute new levels as mode (most common zip) from training data
-test.data.imputed <- test.data
-mode.zip <- getmode(train.data$`ZIP Code`)
-mode.zip
-test.data.imputed$`ZIP Code`[
-  test.data.imputed$`ZIP Code` %in% 
-    c(90745, 91941, 94509, 95678, 92116, 90016, 90639, 94302, 90280, 96145, 94598)] <- mode.zip
-
-# try obtaining predictions against test data again
-test.probs.zip <- predict(lm.zip, newdata = test.data.imputed,
-                          type = "response")
-test.preds.zip <- test.probs.zip>0.5
-confusionMatrix(
-  factor(test.preds.zip), 
-  factor(test.data.imputed$`Personal Loan`)
-)
-# Balanced Accuracy : 0.6998 
-
-roc.obj <- roc(test.data.imputed$`Personal Loan`,
-               predictor = test.probs.zip)
-auc(roc.obj)
-# Area under the curve: 0.737
-
-
-
-### performance against training data for comparison
-
-## Base model vs Train
-train.probs.base <- predict(lm.base, newdata = train.data,
-                            type = "response")
-train.preds.base <- train.probs.base>0.5
-confusionMatrix(
-  factor(train.preds.base), 
-  factor(train.data$`Personal Loan`)
-)
-# Balanced Accuracy : 0.7465
-
-roc.obj <- roc(train.data$`Personal Loan`,
-               predictor = train.probs.base)
-auc(roc.obj)
-# Area under the curve: 0.9299
-
-## Zip-2 model vs Train
-train.probs.zip2 <- predict(lm.zip2, newdata = train.data,
-                            type = "response")
-train.preds.zip2 <- train.probs.zip2>0.5
-confusionMatrix(
-  factor(train.preds.zip2), 
-  factor(train.data$`Personal Loan`)
-)
-# Balanced Accuracy : 0.7473
-
-roc.obj <- roc(train.data$`Personal Loan`,
-               predictor = train.probs.zip2)
-auc(roc.obj)
-# Area under the curve: 0.9302
-
-## Zip-3 model vs Train
-train.probs.zip3 <- predict(lm.zip3, newdata = train.data,
-                            type = "response")
-train.preds.zip3 <- train.probs.zip3>0.5
-confusionMatrix(
-  factor(train.preds.zip3), 
-  factor(train.data$`Personal Loan`)
-)
-# Balanced Accuracy : 0.7694
-
-roc.obj <- roc(train.data$`Personal Loan`,
-               predictor = train.probs.zip3)
-auc(roc.obj)
-# Area under the curve: 0.938
-
-
-# full zip model
-train.probs.zip <- predict(lm.zip, newdata = train.data,
-                           type = "response")
-train.preds.zip <- train.probs.zip>0.5
-confusionMatrix(
-  factor(train.preds.zip), 
-  factor(train.data$`Personal Loan`)
-)
-# Balanced Accuracy: 0.8397
-
-roc.obj <- roc(train.data$`Personal Loan`,
-               predictor = train.probs.zip)
-auc(roc.obj)
-# Area under the curve: 0.9742
