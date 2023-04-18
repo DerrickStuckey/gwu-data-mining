@@ -133,6 +133,7 @@ auc(roc.obj)
 
 ## transform zip code to zip 3
 train.data$zip3 <- train.data$`ZIP Code` %>% as.character() %>% substr(1,3)
+head(train.data$`ZIP Code`)
 head(train.data$zip3)
 table(train.data$`ZIP Code`)
 table(train.data$zip3)
@@ -175,6 +176,9 @@ ggplot(mapping = aes(m = validation.probs.zip3,
 train.data$zip2 <- train.data$`ZIP Code` %>% as.character() %>% substr(1,2)
 validation.data$zip2 <- validation.data$`ZIP Code` %>% as.character() %>% substr(1,2)
 test.data$zip2 <- test.data$`ZIP Code` %>% as.character() %>% substr(1,2)
+
+train.data$`ZIP Code` %>% unique() %>% length()
+train.data$zip2 %>% unique() %>% length()
 
 # train logistic regression model with zip2
 lm.zip2 <- glm(`Personal Loan` ~ Age + Income + Experience + Education + zip2, 
@@ -284,3 +288,67 @@ roc.obj <- roc(test.data.imputed$`Personal Loan`,
 auc(roc.obj)
 # Area under the curve: 0.737
 
+
+
+### performance against training data for comparison
+
+## Base model vs Train
+train.probs.base <- predict(lm.base, newdata = train.data,
+                            type = "response")
+train.preds.base <- train.probs.base>0.5
+confusionMatrix(
+  factor(train.preds.base), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy : 0.7465
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.base)
+auc(roc.obj)
+# Area under the curve: 0.9299
+
+## Zip-2 model vs Train
+train.probs.zip2 <- predict(lm.zip2, newdata = train.data,
+                            type = "response")
+train.preds.zip2 <- train.probs.zip2>0.5
+confusionMatrix(
+  factor(train.preds.zip2), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy : 0.7473
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.zip2)
+auc(roc.obj)
+# Area under the curve: 0.9302
+
+## Zip-3 model vs Train
+train.probs.zip3 <- predict(lm.zip3, newdata = train.data,
+                            type = "response")
+train.preds.zip3 <- train.probs.zip3>0.5
+confusionMatrix(
+  factor(train.preds.zip3), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy : 0.7694
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.zip3)
+auc(roc.obj)
+# Area under the curve: 0.938
+
+
+# full zip model
+train.probs.zip <- predict(lm.zip, newdata = train.data,
+                           type = "response")
+train.preds.zip <- train.probs.zip>0.5
+confusionMatrix(
+  factor(train.preds.zip), 
+  factor(train.data$`Personal Loan`)
+)
+# Balanced Accuracy: 0.8397
+
+roc.obj <- roc(train.data$`Personal Loan`,
+               predictor = train.probs.zip)
+auc(roc.obj)
+# Area under the curve: 0.9742
