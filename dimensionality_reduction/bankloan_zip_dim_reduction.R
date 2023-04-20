@@ -230,7 +230,9 @@ auc.df <- data.frame("Model"=c("Base Model","Zip-2","Zip-3","Full Zip"),
                      "Train AUC"=c(base.auc.train, zip2.auc.train,
                                    zip3.auc.train, full.zip.auc.train),
                      "Validation AUC"=c(base.auc.validation, zip2.auc.validation,
-                                        zip3.auc.validation, full.zip.auc.validation))
+                                        zip3.auc.validation, full.zip.auc.validation),
+                     "Num Predictors"=c(length(lm.base$coefficients),length(lm.zip2$coefficients),
+                                        length(lm.zip3$coefficients),length(lm.zip$coefficients))-1)
 
 write.csv(auc.df,"./dimensionality_reduction/bankloan_results.csv",
           row.names=FALSE)
