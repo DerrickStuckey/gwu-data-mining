@@ -51,6 +51,7 @@ lm.base <- glm(`Personal Loan` ~ Age + Income + Education + Experience,
                data=train.data,
                family=binomial)
 summary(lm.base)
+length(lm.base$coefficients)
 
 # evaluate against train data
 train.probs.base <- predict(lm.base, newdata = train.data,
@@ -86,6 +87,7 @@ lm.zip <- glm(`Personal Loan` ~ Age + Income + Education + Experience + `ZIP Cod
                data=train.data,
                family=binomial)
 summary(lm.zip)
+length(lm.zip$coefficients)
 
 # evaluate full zip model against train data
 train.probs.zip <- predict(lm.zip, newdata = train.data,
@@ -149,6 +151,7 @@ lm.zip3 <- glm(`Personal Loan` ~ Age + Income + Education + Experience + zip3,
               data=train.data,
               family=binomial)
 summary(lm.zip3)
+length(lm.zip3$coefficients)
 
 ## Zip-3 model vs Train
 train.probs.zip3 <- predict(lm.zip3, newdata = train.data,
@@ -189,6 +192,7 @@ lm.zip2 <- glm(`Personal Loan` ~ Age + Income + Education + Experience + zip2,
                data=train.data,
                family=binomial)
 summary(lm.zip2)
+length(lm.zip2$coefficients)
 
 # evaluate zip-2 model against train data
 train.probs.zip2 <- predict(lm.zip2, newdata = train.data,
