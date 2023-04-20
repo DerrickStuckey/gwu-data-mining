@@ -40,6 +40,7 @@ wine.pca.simple$scale
 
 # PC1 and PC2 values for first two data points
 head(wine.pca.simple$x, n=2)
+dim(wine.pca.simple$x)
 
 # raw variable values for first data point
 wine %>% select(Flavanoids,Total.phenols) %>% head(n=1)
@@ -50,6 +51,8 @@ raw.values
 normalized.values <- (raw.values - wine.pca.simple$center) / wine.pca.simple$scale
 normalized.values
 
+as.matrix(normalized.values)
+wine.pca.simple$rotation
 as.matrix(normalized.values) %*% wine.pca.simple$rotation
 
 # long version
@@ -143,43 +146,6 @@ ggplot() +
   ggtitle("PC 1 and PC 2 Projections in PC Basis")
 
 
-##plot just a few points with shape in both bases to show translation
-# sample.indices <- c(147, 53, 122, 135, 124)
-sample.indices <- c(147, 53, 122, 135)
-wine.sample <- wine[sample.indices,]
-
-# plot sample of points in original basis
-pointsize <- 5
-ggplot() + 
-  geom_point(mapping = aes(x=wine.sample$Flavanoids, y=wine.sample$Total.phenols,
-                           shape=as.factor(sample.indices)), 
-             col="black", size=pointsize) +
-  geom_point(mapping = aes(x=pc1.Flavanoids.component[sample.indices],
-                           y=pc1.Phenols.component[sample.indices],
-                           shape=as.factor(sample.indices)),
-             col="blue", size=pointsize) +
-  geom_point(mapping = aes(x=pc2.Flavanoids.component[sample.indices],
-                           y=pc2.Phenols.component[sample.indices],
-                           shape=as.factor(sample.indices)),
-             col="red", size=pointsize) + 
-  theme(aspect.ratio=1, legend.position = "none") + 
-  ggtitle("Original Basis") + 
-  xlab("Flavanoids") + ylab("Total Phenols")
-
-# plot sample of points in PC1, PC2 basis
-ggplot() + 
-  geom_point(mapping = aes(x=pc1[sample.indices], y=pc2[sample.indices],
-                           shape=as.factor(sample.indices)),
-             col="black", size=pointsize) + 
-  geom_point(mapping = aes(x=pc1[sample.indices], y=0,
-                           shape=as.factor(sample.indices)),
-             col="blue", size=pointsize) + 
-  geom_point(mapping = aes(x=0, y=pc2[sample.indices],
-                           shape=as.factor(sample.indices)),
-             col="red", size=pointsize) + 
-  theme(aspect.ratio=1, legend.position = "none") + 
-  xlab("PC 1") + ylab("PC 2") + 
-  ggtitle("PC 1, PC 2 Basis")
 
 
 ## % of variance by PC
@@ -214,6 +180,8 @@ train.idx <- sample(1:nrow(wine),
 wine.train <- wine[train.idx,]
 wine.test <- wine[-train.idx,]
 cultivar.a.logistic <- glm(Cultivar.A ~ Flavanoids + Total.phenols, data = wine.train)
+summary(cultivar.a.logistic)
+
 test.pred.probabilities <- predict(cultivar.a.logistic, newdata = wine.test,
                                    type="response")
 test.preds <- ifelse(test.pred.probabilities>0.5,"Pred True","Pred False")
@@ -230,6 +198,7 @@ wine.train$pc1 <- pc1[train.idx]
 wine.test$pc1 <- pc1[-train.idx]
 
 cultivar.a.logistic.pc1 <- glm(Cultivar.A ~ pc1, data=wine.train)
+summary(cultivar.a.logistic.pc1)
 
 test.pred.probabilities.pc1 <- predict(cultivar.a.logistic.pc1, 
                                        newdata = wine.test,
@@ -244,10 +213,12 @@ confusion.matrix
 # 0.8518519
 
 
+
 ## PCA on all numeric variables
 
 # based on example from https://www.datacamp.com/tutorial/pca-analysis-r
 wine.pca <- prcomp(wine[,2:14], center = TRUE,scale. = TRUE)
+dim(wine[,2:14])
 
 cov(wine %>% select(-Cultivar)) %>% View()
 
@@ -271,6 +242,7 @@ ggplot() +
 importance.variance[1:2] %>% sum()
 importance.variance[1:5] %>% sum()
 importance.variance[1:8] %>% sum()
+importance.variance[1:12] %>% sum()
 importance.variance[1:13] %>% sum()
 
 # matrix of variable loadings
@@ -296,9 +268,51 @@ ggbiplot(wine.pca, ellipse=TRUE, groups=wine.cultivar) +
 
 
 
-## explore some other var relationshops
+## explore some other var relationships
 
 ggplot(data=wine) + 
   geom_point(mapping = aes(x=Flavanoids, y=Color.intensity))
 
 # how well would PCA work on these 2 vars?
+
+
+
+
+
+##plot just a few points with shape in both bases to show translation
+# # sample.indices <- c(147, 53, 122, 135, 124)
+# sample.indices <- c(147, 53, 122, 135)
+# wine.sample <- wine[sample.indices,]
+# 
+# # plot sample of points in original basis
+# pointsize <- 5
+# ggplot() + 
+#   geom_point(mapping = aes(x=wine.sample$Flavanoids, y=wine.sample$Total.phenols,
+#                            shape=as.factor(sample.indices)), 
+#              col="black", size=pointsize) +
+#   geom_point(mapping = aes(x=pc1.Flavanoids.component[sample.indices],
+#                            y=pc1.Phenols.component[sample.indices],
+#                            shape=as.factor(sample.indices)),
+#              col="blue", size=pointsize) +
+#   geom_point(mapping = aes(x=pc2.Flavanoids.component[sample.indices],
+#                            y=pc2.Phenols.component[sample.indices],
+#                            shape=as.factor(sample.indices)),
+#              col="red", size=pointsize) + 
+#   theme(aspect.ratio=1, legend.position = "none") + 
+#   ggtitle("Original Basis") + 
+#   xlab("Flavanoids") + ylab("Total Phenols")
+# 
+# # plot sample of points in PC1, PC2 basis
+# ggplot() + 
+#   geom_point(mapping = aes(x=pc1[sample.indices], y=pc2[sample.indices],
+#                            shape=as.factor(sample.indices)),
+#              col="black", size=pointsize) + 
+#   geom_point(mapping = aes(x=pc1[sample.indices], y=0,
+#                            shape=as.factor(sample.indices)),
+#              col="blue", size=pointsize) + 
+#   geom_point(mapping = aes(x=0, y=pc2[sample.indices],
+#                            shape=as.factor(sample.indices)),
+#              col="red", size=pointsize) + 
+#   theme(aspect.ratio=1, legend.position = "none") + 
+#   xlab("PC 1") + ylab("PC 2") + 
+#   ggtitle("PC 1, PC 2 Basis")
