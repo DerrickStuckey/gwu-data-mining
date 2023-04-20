@@ -15,7 +15,7 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        Age = col_double(),
                        Experience = col_double(),
                        Income = col_double(),
-                       `ZIP Code` = col_factor(),
+                       `ZIP Code` = readr::col_factor(),
                        Family = col_double(),
                        CCAvg = col_double(),
                        Education = col_double(),
@@ -27,7 +27,7 @@ bankdata <- read_csv("./data/UniversalBank.csv",
                        CreditCard = col_logical()
                      ))
 head(bankdata)
-
+# is.factor(bankdata$`ZIP Code`)
 
 # training/validation split
 set.seed(123456)
